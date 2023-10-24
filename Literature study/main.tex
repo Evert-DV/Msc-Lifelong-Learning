@@ -6,9 +6,18 @@
 
 % Packages
 \usepackage{amsmath}
+\usepackage[top=2cm, bottom=4.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[backend=biber]{biblatex}
+
+\addbibresource{references.bib}
+\title{Lifelong Learning for an Origami Robot}
+\author{Evert De Vroey}
 
 % Document
 \begin{document}
+    \maketitle
+
 
     \section{Introduction}\label{sec:intro}
 
@@ -16,6 +25,7 @@
     % catastrophic forgetting
     % handling memories
     % detecting change
+    \cite{Kim2021,Lesort2020}.
 
     \subsection{Application to soft (origami) robots}\label{subsec:origami}
     % reason: change in dynamics
@@ -23,19 +33,29 @@
 
 
     \section{Background and definition}\label{sec:background}
+    ~\cite{Lesort2020}.
 
 
     \section{Blackbox methods}\label{sec:blackbox}
+    ~\cite{Zhou2022, Romeres2016, Gijsberts2011, Thuruthel2019, Nguyen2009}.
 
 
-    \section{Storage \& retrieval}\label{sec:storage}
+    \section{Dual architectures}\label{sec:dual}
+    ~\cite{Mallya2018, Schwarz2018, Shin2017, Lu2019, Lu2020}.
+
+
+    \section{Storage and retrieval}\label{sec:storage}
+    ~\cite{Wang2022, Schulman2017, Mouret2015, Shin2017, Aljundi2016, Nguyen2011, Xie2021}.
 
 
     \section{Architectural expansions}\label{sec:architectural}
+    ~\cite{Chatzilygeroudis2016, Nazeer2023, Gillespie2018}.
 
 
-    \section{Discussion \& conclusion}\label{sec:discussion}
+    \section{Discussion and conclusion}\label{sec:discussion}
     % promising approach(es)
     % research gap
+
+    \printbibliography
 
 \end{document}
