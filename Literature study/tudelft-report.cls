@@ -89,7 +89,7 @@
     BoldItalicFont = *_Bold_Italic]{Arial}
 \else
 \@nativefontstrue
-%    \newfontfamily\tudtitlefamily{roboto-thin}
+%\newfontfamily\tudtitlefamily{roboto-thin}
 \newcommand*\tudrmfamily{\rmfamily}
 \newcommand*\tudsffamily{\sffamily}
 \fi
@@ -104,10 +104,10 @@
 \if@roman
 %      \RequirePackage{lato}
 %      \RequirePackage{helvet}
-\RequirePackage[thin]{roboto}
+\RequirePackage[thin, condensed]{roboto}
 \RequirePackage{fourier}
 \else
-\RequirePackage[thin]{roboto}
+\RequirePackage[thin, condensed]{roboto}
 %      \RequirePackage[default]{lato}
 \RequirePackage{helvet}
 \renewcommand{\familydefault}{\sfdefault}
