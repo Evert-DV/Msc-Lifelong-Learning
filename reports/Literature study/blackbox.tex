@@ -1,8 +1,17 @@
 \chapter{Blackbox methods}\label{ch:blackbox}
+% TODO: define "blackbox"
 
 ~\cite{Zhou2022, Romeres2016, Gijsberts2011, Thuruthel2019, Nguyen2009, Alessi2023}.
 
-\section{Learning the dynamic model}\label{sec:DM}
 
 \section{Learning control policies}\label{sec:policies}
 
+
+\section{Learning the dynamic model}\label{sec:DM}
+One way of having continually adapting control of the soft robots, is by implementing a (traditional) control scheme that uses a dynamic model (either forward or inverse) of the robot and then to incrementally update that model.\ The idea of learning a dynamic model for soft robots has advantages even outside the context of lifelong adaptation: many soft robots have such a large amount of degrees of freedom and such complex and nonlinear dynamics, that analytically deriving a dynamic model is both cumbersome and often insufficiently accurate \todo{CITE}. % TODO: Cite
+
+Blackbox methods also allow for learning both forward and inverse dynamic models and can thus be used in several control schemes.\ When learning a forward model, the robot's actions and resulting states can be used as the inputs and outputs, respectively, this is so-called \emph{direct modeling}~\cite{NguyenPeters2011}.\ In the case of learning inverse dynamic models, such direct approaches might not always be applicable, due to the multiple solutions that exist for the inverse dynamics of robots with redundant degrees of freedom.\ Instead, an \emph{indirect-modeling} approach can be taken, where the model is trained to minimize the error of the feedback controller~\cite{NguyenPeters2011}.
+
+The form that the dynamic model takes can vary.\ In~\cite{Gillespie2018} a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ to the inputs are made available during the process of backpropagation and can be used in matrices $A$ and $B$ to form a more interpretable state-space system.\ In~\cite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form, and is directly used to generate trajectories in open-loop control. \todo{refine structure} % TODO: rethink structure
+
+Likewise, since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used, can vary from implementation to implementation.\ The aforementioned matrices $A$ and $B$ from~\cite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\cite{Thuruthel2019} are used as samples to train a control policy (the dynamic model is in essence an intermediary step in order to create a blackbox policy as in \autoref{sec:policies}).
