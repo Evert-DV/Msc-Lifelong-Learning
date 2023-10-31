@@ -1,13 +1,14 @@
 \documentclass[roman]{tudelft-report}
 
 % Packages
-\usepackage[backend=biber]{biblatex}
+\usepackage[backend=biber, style=apa]{biblatex}
 \usepackage{changes}
 \usepackage{todonotes}
 \usepackage{csquotes}
 
 \addbibresource{Literature study/references.bib}
 
+\renewcommand{\cite}{\autocite}
 \newcommand{\studentnumber}{4685156}
 \setlength{\headheight}{13.59999pt}
 
