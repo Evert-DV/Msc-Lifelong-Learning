@@ -1,15 +1,17 @@
-\documentclass[roman]{tudelft-report}
+\documentclass[noroman]{tudelft-report}
 
 % Packages
 \usepackage[backend=biber, style=apa, natbib=true]{biblatex}
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
 \usepackage{csquotes}
+\usepackage{wasysym}
 \usepackage{lipsum}
 \usepackage{booktabs}
 %\usepackage{showframe}
 
 \addbibresource{Literature study/references.bib}
 
+\renewcommand{\checkmark}{\char"2713}
 \renewcommand{\cite}{\parencite}
 \newcommand{\studentnumber}{4685156}
 \setlength{\headheight}{13.59999pt}
