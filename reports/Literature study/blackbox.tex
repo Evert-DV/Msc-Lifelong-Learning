@@ -1,20 +1,21 @@
 \chapter{Blackbox methods}\label{ch:blackbox}
 % TODO: define "blackbox"
 \todo{general intro, define "blackbox"}
-~\cite{Zhou2022, Romeres2016, Gijsberts2011, Thuruthel2019, Nguyen2009, Alessi2023}.
 
 
 \section{Learning control policies}\label{sec:policies}
-A perfect example of a blackbox method is given by~\textcite{Alessi2023}.\ In their study they used proximal policy optimization~\cite{Schulman2017} to obtain a controller that can generalize over new dynamics and tasks.\ The
+A perfect example of a blackbox method is given by~\textcite{Alessi2023}.\ In their study they used Proximal Policy Optimization (PPO)~\cite{Schulman2017} to obtain a controller that can generalize over new dynamics and tasks.\ The
 controller is a blackbox: a desired trajectory, several measurements of the robots state, and other values of interest, such as the error of robot's end-effector tip, are used as inputs, resulting in a control action.\ It essentially acts in a manner akin to a feedback controller using an inverse dynamics model, only in this case it is unknown what is happening \emph{under the hood}.
 
-The previous example is \emph{"perfect"} in the sense that it perfectly embodies the simplistic nature of blackbox methods, however it is worth noting that other techniques, such as more complicated architectures or combinations of multiple models, can be used in combination with these blackbox methods.\ Such architectural modifications will be discussed in \autoref{ch:architecture}.
+The previous example is \emph{``perfect´´} in the sense that it perfectly embodies the simplistic nature of blackbox methods, however it is worth noting that other techniques, such as more complicated architectures or combinations of multiple models, can be used in combination with these blackbox methods.\ Such architectural modifications will be discussed in \autoref{ch:architecture}.
 
-% forgetting and imbalance (twice!) --> MPO + CRR (TODO: find citations)
+
+% forgetting and imbalance (twice!) --> MPO + CRR
 % learning a controller ... and tasks --> PPO
 % model-based RL ... of soft robot (2nd part) --> ? (TODO: check algorithm)
 % policy adaptation ... robotic arm (policy itself) --> ? (TODO: check algorithm)
 % reset-free LLL ... planning (model-free part) --> ? (TODO: check algorithm)
+
 
 \section{Learning the dynamic model}\label{sec:DM}
 One way of having continually adapting control for soft robots, is by implementing a (traditional) control scheme that uses a dynamic model (either forward or inverse) of the robot and then to incrementally update that model.\ The idea of learning a dynamic model for soft robots has advantages even outside the context of lifelong adaptation: many soft robots have such a large amount of degrees of freedom and such complex and nonlinear dynamics, that analytically deriving a dynamic model is both cumbersome and often insufficiently accurate~\cite{Kim2021, Thuruthel2019, Giorelli2015, Gillespie2018}.
@@ -33,10 +34,10 @@ The form that the dynamic model takes can vary.\ For example, in~\textcite{Gille
 % online semiparametric ... modeling --> ? TODO: check form + algorithm
 
 
-Likewise, since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create a blackbox policy as in \autoref{sec:policies}).
+Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create a blackbox policy as in \autoref{sec:policies}).
 
 
-Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
+As a result, and contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
 
 
 \section{Incremental learning}\label{sec:incremental}
@@ -47,9 +48,17 @@ In \autoref{sec:policies} and~\ref{sec:DM} an overview was provided of how black
 \end{enumerate}
 In both scenarios, the control of the robot would be continually adaptive.\ However, only strategy 2 aligns with the incremental objectives of the adaptive control challenge.\ In addition, the complex dynamics and many degrees of freedom of soft robots might make it difficult to accurately represent all possible degradations in dynamics (such as damages) or state-space configurations of the robot, potentially causing an imbalance in the training dataset of strategy 1.\ Incrementally learning to adapt the control policy or dynamic model is thus far more desirable, since it can cope with unforeseen circumstances.
 
-\begin{table}
+Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, in \textcite{Zhou2022}, two policies are trained sequentially: one online and one offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline setting.
+
+\textcite{Nguyen2011}
+
+
+\section{Summary and conclusions}\label{sec:bb-summary}
+In \autoref{tab:DM} an overview of the discussed methods can be found.
+
+\begin{table}[!htb]
+    \normalsize % just to be sure
     \centering
-    \label{tab:DM}
     \begin{tabular}{p{4.5cm}|ccc}
         \toprule
         Reference                                & Dynamic model & Control policy                                               & Incremental \\
@@ -65,6 +74,7 @@ In both scenarios, the control of the robot would be continually adaptive.\ Howe
         \bottomrule
     \end{tabular}
     \caption{An overview blackbox methods and their ability to be implemented incrementally. For dynamic model learning methods, the control policy specifies the control scheme in which the model is used.}
+    \label{tab:DM}
 \end{table}
 
 \footnotetext[1]{For generating training samples}
