@@ -35,21 +35,21 @@ In both scenarios, the control of the robot would be continually adaptive.\ Howe
 \begin{table}
     \centering
     \label{tab:DM}
-    \begin{tabular}{l|ccc}
+    \begin{tabular}{p{4.5cm}|ccc}
         \toprule
-        Reference                                                              & Dynamic model form         & Control policy                      & Incremental \\
+        Reference                                                              & Dynamic model             & Control policy                      & Incremental \\
         \midrule
-        \textcite{Gillespie2018}                                               & State-space matrices       & MPC                                 & \checked    \\
-        \textcite{Thuruthel2019}\footnotemark[5]    & RNN                        & Open-loop + trajectory optimization & \checked    \\
-        \textcite{Lu2020}                                                      & Blackbox                   & MPC                                 & \checked    \\
+        \textcite{Gillespie2018}                                               & SS-matrices               & MPC                                 & \checked    \\
+        \textcite{Thuruthel2019}\footnotemark[5]                               & RNN                       & \parbox{4cm}{\centering Open-loop + trajectory optimization} & \checked    \\
+        \textcite{Lu2020}                                                      & Blackbox                  & MPC                                 & \checked    \\
         \textcite{Nguyen2011}                                                  & GPR~\footcite{Nguyen2009} & Feedforward                         & \checked    \\
-        \textcite{Romeres2016}                                                 & Blackbox                   & \textbf{TODO}                       & \checked    \\
-        \textcite{Nazeer2023}                                                  & Blackbox                   & Blackbox                            & \checked    \\
-        \textcite{Thuruthel2019}\footnote{After training on generated samples} & --                         & NN                                  & \checked    \\
-        \textcite{Alessi2023}                                                  & --                         & PPO                                 & --          \\
+        \textcite{Romeres2016}                                                 & Blackbox                  & \textbf{TODO}                       & \checked    \\ % TODO: control policy
+        \textcite{Nazeer2023}                                                  & Blackbox                  & Blackbox                            & \checked    \\
+        \textcite{Thuruthel2019}\footnote{After training on generated samples} & --                        & NN                                  & \checked    \\
+        \textcite{Alessi2023}                                                  & --                        & PPO                                 & --          \\
         \bottomrule
     \end{tabular}
-    \caption{some caption}
+    \caption{An overview blackbox methods and their ability to be implemented incrementally. For dynamic model learning methods, the control policy specifies the control scheme in which the model is used.}
 \end{table}
 
 \footnotetext[5]{{For generating training samples} }
