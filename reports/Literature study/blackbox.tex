@@ -31,7 +31,7 @@ Since the lifelong adapting nature of the techniques is embedded in the dynamic 
 \textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy.
 
 
-% reset-free LLL ... planning (model-based part) --> form: ensemble, controller: MPC/MPPI
+% reset-free LLL ... planning (model-based part) --> form: ensemble, controller: MPC/MPPI \ TODO: check with other Lu refrence
 % model learning with local GPR --> GP
 % ^ becomes incremantal in `incremental online sparsification...'
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
@@ -66,7 +66,7 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
         \textcite{Gijsberts2011}              & Linear model in random feature space & --                                                           & \checked      \\
         \textcite{Thuruthel2019}\footnotemark & RNN                                  & \parbox{4cm}{\centering Open-loop + trajectory optimization} & -- \\
         \textcite{Lu2020}                     & Model ensemble                       & MPC                                                          & \checked      \\ % TODO: check / correct with other Lu reference
-        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\
+        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\ % TODO verify model form, or replace by Nguyen2009
         \textcite{Romeres2016}                & Gaussian process                     & --                                                           & \checked      \\ % TODO: control policy
         \textcite{Nazeer2023}                 & RNN                                  & MLP                                                          & \footnotemark \\
         \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                                          & --            \\
