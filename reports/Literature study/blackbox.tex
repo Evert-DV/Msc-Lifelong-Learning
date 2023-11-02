@@ -4,16 +4,18 @@
 
 
 \section{Learning control policies}\label{sec:policies}
-A perfect example of a blackbox method is given by~\textcite{Alessi2023}.\ In their study they used Proximal Policy Optimization (PPO)~\cite{Schulman2017} to obtain a controller that can generalize over new dynamics and tasks.\ The
-controller is a blackbox: a desired trajectory, several measurements of the robots state, and other values of interest, such as the error of robot's end-effector tip, are used as inputs, resulting in a control action.\ It essentially acts in a manner akin to a feedback controller using an inverse dynamics model, only in this case it is unknown what is happening \emph{under the hood}.
+A perfect example of a blackbox method is given by~\textcite{Alessi2023}.\ In their study they used Proximal Policy Optimization (PPO)~\cite{Schulman2017} to obtain a feedforward neural network (FNN) that can generalize over new dynamics and tasks.\ The controller is a blackbox: a desired trajectory, several measurements of the robots state, and other values of interest, such as the error of robot's end-effector tip, are used as inputs, resulting in a control action.\ It essentially acts in a manner akin to a feedback controller using an inverse dynamics model, only in this case it is unknown what is happening \emph{under the hood}.
 
-The previous example is \emph{``perfect´´} in the sense that it perfectly embodies the simplistic nature of blackbox methods, however it is worth noting that other techniques, such as more complicated architectures or combinations of multiple models, can be used in combination with these blackbox methods.\ Such architectural modifications will be discussed in \autoref{ch:architecture}.
+The previous example is \emph{``perfect"} in the sense that it perfectly embodies the simplistic nature of blackbox methods, however it is worth noting that other techniques, such as more complicated architectures or combinations of multiple models, can be used in combination with these blackbox methods.\ Such architectural modifications will be discussed in \autoref{ch:architecture}.
+
+Apart from \textcite{Alessi2023}, several other examples of blackbox policies can be found in the literature.\\
+In \textcite{Zhou2022}, two policies are learned for the control of a small humanoid robot.\ Exact details on the inputs and outputs of the controllers are not provided, but both policies are probabilistic in nature, having the form $\pi(a\textbar s)$.
+
+\textcite{Thuruthel2019} use guided policy search~\cite{}\todo{citation [17] from thuruthel2019} over trajectory samples containing control actions for given regions in the state-space of a soft robotic manipulator.\ The resulting control policy is represented as a FNN which takes in current and previous states, as well as a desired target state, and returns the appropriate control action.
+
+For the control of a soft robotic arm, in \textcite{Nazeer2023}, the policy is represented by a multi-layer perceptron (MLP) which takes in the arm's current state\footnote{Rather, the sum of the state and a correction term, resulting from a separate network (\autoref{sec:expansions}), but that is not relevant for the basic idea of the policy.} and outputs a control action.\ The policy is trained using the Soft Actor-Critic (SAC)~\cite{}\todo{SAC reference} reïnforcement learning algorithm.
 
 
-% forgetting and imbalance (twice!) --> MPO + CRR
-% learning a controller ... and tasks --> PPO
-% model-based RL ... of soft robot (2nd part) --> ? (TODO: check algorithm)
-% policy adaptation ... robotic arm (policy itself) --> ? (TODO: check algorithm)
 % reset-free LLL ... planning (model-free part) --> ? (TODO: check algorithm)
 
 
@@ -22,23 +24,22 @@ One way of having continually adapting control for soft robots, is by implementi
 
 Blackbox methods also allow for learning both forward and inverse dynamic models and can thus be used in several control schemes.\ When learning a forward model, the robot's actions and resulting states can be used as the inputs and outputs, respectively, this is so-called \emph{direct modeling}~\cite{NguyenPeters2011}.\ In the case of learning inverse dynamic models, such direct approaches might not always be applicable, due to the multiple solutions that exist for the inverse dynamics of robots with redundant degrees of freedom.\ Instead, an \emph{indirect-modeling} approach can be taken, where the model is trained to minimize the error of the feedback controller~\cite{NguyenPeters2011}.
 
-The form that the dynamic model takes can vary.\ For example, in~\textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ to the inputs are made available during the process of backpropagation and can be used in matrices $A$ and $B$ to form a more interpretable state-space system.\ In~\textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form, and is directly used to generate trajectories in open-loop control. \todo{list all other methods that use blackbox/interpretable models? instead of just illustrative examples} % TODO: list methods that use blackbox/interpretable models?
+The form that the dynamic model takes can vary.\ For example, in~\textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ to the inputs are made available during the process of backpropagation and can be used in matrices $A$ and $B$ to form a more interpretable state-space system.\ In~\textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.
 
-% model-based RL ... of soft robot (1st part) --> ? (TODO: check algorithm)
-% policy adaptation ... robotic arm (data driven model) --> NN (TODO: check algorithm)
+Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create the blackbox policy mentioned in \autoref{sec:policies}).\ More examples can be found in the literature.
+
+\textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy.
+
+
 % reset-free LLL ... planning (model-based part) --> form: ensemble, controller: MPC/MPPI
-% Learning nonlinear ... with NN's --> NN > SS matrices > MPC
 % model learning with local GPR --> GP
-% ^ becomes incremantal in "incremental online sparsification..."
+% ^ becomes incremantal in `incremental online sparsification...'
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
 % online semiparametric ... modeling --> ? TODO: check form + algorithm
 
 
-Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create a blackbox policy as in \autoref{sec:policies}).
-
-
 As a result, and contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
-
+\todo{rethink order of paragraphs}
 
 \section{Incremental learning}\label{sec:incremental}
 In \autoref{sec:policies} and~\ref{sec:DM} an overview was provided of how blackbox machine learning techniques can be used to model either control policies or dynamic models (to be used in control policies).\ The choice of machine learning method can be important when it comes to the desired incremental nature of the learning techniques.\ To illustrate, consider these two main strategies in continually adaptive control:
@@ -48,9 +49,7 @@ In \autoref{sec:policies} and~\ref{sec:DM} an overview was provided of how black
 \end{enumerate}
 In both scenarios, the control of the robot would be continually adaptive.\ However, only strategy 2 aligns with the incremental objectives of the adaptive control challenge.\ In addition, the complex dynamics and many degrees of freedom of soft robots might make it difficult to accurately represent all possible degradations in dynamics (such as damages) or state-space configurations of the robot, potentially causing an imbalance in the training dataset of strategy 1.\ Incrementally learning to adapt the control policy or dynamic model is thus far more desirable, since it can cope with unforeseen circumstances.
 
-Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, in \textcite{Zhou2022}, two policies are trained sequentially: one online and one offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline setting.
-
-\textcite{Nguyen2011}
+Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, the two policies from \textcite{Zhou2022} mentioned in \autoref{sec:policies} are trained sequentially: one online and the other offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online interaction setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline distillation setting (see \autoref{}). % TODO: reference chapter
 
 
 \section{Summary and conclusions}\label{sec:bb-summary}
@@ -61,22 +60,25 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
     \centering
     \begin{tabular}{p{4.5cm}|ccc}
         \toprule
-        Reference                                & Dynamic model & Control policy                                               & Incremental \\
+        Reference                             & Dynamic model                        & Control policy                                               & Incremental   \\
         \midrule
-        \textcite{Gillespie2018}                 & SS-matrices   & MPC                                                          & \checked    \\
-        \textcite{Thuruthel2019}\footnotemark[1] & RNN           & \parbox{4cm}{\centering Open-loop + trajectory optimization} & \checked    \\
-        \textcite{Lu2020}                        & Blackbox      & MPC                                                          & \checked    \\
-        \textcite{Nguyen2011}                    & GPR           & Feedforward                                                  & \checked    \\
-        \textcite{Romeres2016}                   & Blackbox      & \textbf{TODO}                                                & \checked    \\ % TODO: control policy
-        \textcite{Nazeer2023}                    & Blackbox      & Blackbox                                                     & \checked    \\
-        \textcite{Thuruthel2019}\footnotemark[2] & --            & NN                                                           & \checked    \\
-        \textcite{Alessi2023}                    & --            & PPO                                                          & --          \\
+        \textcite{Gillespie2018}              & SS-matrices                          & MPC                                                          & \checked      \\
+        \textcite{Gijsberts2011}              & Linear model in random feature space & --                                                           & \checked      \\
+        \textcite{Thuruthel2019}\footnotemark & RNN                                  & \parbox{4cm}{\centering Open-loop + trajectory optimization} & -- \\
+        \textcite{Lu2020}                     & Model ensemble                       & MPC                                                          & \checked      \\ % TODO: check / correct with other Lu reference
+        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\
+        \textcite{Romeres2016}                & Gaussian process                     & --                                                           & \checked      \\ % TODO: control policy
+        \textcite{Nazeer2023}                 & RNN                                  & MLP                                                          & \footnotemark \\
+        \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                                          & --            \\
+        \textcite{Alessi2023}                 & --                                   & FNN                                                          & --            \\
+        \textcite{Zhou2022}                   & --                                   & Probabilistic model                                          & \checked      \\
         \bottomrule
     \end{tabular}
     \caption{An overview blackbox methods and their ability to be implemented incrementally. For dynamic model learning methods, the control policy specifies the control scheme in which the model is used.}
     \label{tab:DM}
 \end{table}
 
-\footnotetext[1]{For generating training samples}
-\footnotetext[2]{After training on generated samples}
-\todo{footnotes, checkmarks, table size, consistency: mention the form (eg. NN, gaussian process, ... or just 'blackbox'?) or the training algorithm (eg. PPO)} % TODO: checkmarks, table size
+\footnotetext[1]{Used for generating training samples}
+\footnotetext[2]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
+\footnotetext[3]{After training on generated samples}
+\todo{footnotes, checkmarks, table size, consistency: mention the form (eg. NN, gaussian process, ... or just 'blackbox'?, check two Lu2020 and Lu2019 refrences) or the training algorithm (eg. PPO)} % TODO: checkmarks, table size
