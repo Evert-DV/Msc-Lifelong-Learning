@@ -52,13 +52,15 @@ In both scenarios, the control of the robot would be continually adaptive.\ Howe
 
 Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, the two policies from \textcite{Zhou2022} mentioned in \autoref{sec:policies} are trained sequentially: one online and the other offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online interaction setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline distillation setting (see \autoref{}\todo{reference chapter}). % TODO: reference chapter
 
-% TODO: gillespie 2018
-% TODO: Gijsbrechts
+To learn the dynamic model from \textcite{Gijsberts2011}, the authors implement Ridge Regression (a linear regression method that aims at keeping the parameters as small as possible) incrementally, whereas normally it is used in a batch-learning setting.\ They achieve this by employing a modified numerical approach that is based on the QR algorithm~\cite{}\todo{citation [17] from \textcite{Gijsberts2011}}, a technique in linear algebra that can process new information incrementally using Givens rotations (a process that is particularly efficient for online learning scenarios)~\cite{}\todo{citation [16] in \textcite{Gijsberts2011}}.\ This enables real-time learning as new data comes in without recalculating the full model.
+
 % TODO: Lu 2020
+\textcite{Lu2020} implement both offline and online training, with the potential for the entire method to be implemented online.\ In fact, it is well known that SAC - the algorithm used for updating the skill-space distribution and the policy - is very suitable for online updates.\ When it comes to the dynamic model, they mention that is incrementally updated through interactions with the environment, but do not provide any details on the algorithm used for training the dynamic model.
+
 % TODO: Nguyen 2008a
 % TODO: NGuyen 2011a
 % TODO: romeres
-% TODO: Zhou
+% TODO: Zhou (extra?)
 
 
 \section{Summary and conclusions}\label{sec:bb-summary}
@@ -71,12 +73,12 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
         \toprule
         Reference                             & Dynamic model                        & Control policy                                               & Incremental   \\
         \midrule
-        \textcite{Gillespie2018}              & SS-matrices                          & MPC                                                          & \checked      \\
+        \textcite{Gillespie2018}              & SS-matrices                          & --                                                           & \checked      \\
         \textcite{Gijsberts2011}              & Linear model in random feature space & --                                                           & \checked      \\
         \textcite{Thuruthel2019}\footnotemark & RNN                                  & \parbox{4cm}{\centering Open-loop + trajectory optimization} & -- \\
         \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                                                    & \checked      \\ % TODO: check incremental
         \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\ % TODO verify model form, or replace by Nguyen2009
-        \textcite{Romeres2016}                & Gaussian process                     & feedforward + feedback                                       & \checked      \\ % TODO: control policy
+        \textcite{Romeres2016}                & Gaussian process                     & feedforward + feedback                                       & \checked      \\
         \textcite{Nazeer2023}                 & RNN                                  & MLP                                                          & \footnotemark \\
         \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                                          & --            \\
         \textcite{Alessi2023}                 & --                                   & FNN                                                          & --            \\
