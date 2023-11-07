@@ -1,6 +1,7 @@
 \chapter{Blackbox methods}\label{ch:blackbox}
-% TODO: define "blackbox"
-\todo{general intro, define "blackbox"}
+The term `blackbox' in the context of lifelong learning techniques describes models that are inherently `data-driven', requiring vast datasets to predict outcomes while often lacking in interpretability.\ These methods differ from traditional approaches, where clever architectural approaches or intuitive mathematical tricks might be exploited.\ Instead, so-called blackbox methods trade transparency for performance, as they process and learn from information in hard-to-interpret yet effective ways.
+
+In this chapter, an overview is provided of how blackbox methods can be used as either building blocks for lifelong learning or to solve the lifelong learning challenge as complete solutions.
 
 
 \section{Learning control policies}\label{sec:policies}
@@ -34,13 +35,13 @@ Since the lifelong adapting nature of the techniques is embedded in the dynamic 
 In and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ % TODO: redundant references?
 The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
 
-\todo{Explain \textcite{Gijsberts2011}} % TODO: explain gijsberts
+\todo{Add paragraph on \textcite{Gijsberts2011}} % TODO: explain gijsberts
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
 
 \textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop (a) semi-parametric model(s) that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
 
 Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
-\todo{rethink order of paragraphs}
+\todo{rethink order of paragraphs?}
 
 
 \section{Incremental learning}\label{sec:incremental}
@@ -57,11 +58,10 @@ To learn the dynamic model from \textcite{Gijsberts2011}, the authors implement 
 
 \textcite{Lu2020} implement both offline and online training, with the potential for the entire method to be implemented online.\ In fact, it is well known that SAC - the algorithm used for updating the skill-space distribution and the policy - is very suitable for online updates.\ When it comes to the dynamic model, they mention that is incrementally updated through interactions with the environment, but do not provide any details on the algorithm used for training the dynamic model.
 
-% TODO: NGuyen 2011a
 In \textcite{Nguyen2011} the authors not only update their model incrementally, but they also manage to do it in real-time.\ This is achieved by using incremental Gaussian process regression algorithm, which uses only a select number of data points to fit a model.\ In addition, they introduce an efficient way to incrementally update the dictionary of datapoints in a way that it maintains the most informative points for a given budget.\ These two techniques are key to reducing the computational demand and allowing for real-time updates.
 
-% TODO: romeres
 The semi-parametric models from \textcite{Romeres2016} are learned using the Recursive Least-Squares algorithm~\cite{}\todo{RLS citation}, which inherently updates the model incrementally.\ Much alike \textcite{Gijsberts2011}, this method uses a numerical trick from the field of adaptive filtering (Cholesky-based updates) to improve efficiency and enable updates in real-time.
+
 
 \section{Summary}\label{sec:bb-summary}
 In \autoref{tab:DM} an overview of the discussed methods can be found.
@@ -89,7 +89,7 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
     \label{tab:DM}
 \end{table}
 
-\footnotetext[1]{Used for generating training samples}
-\footnotetext[2]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
-\footnotetext[3]{After training on generated samples}
-\todo{add LU2019 to chapter, footnotes, checkmarks, table size, add the training algorithm (eg. PPO)?} % TODO: see \todo
+\footnotetext[2]{Used for generating training samples}
+\footnotetext[3]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
+\footnotetext[4]{After training on generated samples}
+\todo{add Lu2019 to chapter, table size, add the training algorithm to the table (eg. PPO)?} % TODO: see \todo
