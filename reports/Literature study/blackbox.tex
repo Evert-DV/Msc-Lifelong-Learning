@@ -31,7 +31,7 @@ Since the lifelong adapting nature of the techniques is embedded in the dynamic 
 
 \textcite{Lu2020} was discussed in \autoref{sec:policies} where it was briefly mentioned that training rollouts for the policies were generated using a dynamic model.\ This model is in fact also a data-driven model, being an ensemble of neural networks and predicting the next state $s'$ based on the current state $s$ and a control action yielded by the policy $\pi_{\theta}$.
 
-In both \textcite{Nguyen2008a} and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
+In and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
 
 \todo{Explain \textcite{Gijsberts2011}}
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
@@ -54,12 +54,13 @@ Not all the previously discussed methods are - or have the possibility to be - i
 
 To learn the dynamic model from \textcite{Gijsberts2011}, the authors implement Ridge Regression (a linear regression method that aims at keeping the parameters as small as possible) incrementally, whereas normally it is used in a batch-learning setting.\ They achieve this by employing a modified numerical approach that is based on the QR algorithm~\cite{}\todo{citation [17] from \textcite{Gijsberts2011}}, a technique in linear algebra that can process new information incrementally using Givens rotations (a process that is particularly efficient for online learning scenarios)~\cite{}\todo{citation [16] in \textcite{Gijsberts2011}}.\ This enables real-time learning as new data comes in without recalculating the full model.
 
-% TODO: Lu 2020
 \textcite{Lu2020} implement both offline and online training, with the potential for the entire method to be implemented online.\ In fact, it is well known that SAC - the algorithm used for updating the skill-space distribution and the policy - is very suitable for online updates.\ When it comes to the dynamic model, they mention that is incrementally updated through interactions with the environment, but do not provide any details on the algorithm used for training the dynamic model.
 
-% TODO: Nguyen 2008a
 % TODO: NGuyen 2011a
+In \textcite{Nguyen2011} the authors not only update their model incrementally, but they also manage to do it in real-time.\ This is achieved by using incremental Gaussian process regression algorithm, which uses only a select number of data points to fit a model.\ In addition, they introduce an efficient way to incrementally update the dictionary of datapoints in a way that it maintains the most informative points for a given budget.\ These two techniques are key to reducing the computational demand and allowing for real-time updates.
+
 % TODO: romeres
+
 % TODO: Zhou (extra?)
 
 
