@@ -25,20 +25,22 @@ Blackbox methods also allow for learning both forward and inverse dynamic models
 
 The form that the dynamic model takes can vary.\ For example, in~\textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ to the inputs are made available during the process of backpropagation and can be used in matrices $A$ and $B$ to form a more interpretable state-space system.\ In~\textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.
 
-Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create the blackbox policy mentioned in \autoref{sec:policies}).\ More examples can be found in the literature.
+Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from~\textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from~\textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step in order to create the blackbox policy mentioned in \autoref{sec:policies}).\ More examples several blackbox dynamic models and their control scheme can be found in the literature.
 
-\textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy.
+\textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy (\autoref{sec:policies}).
+
+\textcite{Lu2020} was discussed in \autoref{sec:policies} where it was briefly mentioned that training rollouts for the policies were generated using a dynamic model.\ This model is in fact also a data-driven model, being an ensemble of neural networks and predicting the next state $s'$ based on the current state $s$ and a control action yielded by the policy $\pi_{\theta}$.
+
+In both \textcite{Nguyen2008a} and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian Process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
 
 
-% reset-free LLL ... planning (model-based part) --> form: ensemble, controller: MPC/MPPI \ TODO: check with other Lu refrence
-% model learning with local GPR --> GP
-% ^ becomes incremantal in `incremental online sparsification...'
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
 % online semiparametric ... modeling --> ? TODO: check form + algorithm
 
 
-As a result, and contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
+Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
 \todo{rethink order of paragraphs}
+
 
 \section{Incremental learning}\label{sec:incremental}
 In \autoref{sec:policies} and~\ref{sec:DM} an overview was provided of how blackbox machine learning techniques can be used to model either control policies or dynamic models (to be used in control policies).\ The choice of machine learning method can be important when it comes to the desired incremental nature of the learning techniques.\ To illustrate, consider these two main strategies in continually adaptive control:
@@ -48,7 +50,7 @@ In \autoref{sec:policies} and~\ref{sec:DM} an overview was provided of how black
 \end{enumerate}
 In both scenarios, the control of the robot would be continually adaptive.\ However, only strategy 2 aligns with the incremental objectives of the adaptive control challenge.\ In addition, the complex dynamics and many degrees of freedom of soft robots might make it difficult to accurately represent all possible degradations in dynamics (such as damages) or state-space configurations of the robot, potentially causing an imbalance in the training dataset of strategy 1.\ Incrementally learning to adapt the control policy or dynamic model is thus far more desirable, since it can cope with unforeseen circumstances.
 
-Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, the two policies from \textcite{Zhou2022} mentioned in \autoref{sec:policies} are trained sequentially: one online and the other offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online interaction setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline distillation setting (see \autoref{}). % TODO: reference chapter
+Not all the previously discussed methods are - or have the possibility to be - implemented in an incremental manner.\ As an example, the two policies from \textcite{Zhou2022} mentioned in \autoref{sec:policies} are trained sequentially: one online and the other offline.\ Each of these policies required different training/optimization algorithms for their specific setting, in this case Maximum a Posteriori Policy Optimization (MPO)~\cite{Abdolmaleki2018} for the online interaction setting, and Critic Regularized Regression (CRR)~\cite{Wang2020} for the offline distillation setting (see \autoref{}\todo{reference chapter}). % TODO: reference chapter
 
 
 \section{Summary and conclusions}\label{sec:bb-summary}
@@ -64,7 +66,7 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
         \textcite{Gillespie2018}              & SS-matrices                          & MPC                                                          & \checked      \\
         \textcite{Gijsberts2011}              & Linear model in random feature space & --                                                           & \checked      \\
         \textcite{Thuruthel2019}\footnotemark & RNN                                  & \parbox{4cm}{\centering Open-loop + trajectory optimization} & -- \\
-        \textcite{Lu2020}                     & Model ensemble                       & MPC                                                          & \checked      \\ % TODO: check / correct with other Lu reference
+        \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                                                    & \checked      \\ % TODO: check incremental
         \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\ % TODO verify model form, or replace by Nguyen2009
         \textcite{Romeres2016}                & Gaussian process                     & --                                                           & \checked      \\ % TODO: control policy
         \textcite{Nazeer2023}                 & RNN                                  & MLP                                                          & \footnotemark \\
@@ -80,4 +82,4 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
 \footnotetext[1]{Used for generating training samples}
 \footnotetext[2]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
 \footnotetext[3]{After training on generated samples}
-\todo{footnotes, checkmarks, table size, consistency: mention the form (eg. NN, gaussian process, ... or just 'blackbox'?, check two Lu2020 and Lu2019 refrences) or the training algorithm (eg. PPO)} % TODO: checkmarks, table size
+\todo{add LU2019 to chapter, footnotes, checkmarks, table size, add the training algorithm (eg. PPO)?} % TODO: see \todo
