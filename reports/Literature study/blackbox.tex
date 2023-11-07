@@ -36,7 +36,7 @@ In both \textcite{Nguyen2008a} and \textcite{Nguyen2011}, the inverse dynamic mo
 \todo{Explain \textcite{Gijsberts2011}}
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
 
-\textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop semi-parametric models that combine the strengths of both parametric and non-parametric models.
+\textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop (a) semi-parametric model(s) that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
 
 Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
 \todo{rethink order of paragraphs}
@@ -68,7 +68,7 @@ In \autoref{tab:DM} an overview of the discussed methods can be found.
         \textcite{Thuruthel2019}\footnotemark & RNN                                  & \parbox{4cm}{\centering Open-loop + trajectory optimization} & -- \\
         \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                                                    & \checked      \\ % TODO: check incremental
         \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                                                  & \checked      \\ % TODO verify model form, or replace by Nguyen2009
-        \textcite{Romeres2016}                & Gaussian process                     & --                                                           & \checked      \\ % TODO: control policy
+        \textcite{Romeres2016}                & Gaussian process                     & feedforward + feedback                                       & \checked      \\ % TODO: control policy
         \textcite{Nazeer2023}                 & RNN                                  & MLP                                                          & \footnotemark \\
         \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                                          & --            \\
         \textcite{Alessi2023}                 & --                                   & FNN                                                          & --            \\
