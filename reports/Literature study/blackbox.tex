@@ -31,12 +31,12 @@ Since the lifelong adapting nature of the techniques is embedded in the dynamic 
 
 \textcite{Lu2020} was discussed in \autoref{sec:policies} where it was briefly mentioned that training rollouts for the policies were generated using a dynamic model.\ This model is in fact also a data-driven model, being an ensemble of neural networks and predicting the next state $s'$ based on the current state $s$ and a control action yielded by the policy $\pi_{\theta}$.
 
-In both \textcite{Nguyen2008a} and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian Process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
+In both \textcite{Nguyen2008a} and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen2008a, Nguyen2009}\todo{redundant references?}.\ The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
 
-
+\todo{Explain \textcite{Gijsberts2011}}
 % incremental learning ... random features --> ridge regression (NN?) TODO: check form
-% online semiparametric ... modeling --> ? TODO: check form + algorithm
 
+\textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop semi-parametric models that combine the strengths of both parametric and non-parametric models.
 
 Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{NguyenPeters2011}.\ For more complex tasks, a more intricate control system might be warranted.
 \todo{rethink order of paragraphs}
