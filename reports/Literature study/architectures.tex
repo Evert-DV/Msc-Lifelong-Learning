@@ -1,17 +1,28 @@
 \chapter{Learning architectures}\label{ch:architecture}
 Blackbox methods for lifelong learning are promising approaches to achieve continually adaptive control, but are hard-to-interpret.\ What other techniques can be implemented that are more intuitive in nature?
 
-Well-designed control architectures can either enable or facilitate lifelong learning, whether the control schemes use blackbox models or more traditional methods.\ For example, some techniques use two or more blackbox models, where the idea is to have each model deal with a separate challenge of the lifelong learning goal.\ Other architectural methods aim to expand existing control schemes or policies in order to enable them to continually adapt.
+Well-designed control and learning architectures can either enable or facilitate lifelong learning, whether the control schemes use blackbox models or more traditional methods.\ For example, some techniques use two or more blackbox models, where the idea is to have each model deal with a separate challenge of the lifelong learning goal.\ Other architectural methods aim to expand existing control schemes or policies in order to enable them to continually adapt.
 
 In this chapter, these two main strategies will be further explored in the literature.
 \comment{Added introduction to chapter}
 
 
 \section{Dual architectures}\label{sec:dual}
-~\cite{Mallya2018, Schwarz2018, Shin2017, Lu2019, Lu2020, Sprechmann2018}.\\
-Under `dual architectures', the methods that have separate module for solving different aspects of the lifelong learning challenge are gathered.\ `Dual' is used because these methods employ on average only two main modules.\ Generally, these dual architectures often exist either of a policy/control module and some sort of knowledge base that stores previous experiences and is used to inform the policy (refer to \autoref{ch:storage} for details on how knowledge bases can differ in implementation), or two (or more) policies that are in turn capable of handling low uncertainty and high uncertainty situations.
+Under `dual architectures', the methods that have separate modules for solving different aspects of the lifelong learning challenge are gathered.\ The term `dual' is used because these methods (mostly) employ only two main modules.\ Generally, these dual architectures often exist either of a policy/control module and some sort of knowledge base that stores previous experiences and is used to inform the policy (refer to \autoref{ch:storage} for details on how knowledge bases can differ in implementation), or two (or more) policies that are in turn capable of handling low uncertainty and high uncertainty situations.
 
+\todo{\cite{Wang2022}} % TODO: LLiRL w/ online BO
 
+\todo{\cite{Shin2017}} % TODO: Continual learning w/ Deep Generative replay
+
+\todo{\cite{Schwarz2018}} % TODO: Progress & compress
+
+\todo{\cite{Sprechmann2018}} % TODO: Memory-based parameter adaptation
+
+\todo{\cite{Lu2019}} % TODO: Adaptive online planning
+
+\todo{\cite{Lu2020}} % TODO: Reset-free LL w/ skill-space planning
+
+\todo{\cite{Zhou2022}} % TODO: Forgetting and imbalance in Robot LL with off-policy data
 
 \section{Architectural expansions}\label{sec:expansions}
 ~\cite{Chatzilygeroudis2016, Nazeer2023}.
