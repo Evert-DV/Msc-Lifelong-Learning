@@ -6,11 +6,19 @@ Well-designed control and learning architectures can either enable or facilitate
 In this chapter, these two main strategies will be further explored in the literature.
 \comment{Added introduction to chapter}
 
-\todo{add section on ``general" adaptive control?} % TODO: sec adaptive control
+
+\section{Traditional adaptive control architectures}\label{sec:adaptive-control}
+Adaptive control is not a new concept.\
 
 
 \section{Dual architectures}\label{sec:dual}
-Under `dual architectures', the methods that have separate modules for solving different aspects of the lifelong learning challenge are gathered.\ The term `dual' is used because these methods (mostly) employ only two main modules.\ Generally, these dual architectures often exist either of a policy/control module and some sort of knowledge base that stores previous experiences and is used to inform the policy (refer to \autoref{ch:storage} for details on how knowledge bases can differ in implementation), or two (or more) policies that are in turn capable of handling low uncertainty and high uncertainty situations.
+Under `dual architectures', the methods that have separate modules for solving different aspects of the lifelong learning challenge are gathered.\ The term `dual' is used here in a very broad sense because each module might ofcourse be a grouping of various techniques with intricate architectures.\ However, studying the literature, it can be found that most of the methods discussed here can be broken down into two main modules.\ Generally, these dual architectures often exist either of a policy/control module in combination with some type of knowledge base used for storing previous experiences and informing the policy (refer to \autoref{ch:storage} for details on how knowledge bases can differ in implementation), or two (or more) control policies that are each in turn capable of handling low uncertainty and high uncertainty situations.
+
+To illustrate how these modules can be a very broad concept, consider a knowledge base: A knowledge base must first and foremost store knowledge, but additionally also maintain and update this library.\ Furthermore, the knowledge base should be capable of categorizing new observations in relation to its library.\ All these capabilities are seldom performed by a single module, but the techniques used vary wildly between different implementations.\ It is therefore not very interesting to differentiate between each different implementation in this chapter, but rather use the overarching term `knowledge base' and discuss the more intricate details in \autoref{ch:storage}.
+
+Having established the broad framework and significance of dual architectures, examples from literature that illustrate how these modular approaches have been effectively implemented can be discussed.
+
+
 
 \todo{\cite{Wang2022}} % TODO: LLiRL w/ online BO
 
@@ -18,13 +26,15 @@ Under `dual architectures', the methods that have separate modules for solving d
 
 \todo{\cite{Schwarz2018}} % TODO: Progress & compress
 
-\todo{\cite{Sprechmann2018}} % TODO: Memory-based parameter adaptation
-
 \todo{\cite{Lu2019}} % TODO: Adaptive online planning
 
 \todo{\cite{Lu2020}} % TODO: Reset-free LL w/ skill-space planning
 
 \todo{\cite{Zhou2022}} % TODO: Forgetting and imbalance in Robot LL with off-policy data
 
+
 \section{Architectural expansions}\label{sec:expansions}
+`Architectural expansions' is a grouping of methods where an already functional control scheme or policy is enhanced by adding one or more modules to the scheme, enabling it to learn and/or adapt continually without actually altering the preexisting policy.\ The idea behind such techniques was already discussed in \autoref{sec:adaptive-control}, but here the focus will be on approaches that incorporate more of a learning aspect rather than simply adapting.
 ~\cite{Chatzilygeroudis2016, Nazeer2023, Sun2011}.
+
+\todo{\cite{Sprechmann2018}} % TODO: Memory-based parameter adaptation
