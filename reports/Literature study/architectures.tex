@@ -1,10 +1,9 @@
-\chapter{Learning Architectures}\label{ch:architecture}
+\chapter{Learning Architectures}\label{ch:architecture}\comment{Added: entire chapter}
 Blackbox methods for lifelong learning are promising approaches to achieve continually adaptive control, but are hard-to-interpret.\ What other techniques can be implemented that are more intuitive in nature?
 
 Well-designed control and learning architectures can either enable or facilitate lifelong learning, whether the control schemes use blackbox models or more traditional methods.\ For example, some techniques use two or more blackbox models, where the idea is to have each model deal with a separate challenge of the lifelong learning goal.\ Other architectural methods aim to expand existing control schemes or policies to enable them to continually adapt.
 
 In this chapter, these two main strategies will be further explored in the literature. % TODO: update sentence (sec on trad methods)
-\comment{Added introduction to chapter}
 
 
 \section{Traditional Adaptive Control Architectures}\label{sec:adaptive-control}
@@ -30,10 +29,18 @@ In \textcite{Zhou2022} the development of a policy exists of two phases: an onli
 
 
 \section{Architectural Expansions}\label{sec:expansions}
-`Architectural expansions' is a grouping of methods where an already functional control scheme or policy is enhanced by adding one or more modules to the scheme, enabling it to learn and/or adapt continually without actually altering the preexisting policy.\ The idea behind such techniques was already discussed in \autoref{sec:adaptive-control}, but here the focus will be on approaches that incorporate more of a learning aspect rather than simply adapting.
-~\cite{Chatzilygeroudis2016, Nazeer2023, Sun2011}.
+THis section group methods where an already functional control scheme or policy is enhanced by adding one or more modules to the scheme, enabling it to learn and/or adapt continually without actually altering the preexisting policy.\ The idea behind such techniques was already discussed in \autoref{sec:adaptive-control}, but here the focus will be on approaches that incorporate more of a learning aspect rather than simply adapting.
+
+\todo{\cite{Nazeer2023}} % TODO: Policy adaptation using ORN
+
+\todo{\cite{Sun2011}} % TODO: NNSMAOFC
+
+A planner of choice is used to control a robot in \textcite{Chatzilygeroudis2016}.\ However, once a significant drop in performance is detected (e.g.,\ due to unexpected damage), the method employs various extra modules to counter this performance-drop.\ Based on the \emph{Intelligent Trial and Error} algorithm (IT\&E)~\cite{Cully2015}, the authors use MAP-elites~\cite[refer to \autoref{ch:storage}]{Mouret2015} offline to create a behavior-performance map of atomic behaviors the robot could execute.\ Contrary to standard IT\&E, the \emph{performance} of a behavior is not a qualitative measure, but rather a Gaussian Process that describes the relative outcome of the behavior (termed the \emph{Generic Reward} by the authors) and is aimed to be generic enough so that it is task-independent.\ A separate \emph{Reward Selection Layer} (RSL) chooses the actual qualitative measure\footnote{The authors do not provide any details on \emph{how} this is achieved}.\\
+As an illustrative example, a \emph{Generic Reward} could be the relative position after executing an atomic behavior.\ The planner provides a target position to reach, and the RSL chooses the Euclidian distance to this point as a performance measure.\ Now, the behavior-performance map can be searched for the atomic behavior that will maximize the reward for the outcome of executing this behavior (i.e., the maximum reward of the \emph{Generic Reward} of the behavior).\ The chosen behavior is executed (in the real world, or using a function to simulate the outcome), the behavior and its outcome are used to update the Gaussian Processes, after which this process is repeated until the performance is
+% difference between afun and the GPs in GR?? <--> updating the GPs on the input and output of the same GPs??
+
+\todo{\cite{Chatzilygeroudis2016}} % TODO: SELA-Adapt
 
 \todo{\cite{Sprechmann2018}} % TODO: Memory-based parameter adaptation
 
-As discussed in \autoref{sec:policies}.
 \todo{\cite{Lu2020}} % TODO: Reset-free LL w/ skill-space planning
