@@ -17,15 +17,16 @@ To accomplish a good performance over several different classification tasks, \t
 
 As described in \autoref{sec:dual}, \textcite{Sprechmann2018} introduce memory-based parameter adaptation, where a memory module $M$ provides context to a network $g_\theta$, allowing it to appropriately adapt its parameters for better performance.\ This memory contains key-value pairs $(h_j,\,v_j)$, obtained during training and given by the embedding networks output and the training labels, respectively, i.e., $h_j = f_{\gamma}(x_j)$ and $v_j = y_j$.\ This means that the keys are represented by abstract feature vectors, the values are dependent on the task (e,g., one-hot encoded class labels for classification, target values for regression), and memory $M$ is thus a higher-dimensional space spanned by these keys and values.\
 
-\textcite{Schwarz2018} use a knowledge base
+\textcite{Schwarz2018} use a knowledge base in the form of a separate policy $\pi_{KB}$.\ This policy would thus be a neural network and is obtained through knowledge distillation\todo{citation needed?}, a process where the outputs of one model are used as labels to train a second model.\ Active policies can reference the knowledge base to accelerate learning (\autoref{sec:retrieval}).\ When it is time to store a newly learned policy $\pi_t$, the outputs of the knowledge base's policy $\pi^{KB}_{t+1}$ are trained to approximate the outputs of the active policy $\pi$, whilst also referencing $\pi^{KB}_{t}$ to prevent drastic forgetting of old policies (\autoref{sec:KB-maintainance}).\
+
+
 
 % not storing, but mimicing --> deep generative replay
 % retaining experiences (buffers w/ tuples)
-% Progress & compress (store distilled policy)
 % LLIRL (library of environment and policy parameters)
 
 
-\section{Retrieval and Detecting distributional shifts}\label{sec:retrieval}
+\section{Retrieval and Detecting Distributional Shifts}\label{sec:retrieval}
 % online sparsification (independance test)
 % expertgate (auto-encoder per model, apply to new data and check recontruction loss)
 % MPA (K nearest neighbours to a query)
@@ -34,7 +35,7 @@ As described in \autoref{sec:dual}, \textcite{Sprechmann2018} introduce memory-b
 % P&C (layerwise informed by kb policy)
 
 
-\section{Maintaining the knowledge base}\label{sec:KB-maintainance}
+\section{Maintaining the Knowledge Base}\label{sec:KB-maintainance}
 % Map Elites (occupy or replace based on performance, fixed budget)
 % online sparsification (updat dependance between vectors)
 % MPA (circular overwrite, fixed budget)
