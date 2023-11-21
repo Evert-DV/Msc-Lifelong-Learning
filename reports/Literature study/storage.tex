@@ -1,4 +1,4 @@
-\chapter{Storage and Retrieval}\label{ch:storage}
+\chapter{Storage and Retrieval}\label{ch:storage}\comment{Added: chapter}
 In \autoref{sec:dual}, many of the methods discussed employ a dual architecture where one of the modules is somehow responsible for retaining previous experiences, often termed the `knowledge base'.\ It was also mentioned that the general idea of using a knowledge base might be shared amongst many lifelong learning techniques, but the implementation varies wildly between them.\ A knowledge base does not always consist of a single module, but can have a complex architecture in and of itself; something akin to a library where the knowledge is stored, and a librarian who can organize and retrieve the knowledge correctly.
 
 This chapter will aim to provide an overview of the many different shapes and forms such libraries can take, as well as the manner in which librarians might keep them organized.
@@ -15,10 +15,12 @@ In \autoref{sec:expansions} it was mentioned that \textcite{Chatzilygeroudis2016
 
 To accomplish a good performance over several different classification tasks, \textcite{Aljundi2016} train multiple models: one per task.\ These models, termed `Experts', are stored in the knowledge base, in a manner most fitting for the model type (e.g., a FNN as layer architectures with corresponding weights and biases).\ The purpose of  his knowledge base is to identify a fitting model for a given task and only selectively load this model into memory.\ Furthermore, when a new task is encountered, the most relevant `Expert' can be loaded in to function as a prior for training a new `Expert'.
 
+As described in \autoref{sec:dual}, \textcite{Sprechmann2018} introduce memory-based parameter adaptation, where a memory module $M$ provides context to a network $g_\theta$, allowing it to appropriately adapt its parameters for better performance.\ This memory contains key-value pairs $(h_j,\,v_j)$, obtained during training and given by the embedding networks output and the training labels, respectively, i.e., $h_j = f_{\gamma}(x_j)$ and $v_j = y_j$.\ This means that the keys are represented by abstract feature vectors, the values are dependent on the task (e,g., one-hot encoded class labels for classification, target values for regression), and memory $M$ is thus a higher-dimensional space spanned by these keys and values.\
+
+\textcite{Schwarz2018} use a knowledge base
 
 % not storing, but mimicing --> deep generative replay
 % retaining experiences (buffers w/ tuples)
-% memory-based PA (store key & value pairs)
 % Progress & compress (store distilled policy)
 % LLIRL (library of environment and policy parameters)
 
