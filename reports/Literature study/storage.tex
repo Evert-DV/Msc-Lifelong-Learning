@@ -1,8 +1,18 @@
-\chapter{Storage and retrieval}\label{ch:storage}
+\chapter{Storage and Retrieval}\label{ch:storage}
+In \autoref{sec:dual}, many of the methods discussed employ a dual architecture where one of the modules is somehow responsible for retaining previous experiences, often termed the `knowledge base'.\ It was also mentioned that the general idea of using a knowledge base might be shared amongst many lifelong learning techniques, but the implementation varies wildly between them.\ A knowledge base does not always consist of a single module, but can have a complex architecture in and of itself; something akin to a library where the knowledge is stored, and a librarian who can organize and retrieve the knowledge correctly.
 
-~\cite{Wang2022, Schulman2017, Mouret2015, Shin2017, Aljundi2016, Nguyen2011, Xie2021, Sprechmann2018}.
+This chapter will aim to provide an overview of the many different shapes and forms such libraries can take, as well as the manner in which librarians might keep them organized.
+
+~\cite{Wang2022, Mouret2015, Shin2017, Aljundi2016, Nguyen2011, Xie2021, Sprechmann2018}.
+
 
 \section{Knowledge bases}\label{sec:KB}
+In this section, a brief overview on the type of knowledge that is stored (e.g., a policy itself, state transitions), and the form in which they are stored (e.g., tuples, abstract representations).
+
+In \textcite{Nguyen2011}, the authors use Gaussian process regression to learn an inverse dynamic model (\autoref{sec:DM}).\ Since they want the model to incrementally learn in realtime, they limit themselves to a fixed budget of data points, represented as vectors $\bvec{d}_i$, to use for updating the model.\ These datapoints are stored in a dictionary $\mathcal{D} = \{\bvec{d}_{i}\}_{i=1}^m$ which is incrementally updated with the aim to be as informative as possible (\autoref{sec:retrieval},~\ref{sec:KB-maintainance}).\ The contents of a point $\bvec{d}_i$ are largely dependent on the application.\ Since \textcite{Nguyen2011} are trying to fit a model for a regression task, they opt for vectors of the form $\bvec{d} = [\bvec{x}\ \bvec{y}]^T$, where $\bvec{x}$ is simply the input vector and $\bvec{y}$ are the target values.
+
+In \autoref{sec:expansions} it was mentioned that \textcite{Chatzilygeroudis2016} created a map of atomic behaviors an agent might execute.\ This map is created using Map-elites~\cite{Mouret2015}, an algorithm that can set up a knowledge base containing many descriptions of solutions and recording their performance according to a specified performance measure.\ The knowledge base is represented by a discretized space of $N$ user-defined dimensions.\ These dimensions define a feature-space of interest within a potentially huge or even infinite search space.\ The paper provides a conceptual example: ``MAP-Elites could search in the space of all possible robot designs (a very high dimensional space) to find the fastest robot (a performance criterion) for each combination of height and weight''~\cite{Mouret2015}.\\
+It can be noted that ``search'' can be interpreted as ``store'' in the context of the algorithm.
 % not storing, but mimicing --> deep generative replay
 % MAP Elites (N-dimensional gridmap with solution description and performance score)
 % retaining experiences (buffers w/ tuples)
@@ -10,15 +20,16 @@
 % memory-based PA (store key & value pairs)
 % Progress & compress (store distilled policy)
 % LLIRL (library of environment and policy parameters)
-% online sparsification (vector space)
+
 
 \section{Retrieval and Detecting distributional shifts}\label{sec:retrieval}
 % online sparsification (independance test)
 % expertgate (auto-encoder per model, apply to new data and check recontruction loss)
 % MPA (K nearest neighbours to a query)
 % LLIRL (Bayesian inference)
-% MAP Elites (?)
+% MAP Elites (?) (BO?)
 % P&C (layerwise informed by kb policy)
+
 
 \section{Maintaining the knowledge base}\label{sec:KB-maintainance}
 % Map Elites (occupy or replace based on performance, fixed budget)
