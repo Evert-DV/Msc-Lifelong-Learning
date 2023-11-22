@@ -21,18 +21,20 @@ As described in \autoref{sec:dual}, \textcite{Sprechmann2018} introduce memory-b
 
 The knowledge base in \textcite{Wang2022} stores a potentially infinite number of pairwise parameters $(\bvec{\theta},\,\bvec{\vartheta})$, where $\bvec{\theta}$ are the policy parameters, and $\bvec{\vartheta}$ represents the parametrized environment.\ The purpose of this library is to recognize the most similar environment model compared to the one currently encountered, and to use the corresponding policy parameters as a strong initial policy to finetune (\autoref{sec:retrieval}).\ The form of the policy parameters $\bvec{\theta}$ again depends on the form of the policy itself.\ The environments, however, can be parametrized as models by training the reward function $r = g^1_{\bvec{\vartheta}}(s, a)$ and the state transition function $s' = g^2_{\bvec{\vartheta}}(s, a)$ and concatenating them to obtain $[r, s'] = g_{\bvec{\vartheta}}(s, a)$.\ An environment model $g_{\bvec{\vartheta}}$ can be trained on sequences of state-action pairs to produce corresponding reward-state sequences, and the corresponding parameters $\bvec{\vartheta}$ are stored alongside $\bvec{\theta}$ in the library.\
 
+In \textcite{Xie2021}, previous experiences are sored in the form of tuples $(\bvec{s, a, s'}, r)$.\ These tuples are stored in a replay buffer $\mathcal{D}^i$ for each task $\mathcal{T}^i$.\ For \emph{all} tasks, each replay buffer is stored; they will serve to provide offline data for pretraining an agent when learning a new task (\autoref{sec:retrieval}).
+
+
 % not storing, but mimicing --> deep generative replay
-% retaining experiences (buffers w/ tuples)
-% LLIRL (library of environment and policy parameters)
 
 
 \section{Retrieval and Detecting Distributional Shifts}\label{sec:retrieval}
 % online sparsification (independance test)
 % expertgate (auto-encoder per model, apply to new data and check recontruction loss)
-% MPA (K nearest neighbours to a query)
+% MbPA (K nearest neighbours to a query)
 % LLIRL (Bayesian inference)
 % MAP Elites (?) (BO?)
 % P&C (layerwise informed by kb policy)
+% retaining experiences (relabeling tuples with new reward)
 
 
 \section{Maintaining the Knowledge Base}\label{sec:KB-maintainance}
