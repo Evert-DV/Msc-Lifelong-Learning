@@ -23,8 +23,7 @@ The knowledge base in \textcite{Wang2022} stores a potentially infinite number o
 
 In \textcite{Xie2021}, previous experiences are sored in the form of tuples $(\bvec{s, a, s'}, r)$.\ These tuples are stored in a replay buffer $\mathcal{D}^i$ for each task $\mathcal{T}^i$.\ For \emph{all} tasks, each replay buffer is stored; they will serve to provide offline data for pretraining an agent when learning a new task (\autoref{sec:retrieval}).
 
-
-% not storing, but mimicing --> deep generative replay
+Similar to \textcite{Schwarz2018}, the authors in \textcite{Shin2017} do not store knowledge explicitly in a buffer or library, but rather use a separate model to fulfill this function.\ However, contrary to \textcite{Schwarz2018}, the model is not a policy but a generative model trained to imitate training data from previous tasks.\ The generative model used in this case uses a Generative Adversarial Network (GAN) architecture.\ These models have a dual architecture of their own, where a generating model is trained to optimize producing outputs that can \emph{fool} a discriminator, which is in turn trained to optimize distinguishing real data from generated data.\ These two networks are trained in parallel and compete against each other (hence, adversarial) to obtain the best result.
 
 
 \section{Retrieval and Detecting Distributional Shifts}\label{sec:retrieval}
