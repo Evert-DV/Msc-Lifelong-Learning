@@ -37,10 +37,11 @@ In the context of pure MAP-elites from \textcite{Mouret2015}, a stored solution 
 The manner in which the collection of experts in \textcite{Aljundi2016} is used is twofold.\ During training, the most relevant expert is selected as a prior for the new model by measuring task relatedness.\ At test time, the collection of experts is simply used to select the best expert for the task at hand.\ To measure task relatedness without having to store all the training data of previous tasks, the authors train an auto-encoder\todo{requires footnote?} network $A_k$ alongside each expert.\ This auto-encoder learns an abstract representation of task data, where important nuances in the task's characteristics can be more accentuated.\ The reconstruction error between the validation data $D_k$ of a task $T_k$ and a previous auto-encoder's $A_a$ reproduction is used to measure how well $T_k$ resembles $T_a$.\ The expert corresponding to the most related task is selected as a prior model.\ Depending on how close the reconstruction error of $A_k$ is to that of the most relevant $A_a$, a transfer method of choice can be selected, such as simply initializing the parameters and fine-tuning for low-related tasks, or more complicated methods like learning-without-forgetting \todo{citation needed} for highly related tasks.\\
 At test time, the same mechanism is effectively employed to select the most relevant expert, with the addition of a softmax layer: a sample $x$ is fed through all auto-encoders and the softmax layer, comparing their reconstruction errors, and selecting the most likely expert.
 
+In \textcite{Schwarz2018}, the knowledge base policy $\pi^{KB}$ informs an active learning policy during the so-called \emph{progress} phase.\ This transfer of knowledge is achieved through layer-wise connections: for a given layer $i$ in the active policy, activations $h_i$ are computed using the previous layer's activations $h_{i-1}$ and the activations of the corresponding knowledge base's layer $h^{KB}_{i-1}$.\ These knowledge base activations are first fed through an `adapter' in the form of a multi-layer perceptron so that the extent to which activations from $\pi^{KB}$ are added can be precisely fine-tuned during training, without altering $\pi^{KB}$ itself.
+
 
 % MbPA (K nearest neighbours to a query)
 % LLIRL (Bayesian inference)
-% P&C (layerwise informed by kb policy)
 % retaining experiences (relabeling tuples with new reward)
 
 
