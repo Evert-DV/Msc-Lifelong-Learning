@@ -70,17 +70,17 @@ In \autoref{tab:DM}, a clear comparison of blackbox methods in lifelong learning
     \centering
     \begin{tabularx}{\textwidth}{
             >{\raggedright\arraybackslash}m{4cm} |
-            >{\centering\arraybackslash}m{4cm}
-            >{\centering\arraybackslash}m{4cm}
-            >{\centering\arraybackslash}X}
+            >{\centering\arraybackslash}X
+            >{\centering\arraybackslash}X
+            >{\centering\arraybackslash}m{1.7cm}}
         \toprule
         Reference                             & Dynamic model                        & Control policy                      & Incremental   \\
         \midrule
         \textcite{Gillespie2018}              & SS-matrices                          & MPC                                 & --            \\
         \textcite{Gijsberts2011}              & Linear model in random feature space & --                                  & \checked      \\
         \textcite{Thuruthel2019}\footnotemark & RNN                                  & Open-loop + trajectory optimization & --            \\
-        \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                           & \checked      \\ % TODO: check incremental
-        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                         & \checked      \\ % TODO verify model form, or replace by Nguyen2009
+        \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                           & \checked      \\  % TODO: check incremental
+        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                         & \checked      \\  % TODO verify model form, or replace by Nguyen2009
         \textcite{Romeres2016}                & Gaussian process                     & feedforward + feedback              & \checked      \\
         \textcite{Nazeer2023}                 & RNN                                  & MLP                                 & \footnotemark \\
         \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                 & --            \\
