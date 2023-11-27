@@ -10,7 +10,7 @@ A perfect example of a blackbox method is given by~\textcite{Alessi2023}.\ In th
 The previous example is \emph{``perfect"} in the sense that it perfectly embodies the simplistic nature of blackbox methods, however, it is worth noting that other techniques, such as more complicated architectures or combinations of multiple models, can be used in combination with these blackbox methods.\ Such architectural modifications will be discussed in \autoref{ch:architecture}.
 
 Apart from \textcite{Alessi2023}, several other examples of blackbox policies can be found in the literature.\\
-In \textcite{Zhou2022}, two policies are learned for the control of a small humanoid robot.\ Exact details on the inputs and outputs of the controllers are not provided, but both policies are probabilistic in nature. %, having the form $\pi(a\mid s)$. % TODO: extend
+In \textcite{Zhou2022}, two policies are learned for the control of a small humanoid robot.\ Exact details on the inputs and outputs of the controllers are not provided, but both policies are probabilistic in nature.
 
 \textcite{Thuruthel2019} use guided policy search~\cite{Levine2013} over trajectory samples containing control actions for given regions in the state-space of a soft robotic manipulator.\ The resulting control policy is represented as a FNN which takes in current and previous states, as well as a desired target state, and returns the appropriate control action.
 
@@ -35,8 +35,7 @@ Since the lifelong adapting nature of the techniques is embedded in the dynamic 
 In and \textcite{Nguyen2011}, the inverse dynamic model is represented by a Gaussian process (a type of probabilistic model) and is learned through Local Gaussian Process Regression~\cite{Nguyen-Tuong2008, Nguyen2009}.
 The models are employed in a feedforward control scheme, supplemented by a feedback term that adjusts the control action outputted by the dynamic model.
 
-\todo{Add paragraph on \textcite{Gijsberts2011}} % TODO: explain gijsberts
-% incremental learning ... random features --> ridge regression (NN?) TODO: check form
+\added{To accurately capture the nonlinearities of an inverse dynamic model, \protect\textcite{Gijsberts2011} want to use a kernel function to map inputs to a nonlinear feature space.\ However, due to the high computational cost of such a transformation, they approximate the kernel as a `random feature' $z_\omega(x)$.\ This approximation $z_\omega(x)$ is a predefined nonlinear activation of a standard feedforward layer, but where the parameters $\bvec{\omega}$ and $\beta$ are sampled from specific distributions to obtain a good approximation of the desired kernel function.\ This makes tha architecture of the dynamic model essentially akin to a FNN, but with specifically initialized and frozen parameters for the very first layer.}
 
 \textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop (a) semi-parametric model(s) that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
 
@@ -74,18 +73,18 @@ In \autoref{tab:DM}, a clear comparison of blackbox methods in lifelong learning
             >{\centering\arraybackslash}X
             >{\centering\arraybackslash}m{1.7cm}}
         \toprule
-        Reference                             & Dynamic model                        & Control policy                      & Incremental   \\
+        Reference                             & Dynamic model                   & Control policy                      & Incremental   \\
         \midrule
-        \textcite{Gillespie2018}              & SS-matrices                          & MPC                                 & --            \\
-        \textcite{Gijsberts2011}              & Linear model in random feature space & --                                  & \checked      \\
-        \textcite{Thuruthel2019}\footnotemark & RNN                                  & Open-loop + trajectory optimization & --            \\
-        \textcite{Lu2020}                     & NN ensemble                          & MPPI + NN                           & \checked      \\  % TODO: check incremental
-        \textcite{Nguyen2011}                 & Gaussian process                     & Feedforward                         & \checked      \\  % TODO verify model form, or replace by Nguyen2009
-        \textcite{Romeres2016}                & Gaussian process                     & feedforward + feedback              & \checked      \\
-        \textcite{Nazeer2023}                 & RNN                                  & MLP                                 & \footnotemark \\
-        \textcite{Thuruthel2019}\footnotemark & --                                   & FNN                                 & --            \\
-        \textcite{Alessi2023}                 & --                                   & FNN                                 & --            \\
-        \textcite{Zhou2022}                   & --                                   & Probabilistic model                 & \checked      \\
+        \textcite{Gillespie2018}              & SS-matrices                     & MPC                                 & --            \\
+        \textcite{Gijsberts2011}              & \replaced{FNN (with kernel approximation)}{Linear model in random feature space} & --                                  & \checked      \\
+        \textcite{Thuruthel2019}\footnotemark & RNN                             & Open-loop + trajectory optimization & --            \\
+        \textcite{Lu2020}                     & NN ensemble                     & MPPI + NN                           & \checked      \\  % TODO: check incremental
+        \textcite{Nguyen2011}                 & Gaussian process                & Feedforward                         & \checked      \\  % TODO verify model form, or replace by Nguyen2009
+        \textcite{Romeres2016}                & Gaussian process                & feedforward + feedback              & \checked      \\
+        \textcite{Nazeer2023}                 & RNN                             & MLP                                 & \footnotemark \\
+        \textcite{Thuruthel2019}\footnotemark & --                              & FNN                                 & --            \\
+        \textcite{Alessi2023}                 & --                              & FNN                                 & --            \\
+        \textcite{Zhou2022}                   & --                              & Probabilistic model                 & \checked      \\
         \bottomrule
     \end{tabularx}
     \caption{An overview blackbox methods and their ability to be implemented incrementally. For dynamic model learning methods, the control policy specifies the control scheme in which the model is used.}
@@ -95,4 +94,4 @@ In \autoref{tab:DM}, a clear comparison of blackbox methods in lifelong learning
 \footnotetext[2]{Used for generating training samples}
 \footnotetext[3]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
 \footnotetext[4]{After training on generated samples}
-\todo{add Lu2019 to chapter, add the training algorithm to the table (eg. PPO)?} % TODO: see \todo
+\todo{add the training algorithm to the table (eg. PPO)?} % TODO: see \todo
