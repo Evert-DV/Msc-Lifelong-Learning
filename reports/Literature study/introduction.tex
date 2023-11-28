@@ -1,4 +1,4 @@
-\chapter{Introduction}\label{ch:introduction}
+\chapter{Introduction}\label{ch:introduction}\comment{Added: chapter}
 All robots suffer a certain degree of wear during their lifetime: unforeseen damages to structures, joints that become less (or more) frictional, motors and batteries that gradually lose power over time, etc.\ These changes result in evolving dynamics of the robot, which can be detrimental to the control of the robot.
 Consider a simplified example where a robot arm needs to reach a certain position, whereas normally a torque $x$ applied for $y$ seconds will result in a perfect completion of the task, with a less powerful motor or a smoother joint, these controls will make the arm miss its target.
 
@@ -20,17 +20,27 @@ The use of soft materials comes with numerous advantages.\ Their compliance make
 \section{Application to soft (origami) robots}\label{sec:origami}
 Why apply the lifelong learning setting to soft (origami) robots?\ To begin with, the flexibility of soft robots makes modeling them a challenging task, and control of these robots thus tends towards machine learning-based methods~\cite{Kim2021}.
 Additionally, consider the illustrative example about the software updates for a conventional robot:
-whereas manually updating a robot's control algorithm every few weeks might not be such expensive trade-off, updating a soft robot every few days or even hours is considerably more cumbersome!
+whereas manually updating a robot's control algorithm every few weeks might not be such expensive trade-off, updating a soft robot every few days or even hours is considerably more cumbersome.
 Due to the materials they are constructed from, soft robots degrade a lot faster than conventional robots and, although they are more compliant and thus in some way more resistive to damages, their materials are less sturdy and more prone to tearing.
+Therefore, lifelong adaptive techniques are a viable choice to ensure that a soft robot remains useful and operational throughout its lifetime.
 
-\ % as a model for conventional robotics, but faster to test
-% discuss focussing on changing dynamic (+environment?) rather than changes in tasks
+Alternatively, deploying lifelong learning for conventional robots could be useful as well, but then evaluating whether a certain approach works could take several months or years.
+Soft robots provide a good setting for testing various methods over a shorter period of time.
 
-\section{Challenges}\label{sec:challenges}
-% catastrophic forgetting
-% handling memories
-% detecting change (distributional shifts)
 
+\section{Challenges}\label{sec:challenges}\
+Successfully enabling lifelong learning faces a number of challenges.\ Some key challenges are addressed by \textcite{Lesort2020}, such as \emph{catastrophic forgetting}, \emph{handling memories}, and \emph{detecting distributional shifts}.
+
+Catastrophic forgetting relates to robots forgetting previously learned knowledge as they progress through life.\ Preferably, a robot should be able to quickly learn to adapt to new settings, without thereby `overwriting' or otherwise erasing old knowledge.
+
+Various ways of retaining old knowledge will be discussed, such as storing it somewhere for reusing it later.
+Storing memories can be done in many ways, and should aim to be as memory-efficient as possible, allowing for fast searches and retrieval of knowledge; another key challenge of handling memories.
+
+As the goal is for a robot to adapt to changes throughout its lifetime, it is essential that it can detect these changes.
+This is related to detecting significant shifts in the data landscape it encounters.\ These shifts can be caused by imbalanced input data, a change in environment, the introduction of new tasks, or - the main focus of this study - the evolution of the robot's dynamics.
+
+
+\section{Overview of the Study}\label{sec:overview}
 % research question
 \begin{displayquote}
     How can lifelong learning methods be employed to manage the evolving dynamics due to wear and tear in the control of a soft origami robot over its operational lifespan?
