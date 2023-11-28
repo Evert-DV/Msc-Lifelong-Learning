@@ -33,7 +33,7 @@ Various ways of retaining old knowledge will be discussed, such as storing it so
 Storing memories can be done in many ways, and should aim to be as memory-efficient as possible, allowing for fast searches and retrieval of knowledge; another key challenge of handling memories.
 
 As the goal is for a robot to adapt to changes throughout its lifetime, it is essential that it can detect these changes.
-This is related to detecting significant shifts in the data landscape it encounters.\ These shifts can be caused by imbalanced input data, a change in environment, the introduction of new tasks, or - the main focus of this study - the evolution of the robot's dynamics.
+This is related to detecting significant shifts in the data landscape it encounters.\ These shifts can be caused by imbalanced input data, a change in environment, the introduction of new tasks, or - the main focus of this study - the evolution of the robot's dynamics~\cite{Lesort2020}.
 
 
 \section{Overview of the Study}\label{sec:overview}\
@@ -44,5 +44,16 @@ Considering the aspects discussed, and the aim of the thesis, a research questio
     \replaced{Which}{How can lifelong learning} methods \added{can} be employed to manage the evolving dynamics due to wear and tear in the control of \replaced{an agent}{a soft origami robot} over its operational lifespan?
 \end{displayquote}
 
-To break down some key concepts this research question: \emph{``methods''} is purposefully broad as to leave the door open for potential traditional and non-machine-learning-based, although the main focus \emph{will} be on machine-learning-based methods.
-\emph{``the evolving dynamics due to wear and tear''} may shift the focus away from changing environments and tasks, but literature considering task- and environment-related applications will still be studied, as the techniques might be highly related. \emph{``the control of an agent over its operational lifespan''} removes the focus from (soft) robotics,  allowing the inclusion of techniques used in other fields that may still be highly applicable, while emphasizing the lifelong nature.
+To break down some key concepts this research question: \emph{``methods''} is purposefully broad to leave the door open for potential traditional and non-machine-learning-based, although the main focus \emph{will} be on machine-learning-based methods.
+\emph{``the evolving dynamics due to wear and tear''} shifts the focus away from changing environments and tasks, but literature considering these applications will still be studied, as the techniques might be highly related. \emph{``the control of an agent over its operational lifespan''} removes the focus from (soft) robotics,  allowing the inclusion of techniques used in other fields that are still highly applicable, while emphasizing the lifelong nature.
+A brief overview of what is to come:
+
+In \hyperref[ch:background]{\textbf{\autoref*{ch:background}, `Background and Definition'}}, key concepts required for a clear understanding of the literature are presented and briefly explained. \todo{come back to this after writing ch2} % TODO: check
+
+In \hyperref[ch:blackbox]{\textbf{\autoref*{ch:blackbox}, `Blackbox Methods'}}, general machine-learning methods that enable lifelong learning are explored.
+
+In \hyperref[ch:architecture]{\textbf{\autoref*{ch:architecture}, `Learning Architectures'}}, an overview of how various methods can be combined to create architectures capable of lifelong learning is presented.
+
+In \hyperref[ch:storage]{\textbf{\autoref*{ch:storage}, `Storage and Retrieval'}}, the focus is on the challenge of handling memories: how they are stored, retrieved and maintained.
+
+In \hyperref[ch:discussion]{\textbf{\autoref*{ch:discussion}, `Discussion and Conclusion'}}, the findings of the study are presented, resulting in a preliminary research plan for the main thesis. \todo{come back to this after writing ch 6} % TODO: check
