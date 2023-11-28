@@ -1,24 +1,52 @@
-\chapter{Background and Definition}\label{ch:background}\
+\chapter{Background and Definition}\label{ch:background}\comment{Added: chapter}
 Before exploring the literature on lifelong learning techniques, it is important to set appropriate definitions of several widely used terms, provide brief explanations of key concepts, and to give sufficient context for the scope of the research.
 
-\section{Lifelong, Continual, or Incremental Learning?}\label{sec:lifelong-def}\
+
+\section{Lifelong, Continual, or Incremental Learning?}\label{sec:lifelong-def}
 The broad concept of lifelong learning has been given many names throughout the literature.
-Common terms are (among others) continual, incremental, and online learning.\
+Common terms are (among others) continual, incremental, and online learning.
 There are some nuances between these terminologies when it comes to the exact details of how regularly models are updated (retrained), the batch sizes of the update training sets, and whether the data shifts over time.
 `Lifelong' simply implies maintaining good functionality throughout the lifetime, `continual' includes shifting data distributions, `incremental' suggests at least regular updates with potentially single training samples, and `online' refers to updates during test time.
 However, in this study, the terms above will be used interchangeably.\ Moreover, `lifelong' will be used as a broad overarching term encompassing all the aspects above.
 Notably, using these terms, no distinction is made on whether they convey real-time implementations.
 
 
-\section{Learning vs. Adapting}\label{sec:learning-v-adapting}\
+\section{Learning vs. Adapting}\label{sec:learning-v-adapting}
 Throughout \autoref{ch:introduction}, it was mentioned several times that the goal is to have a robot continually
 adapt to changes.
 Apparently, `adapting' and `learning' can be used interchangeably in this context, or could (and will be throughout this study) both be interpreted as `learning to adapt'.
-However, some distinction between the two can be made to provide some context.\
-% important definitions: continual vs incremental vs lifelong; learning vs adapting;
+Adaptive learning is intricately tied to adaptive control, as the rise of data-driven models and machine learning has significantly changed the landscape of traditional adaptive control systems~\cite{Annaswamy2021}.
+However, some distinction between the two can be made to provide some context.
 
-% historical background
+Adapting to a change or disturbance does not have to directly involve learning methods.\ In fact, many techniques exist that can mitigate unforeseen disturbances, but these are automatic or `hard-coded' processes and have not necessarily \emph{learned} how to deal with the disturbances.
 
-% ML processes: RL, DP, etc (?); model-based, policy-based, ...
+Any methods that involve tuning the parameters of models or control systems will be considered under `learning'.
+This spans some implementations of traditional adaptive control (refer to \autoref{sec:adaptive-control}) to state-of-the-art reinforcement learning algorithms.
+
+
+\section{Learning Paradigms and Terminology}\label{sec:paradigms}
+This section delves into various learning paradigms that are often considered when facing the lifelong learning challenge and explains some key terminology essential for understanding these paradigms.
+
+\paragraph{Traditional supervised learning}
+One might consider gathering an immense amount of data for several settings and let a traditional machine learning model loose on it.
+Unfortunately, this would require several key assumptions, e.g., the data will always be accessible for later updates; the imbalance of different settings in the data perfectly resembles that of the real world; when and how the data will shift is known exactly beforehand; and several other assumptions~\cite{Lesort2020}.
+
+\paragraph{Policy learning}
+In this review, policies will simply relate to any decision-making process.\ The policy can be a program, explicitly coded by a software engineer, or it can be a decision tree, or a machine learning model of any kind.
+In short, any process that in someway reviews the current situation and subsequently produces an action or strategy, will be considered a policy.
+
+\paragraph{Reinforcement learning}
+Reinforcement learning is a goal-based learning method where interaction with the environment is key.
+It is akin to teaching a pet a trick, where good behaviors are rewarded with a treat, thereby encouraging the decision-making process to repeat the behavior or produce others like it.
+
+In reinforcement learning, an agent interacts with an environment, observes the state it is in, and decides on an action to take.
+The specific state and action are valued using a reward function.\ Ultimately, the agent aims to obtain a good policy for interacting with the environment, e.g., finding an optimal sequence of actions to complete a task~\cite{Zhang2021, Han2023a, Bhagat2019}.
+
+Distinctions can be made in the manner in which the policy is obtained.
+Policy-based methods learn a direct mapping from state to action, while model-based methods use a model of the agent and/or environment to predict the outcome of an action before executing it~\cite{Zhang2021}.
+
+\paragraph{Replay buffers}
+In reinforcement learning, the agent learns through interaction with the environment.\ This setting requires at least temporary storing data obtained through interaction.
+This storage is usually called a replay buffer.
 
 % learning paradigms
