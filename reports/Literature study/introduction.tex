@@ -18,10 +18,10 @@ The use of soft materials comes with numerous advantages.\ Their compliance make
 
 
 \section{Application to soft (origami) robots}\label{sec:origami}
-Why apply the lifelong learning setting to soft (origami) robots?\ To begin with, the flexibility of soft robots makes modeling them a challenging task, and control of these robots thus tends towards machine learning-based methods~\cite{Kim2021}.
+Why apply the lifelong learning setting to soft (origami) robots?\ To begin with, the flexibility of soft robots makes modeling them a challenging task, and control of these robots thus tends towards machine-learning-based methods~\cite{Kim2021}.
 Additionally, consider the illustrative example about the software updates for a conventional robot:
 whereas manually updating a robot's control algorithm every few weeks might not be such expensive trade-off, updating a soft robot every few days or even hours is considerably more cumbersome.
-Due to the materials they are constructed from, soft robots degrade a lot faster than conventional robots and, although they are more compliant and thus in some way more resistive to damages, their materials are less sturdy and more prone to tearing.
+Due to the materials they are constructed from, soft robots degrade a lot faster than conventional robots and, although they are more compliant and thus in some way more resistive to damages, their materials are less sturdy and more prone to tearing or other \emph{traditional} modes of failure.
 Therefore, lifelong adaptive techniques are a viable choice to ensure that a soft robot remains useful and operational throughout its lifetime.
 
 Alternatively, deploying lifelong learning for conventional robots could be useful as well, but then evaluating whether a certain approach works could take several months or years.
@@ -40,8 +40,13 @@ As the goal is for a robot to adapt to changes throughout its lifetime, it is es
 This is related to detecting significant shifts in the data landscape it encounters.\ These shifts can be caused by imbalanced input data, a change in environment, the introduction of new tasks, or - the main focus of this study - the evolution of the robot's dynamics.
 
 
-\section{Overview of the Study}\label{sec:overview}
+\section{Overview of the Study}\label{sec:overview}\
+Considering the aspects discussed, and the aim of the thesis, a research question can be formulated for this literature study:
+
 % research question
 \begin{displayquote}
-    How can lifelong learning methods be employed to manage the evolving dynamics due to wear and tear in the control of a soft origami robot over its operational lifespan?
+    \replaced{Which}{How can lifelong learning} methods \added{can} be employed to manage the evolving dynamics due to wear and tear in the control of \replaced{an agent}{a soft origami robot} over its operational lifespan?
 \end{displayquote}
+
+To break down some key concepts this research question: \emph{``methods''} is purposefully broad as to leave the door open for potential traditional and non-machine-learning-based, although the main focus \emph{will} be on machine-learning-based methods.
+\emph{``the evolving dynamics due to wear and tear''} may shift the focus away from changing environments and tasks, but literature considering task- and environment-related applications will still be studied, as the techniques might be highly related. \emph{``the control of an agent over its operational lifespan''} removes the focus from (soft) robotics,  allowing the inclusion of techniques used in other fields that may still be highly applicable, while emphasizing the lifelong nature.
