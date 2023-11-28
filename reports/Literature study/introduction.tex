@@ -1,31 +1,27 @@
 \chapter{Introduction}\label{ch:introduction}\comment{Added: chapter}
-All robots suffer a certain degree of wear during their lifetime: unforeseen damages to structures, joints that become less (or more) frictional, motors and batteries that gradually lose power over time, etc.\ These changes result in evolving dynamics of the robot, which can be detrimental to the control of the robot.
-Consider a simplified example where a robot arm needs to reach a certain position, whereas normally a torque $x$ applied for $y$ seconds will result in a perfect completion of the task, with a less powerful motor or a smoother joint, these controls will make the arm miss its target.
-
+All robots suffer a certain degree of wear during their lifetime: unforeseen damages to structures, joints that lose friction, diminishing motor and battery power, etc.\ These evolutions change dynamics of the robot, which can be detrimental to its control.
+Consider a simplified example where a robot arm that normally reaches its target with a certain torque and timing might miss due to weaker motors or smoother joints.
 A solution to this could be that the user has instructions to update the software of the robot every few weeks; or preferably, the robot receives software updates which the user only needs to download and install; or even better, the robot automatically updates itself when necessary\dots\
-Enter \emph{lifelong learning}, a concept that is generally understood to relate to systems that are able to adapt to changes they might encounter throughout their lifetime.
+Enter \emph{lifelong learning}, where systems adapt continuously throughout their operational life.
 
-This literature study aims to provide an extensive overview of various techniques that can be employed to enable lifelong learning in robot control.
+This literature study aims to provide an extensive overview of techniques for enabling lifelong learning in robot control.
 The study will provide essential background for the thesis, which will aim to achieve lifelong learning in the control of a small origami robot.
 
-A clarification of the term `origami robot' might be useful first: an origami robot is not an origami-folding robot, but rather a robot constructed by origami techniques.
+First, a note on `origami robots': These are not robots that fold origami, but rather robots constructed by origami techniques.
 This includes designs made out of flexible materials such as thin plastics or paper, where the folds can provide both structural integrity and serve as actuation mechanisms.
-These approaches bring with them advantages such as compact configurations and miniaturization, self-deployment, or unconventional actuation mechanisms (magnetic, thermal deformation,  \dots)~\cite{Tang2022a}.
-
-Origami robots are a subset of soft robots, whose emergence over recent years has changed the robotics landscape.
-Soft robots' flexibility and use of  non-rigid materials makes them inherently compliant and adaptive.
-The use of soft materials comes with numerous advantages.\ Their compliance makes them a safer alternative in human-robot interaction settings than traditional robotics~\cite{Sun2021}, and their use of flexible materials allows for greater manoeuvrability and energy-efficient locomotion~\cite{Sun2021, Kim2021}.
+These approaches offer advantages such as compact configurations and miniaturization, self-deployment, and unconventional actuation mechanisms (magnetic, thermal deformation,  \dots)~\cite{Tang2022a}.
+Origami robots are a subset of soft robots, a field that has significantly evolved recently.
+Their flexibility and non-rigid materials make them inherently compliant and adaptable, which comes with numerous advantages.
+Soft robots are safer for human interaction, more maneuverable, and efficient in locomotion due to their flexible nature~\cite{Sun2021, Kim2021}.
 
 
 \section{Application to soft (origami) robots}\label{sec:origami}
-Why apply the lifelong learning setting to soft (origami) robots?\ To begin with, the flexibility of soft robots makes modeling them a challenging task, and control of these robots thus tends towards machine-learning-based methods~\cite{Kim2021}.
-Additionally, consider the illustrative example about the software updates for a conventional robot:
-whereas manually updating a robot's control algorithm every few weeks might not be such expensive trade-off, updating a soft robot every few days or even hours is considerably more cumbersome.
-Due to the materials they are constructed from, soft robots degrade a lot faster than conventional robots and, although they are more compliant and thus in some way more resistive to damages, their materials are less sturdy and more prone to tearing or other \emph{traditional} modes of failure.
-Therefore, lifelong adaptive techniques are a viable choice to ensure that a soft robot remains useful and operational throughout its lifetime.
-
-Alternatively, deploying lifelong learning for conventional robots could be useful as well, but then evaluating whether a certain approach works could take several months or years.
-Soft robots provide a good setting for testing various methods over a shorter period of time.
+Why apply lifelong learning to soft (origami) robots?\ First, their flexibility makes modeling them a challenge, and their control thus tends towards machine-learning-based methods~\cite{Kim2021}.
+Additionally, consider the example about the updates for a conventional robot:
+whereas manually updating a robot every few weeks might not be such an expensive trade-off, updating a soft robot every few hours is considerably more cumbersome.
+Due to their materials, soft robots degrade faster than conventional robots and, although their compliance makes them in some way more resistive to damages, the materials are less sturdy and more prone to tearing or other \emph{traditional} modes of failure.
+Therefore, lifelong adaptive techniques are essential for their sustained operation and usefulness.
+Alternatively, Lifelong learning could benefit conventional robots, but assessing its effectiveness might take months or years.\ Soft robots offer a quicker way to test various methods.
 
 
 \section{Challenges}\label{sec:challenges}\
