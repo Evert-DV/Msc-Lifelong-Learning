@@ -7,7 +7,7 @@ The aim of this literature study can be summarized by the research question:
 
 In \cref{ch:blackbox}, blackbox solutions were presented that offered either incrementally adapted, or sufficiently flexible and robust control, but that are opaque in nature.
 Furthermore, the case was made for employing such solutions as a robust or adaptive dynamic model, which can then be combined in control schemes of choice.
-Some of the methods did not offer incremental updates, but rather resulted in highly flexible control solutions, however, these methods would then heavily rely on the key assumptions mentioned in \cref{par:traditional-learning}.
+Some methods did not offer incremental updates, but rather resulted in highly flexible control solutions, however, these methods would then heavily rely on the key assumptions mentioned in \cref{par:traditional-learning}.
 
 \Cref{ch:architecture} focused on adaptive control schemes, common machine-learning-based architectures used in lifelong learning, and ways in which control methods were expanded to enable lifelong learning.
 Noteworthy is the common use of dual architectures, specifically the use of knowledge bases in combination with active policies, and the one-model-per-setting approaches.
@@ -19,10 +19,22 @@ The predominant use of dynamic libraries justified an overview of the mechanisms
 % small overview
 
 \section{Promising Approaches}\label{sec:promising}
-%   the use of data driven models in adaptive control
+The use of data-driven dynamic models appears to lend itself well to various settings (see \cref{sec:DM}), whether the model is used in combination with a blackbox policy or an adaptive control scheme (\cref{sec:adaptive-control}).
+Using such a dynamic model can also constrain the problem to only incrementally updating the dynamic model, rather than the control policy, which aligns well with the focus on evolving dynamics instead of different tasks.
+%   the use of data-driven models in adaptive control
+
+Generally, the implementations of dual architectures (\cref{sec:dual}) provided more interpretable, or at least more intuitively understandable solutions, even though the use of blackbox methods is not excluded in these architectures.
+In particular, the use of knowledge bases \cref{sec:KB} provides an intuitive solution to the problem of catastrophic forgetting, and the study revealed that a knowledge base does not have to imply vast storage requirements.
+Additionally, dual architectures with knowledge bases, rather than separate models for different settings, reflect a strong preference towards a more `learning' and `remembering' related approach as opposed to `rapidly adapting'.
+This preference can be beneficial in the setting of soft robots that have fragile parts which are often replaced.
 %   dual architecture blackbox models
-%   expansions
 %   mention preference for `learning' and `remebering' over `rapidly adapting'
+
+Another attractive approach is that of an architectural expansion to an existing model (\cref{sec:expansions}), enabling lifelong learning.
+Like blackbox dynamic models, the methods constrain the lifelong learning problem to a select number of modules, but in this case there is more variety in where adaptions to the control are applied.
+Furthermore, these methods provide the option to leave the base control method unchanged.
+%   expansions
+
 
 \section{Research Avenues}\label{sec:research-gap}
 %   realtime applications
@@ -30,6 +42,7 @@ The predominant use of dynamic libraries justified an overview of the mechanisms
 %   --> transfer from (discrete) task-related problems to continuously evolving problems
 %   interpretability
 %   snap-on one-size-fits-all method: no need to rewrite control algorithm, just add a `lifelong learning extension'
+
 
 \section{Conclusion}\label{sec:conlusion}
 % update research question
