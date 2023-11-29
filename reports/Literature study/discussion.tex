@@ -1,5 +1,21 @@
-\chapter{Discussion and conclusion}\label{ch:discussion}
+\chapter{Discussion and conclusion}\label{ch:discussion}\comment{Added: chapter}
+The aim of this literature study can be summarized by the research question:
 
+\begin{displayquote}
+    Which methods can be employed to manage the evolving dynamics due to wear and tear in the control of an agent over its operational lifespan?
+\end{displayquote}
+
+In \cref{ch:blackbox}, blackbox solutions were presented that offered either incrementally adapted, or sufficiently flexible and robust control, but that are opaque in nature.
+Furthermore, the case was made for employing such solutions as a robust or adaptive dynamic model, which can then be combined in control schemes of choice.
+Some of the methods did not offer incremental updates, but rather resulted in highly flexible control solutions, however, these methods would then heavily rely on the key assumptions mentioned in \cref{par:traditional-learning}.
+
+\Cref{ch:architecture} focused on adaptive control schemes, common machine-learning-based architectures used in lifelong learning, and ways in which control methods were expanded to enable lifelong learning.
+Noteworthy is the common use of dual architectures, specifically the use of knowledge bases in combination with active policies, and the one-model-per-setting approaches.
+
+In \cref{ch:storage}, extra attention was given to knowledge base implementations.
+Implementations included, among others: separate policies, collections of models,  libraries of model and environment parameters, abstract representations of input data, etc.
+A connection between retrieving knowledge, classifying observations, and detecting distributional shifts was established.
+The predominant use of dynamic libraries justified an overview of the mechanisms they employ for maintenance.
 % small overview
 
 \section{Promising Approaches}\label{sec:promising}
