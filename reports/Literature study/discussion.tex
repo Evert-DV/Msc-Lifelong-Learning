@@ -37,13 +37,20 @@ Furthermore, these methods provide the option to leave the base control method u
 
 
 \section{Research Avenues}\label{sec:research-gap}
-A number of potential avenues that warrant further research can be identified.\\
+A number of topics that received less attention in te literature can be identified as potential avenues for future research.\\
+For example, while many methods allow for incremental learning, whether through updates of a model or updates of a knowledge base, no emphasis is given to real-time applications (except for \textcite{Nguyen2011}).
+Much of the literature does not specify the computational speed of the methods they employ.
+Data is likely gathered in real-time during interactions with the environment, but the incremental updates can take an unspecified amount of time (in fact the video that \textcite{Chatzilygeroudis2016} include with their research clearly shows the robot pausing after each trial).
 
-%   realtime applications
-%   lot of focus on control for nonlinear dynamics, but not necessarily on degradation of dynamics
-%   --> transfer from (discrete) task-related problems to continuously evolving problems
-%   interpretability
-%   snap-on one-size-fits-all method: no need to rewrite control algorithm, just add a `lifelong learning extension'
+The thesis will focus on the continually evolving dynamics of a soft origami robot.
+However, in the literature, a lot of focus is given to policies that can handle ``discrete'' changes in tasks and environment, where the dynamics or specifications change abruptly from one environment or task to the other.
+Even when learning methods are applied to the dynamics of (soft) robotic manipulators, the main reason often is to avoid analytically deriving the complex nonlinear models, and then to allow adapting to different environments and tasks.
+\Cref{sec:overview} mentioned that these methods would be reviewed because the techniques could be highly relevant, and so this could very well be a moot point, but the gap in the literature was noticeable.
+
+Although the architectural expansion approach shows promise, each expansion is highly tailored to the base control scheme or policy it is attached to.
+This is generally the case for other approaches too, where the architectures, algorithms, and possible knowledge bases are all strongly linked to one another, leaving little room for flexibility in the approach.
+An interesting avenue might be to develop a \emph{one-size-fits-all} expansion.
+Ideally such a solution could be applied to a wide range of control policies, schemes, or algorithms,  without the need to alter them in any way.
 
 
 \section{Conclusion}\label{sec:conlusion}
