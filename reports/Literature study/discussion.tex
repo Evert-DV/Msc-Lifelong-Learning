@@ -54,4 +54,15 @@ Ideally such a solution could be applied to a wide range of control policies, sc
 
 
 \section{Conclusion}\label{sec:conlusion}
+Considering the foregoing sections, some key aspects are identified as desirable features for the implementation resulting from the main thesis:
+
+\begin{itemize}
+    \item The solution should specifically deal with continually evolving robot dynamics.\ This would mean constraining the robot to executing a single (simple) task, in a single environment.
+    \item The emphasis should be on ``learning'' and ``remembering'', rather than only adapting.\ This includes dealing with catastrophic forgetting and handling memories.\ A desirable result or application could be to replace a broken part of an origami robot, and have the control recognize the dynamics of the new replacement.
+    \item The aim should be a \emph{plug-and-play} module that can enable lifelong learning in a multitude of different approaches to robot-control, given the most base assumptions that would hold for most control approaches (e.g., robot states as inputs, control actions as output).
+    \item The architecture and functioning of this model should be intuitive and interpretable; however, this does not exclude the use of opaque blackbox methods within the module.
+    \item Real-time adaptation and learning would be desirable.
+\end{itemize}
+
+
 % update research question
