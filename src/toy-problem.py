@@ -15,30 +15,55 @@ class System:
         self.u = m * g + k * l0
 
     def response(self, s, a=0, dt=0.01):
-        _, _, s = sp.signal.lsim(self.sys, [self.u + a, self.u], [0, dt], s)
+        _, _, s = sp.signal.lsim(self.sys, 2 * [self.u + a], [0, dt], s)
 
         return s[-1]
 
 
-dt = 0.01
+class PIDController:
+    def __init__(self, kp, kd, ki):
+        self.kp = kp
+        self.kd = kd
+        self.ki = ki
+        self.integral_error = 0.
+
+    def compute_control(self, current_state, target_pos, dt):
+        position_error = target_pos - current_state[0]
+        velocity_error = -current_state[1]
+        self.integral_error += position_error * dt
+
+        control_action = self.kp * position_error + self.kd * velocity_error + self.ki * self.integral_error
+
+        return control_action
+
+
+np.random.seed(15)
+
 system = System(5, 10, 3, 5)
-x0 = [8, 0]
+controller = PIDController(0.35*600, 1.5*600*0.57/8, 2*0.6*600/0.57)  # w/ kp_ult = 600 and T_ult = 0.57
+
+dt = 0.01
+x0 = [9.9, 0]  # 9.9 was found to be the steady state
 signal = []
+targets = []
 t = np.arange(0, 50, dt)
 
-for _ in t:
-    x = system.response(x0)
+for ti in t:
+    if ti % 15 == 0:
+        target = np.random.rand(1) * 6 + 7
+    targets.append(target)
+    a = controller.compute_control(x0, target, dt)
+    x = system.response(x0, a)
     signal.append(x)
     x0 = x
 
-steady_state = signal[-1]
-print(f"Steady state: {steady_state[0]:.2f}")
+signal = np.asarray(signal)
 
 fig, ax = plt.subplots(1)
-ax.plot(t, signal)
+ax.plot(t, signal[:, 0])
+ax.plot(t, targets)
 ax.invert_yaxis()
-plt.savefig("./tmp/plot.png")
-
+plt.savefig("./tmp/plot.png", dpi=300)
 
 # # System identification
 # z = c / (2 * np.sqrt(m * k))
