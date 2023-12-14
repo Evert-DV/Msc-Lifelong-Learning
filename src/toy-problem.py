@@ -29,8 +29,8 @@ class System:
         return s[-1]
 
     def update(self):
-        self.k *= 0.9
-        self.c *= 0.9
+        self.k *= 0.995
+        self.c *= 0.995
         self.l0 += 1 / self.l0
         self.u = self.m * self.g + self.k * self.l0
 
@@ -61,7 +61,7 @@ class PIDController:
 np.random.seed(15)
 
 system = System(5, 10, 3, 5)
-controller = PIDController(0.35 * 600, 1.5 * 600 * 0.57 / 8, 2 * 0.6 * 600 / 0.57)  # w/ kp_ult = 600 and T_ult = 0.57
+controller = PIDController(350, 107.5, 1257)
 
 dt = 0.01
 x0 = [9.9, 0]  # 9.9 was found to be the steady state
