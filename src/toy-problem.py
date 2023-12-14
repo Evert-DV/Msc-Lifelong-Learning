@@ -58,42 +58,48 @@ class PIDController:
         return control_action
 
 
-np.random.seed(15)
+def main():
+    np.random.seed(15)
 
-system = System(5, 10, 3, 5)
-controller = PIDController(350, 107.5, 1257)
+    system = System(5, 10, 3, 5)
+    controller = PIDController(350, 107.5, 1257)
 
-dt = 1 / 60
-x0 = [9.9, 0]  # 9.9 was found to be the steady state
-signal = []
-targets = []
-controls = []
-t = np.arange(0, 45, dt)
+    dt = 1 / 60
+    x0 = [9.9, 0]  # 9.9 was found to be the steady state
+    signal = []
+    targets = []
+    controls = []
+    t = np.arange(0, 45, dt)
+    target = None
 
-for ti in t:
-    if ti % 15 == 0:
-        target = np.random.rand(1) * 6 + 7
-    targets.append(target)
-    a = controller.compute_control(x0, target, dt)
-    controls.append(a)
-    x = system.response(x0, a, do_update=True)
-    signal.append(x)
-    x0 = x
+    for ti in t:
+        if ti % 15 == 0:
+            target = np.random.rand(1) * 6 + 7
+        targets.append(target)
+        a = controller.compute_control(x0, target, dt)
+        controls.append(a)
+        x = system.response(x0, a, do_update=True)
+        signal.append(x)
+        x0 = x
 
-signal = np.asarray(signal)
+    signal = np.asarray(signal)
 
-fig, ax = plt.subplots(2, 1, sharex=True)
+    fig, ax = plt.subplots(2, 1, sharex=True)
 
-ax[0].plot(t, signal[:, 0])
-ax[0].plot(t, targets)
-ax[0].invert_yaxis()
+    ax[0].plot(t, signal[:, 0])
+    ax[0].plot(t, targets)
+    ax[0].invert_yaxis()
 
-ax[1].plot(t, controls)
-ax[1].invert_yaxis()
+    ax[1].plot(t, controls)
+    ax[1].invert_yaxis()
 
-fig.tight_layout()
-plt.savefig("./tmp/plot.png", dpi=300)
+    fig.tight_layout()
+    plt.savefig("./tmp/plot.png", dpi=300)
 
-# # System identification
-# z = c / (2 * np.sqrt(m * k))
-# wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
+    # # System identification
+    # z = c / (2 * np.sqrt(m * k))
+    # wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
+
+
+if __name__ is "__main__":
+    main()
