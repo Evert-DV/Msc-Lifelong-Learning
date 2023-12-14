@@ -71,6 +71,7 @@ def main():
     controls = []
     t = np.arange(0, 45, dt)
     target = None
+    buffer = []
 
     for ti in t:
         if ti % 15 == 0:
@@ -80,6 +81,7 @@ def main():
         controls.append(a)
         x = system.response(x0, a, do_update=True)
         signal.append(x)
+        buffer.append([*x0, *a, *x, *target])
         x0 = x
 
     signal = np.asarray(signal)
