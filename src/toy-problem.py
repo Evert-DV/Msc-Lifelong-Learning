@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+import keras
 
 
 # Create a mass-spring-damper toy problem
@@ -58,11 +59,20 @@ class PIDController:
         return control_action
 
 
+class Adapter(keras.Sequential):
+    def __init__(self):
+        super(Adapter, self).__init__()
+        self.add(keras.layers.Dense(2, kernel_initializer='zeros', bias_initializer='zeros'))
+        self.add(keras.layers.Dense(2, kernel_initializer='zeros', bias_initializer='zeros'))
+
+
 def main():
-    np.random.seed(15)
+    np.random.seed(16)
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
+    adapter = Adapter()
+    adapter.compile(optimizer='sgd', loss='mse')
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -74,6 +84,9 @@ def main():
     buffer = []
 
     for ti in t:
+        if ti % 10 == 0 and ti != 0.:
+            print("fitting")
+            adapter.fit(np.asarray(buffer)[:, -2:], np.asarray(buffer)[:, :2])
         if ti % 15 == 0:
             target = np.random.rand(1) * 6 + 7
         targets.append(target)
@@ -103,5 +116,5 @@ def main():
     # wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     main()
