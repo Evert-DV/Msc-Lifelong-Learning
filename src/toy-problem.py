@@ -2,56 +2,49 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 
+
 # Create a mass-spring-damper toy problem
 
-# System model parameters
-m = 5
-l0 = 5
-k = 10
-c = 2
-g = 9.81
+class System:
+    def __init__(self, m, k, c, l0=0, g=9.81):
+        self.A = np.array([[0., 1.], [-k / m, -c / m]])
+        self.B = np.array([[0., 1 / m]]).T
+        self.C = np.array([[1., 0.]])
+        self.D = np.array([[0.]])
+        self.sys = sp.signal.StateSpace(self.A, self.B, self.C, self.D)
+        self.u = m * g + k * l0
+
+    def response(self, s, a=0, dt=0.01):
+        _, _, s = sp.signal.lsim(self.sys, [self.u + a, self.u], [0, dt], s)
+
+        return s[-1]
+
+
 dt = 0.01
-t = np.arange(0, 50, dt)
+system = System(5, 10, 3, 5)
 x0 = [8, 0]
+signal = []
+t = np.arange(0, 50, dt)
 
-A = np.array([[0., 1.], [-k / m, -c / m]])
-B = np.array([[0., 1 / m]]).T
-C = np.array([[1., 0.]])
-D = np.array([[0.]])
-sys = sp.signal.StateSpace(A, B, C, D)
+for _ in t:
+    x = system.response(x0)
+    signal.append(x)
+    x0 = x
 
-_, signal, _ = sp.signal.lsim(sys, np.ones(len(t)) * (m * g + k * l0), t, x0)
+steady_state = signal[-1]
+print(f"Steady state: {steady_state[0]:.2f}")
 
 fig, ax = plt.subplots(1)
 ax.plot(t, signal)
-
-# System identification
-frequencies = np.linspace(0.1, 10, 500)  # Frequency range in Hz
-angular_frequencies = 2 * np.pi * frequencies  # Convert to rad/s
-w, mag, phase = sp.signal.bode(sys)
-phase = np.radians(phase[np.argmax(mag)])
-
-# Periodic excitation
-z = c / (2 * np.sqrt(m * k))
-wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
-Tn = 2 * np.pi / wn
-t_wait = phase / wn
-
-X = 2
-F0 = X * np.sqrt((k - m * wn ** 2) ** 2 + (c * wn) ** 2)
-F = F0 * np.cos(wn * t + phase)
-
-impulse = np.sum(np.abs(F[:int(Tn/dt)] * dt))
-
-F0_inst = impulse / dt
-F_inst = np.zeros(len(t))
-F_inst[int((Tn - t_wait)/dt)::int(Tn / dt)] = F0_inst
-
-_, signal2, _ = sp.signal.lsim((A, B, C, D), np.ones(len(t)) * (m * g + k * l0) + F, t, x0)
-_, signal3, _ = sp.signal.lsim((A, B, C, D), np.ones(len(t)) * (m * g + k * l0) + F_inst, t, x0)
-
-ax.plot(t, signal2)
-ax.plot(t, signal3)
-
 ax.invert_yaxis()
-plt.savefig("./tmp/plot.png", dpi=200)
+plt.savefig("./tmp/plot.png")
+
+
+# # System identification
+# z = c / (2 * np.sqrt(m * k))
+# wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
+#
+# # Problem setup
+#
+# target_pos = np.random.rand()
+# print(f"Target: {target_pos}")
