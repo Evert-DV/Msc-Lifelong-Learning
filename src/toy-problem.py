@@ -1,7 +1,9 @@
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-import keras
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 
 # Create a mass-spring-damper toy problem
@@ -43,38 +45,77 @@ class System:
 
 
 class PIDController:
-    def __init__(self, kp, kd, ki):
+    def __init__(self, kp, kd, ki, dt):
         self.kp = kp
         self.kd = kd
         self.ki = ki
         self.integral_error = 0.
+        self.dt = dt
 
-    def compute_control(self, current_state, target_pos, dt):
+    def compute_control(self, current_state, target_pos):
         position_error = target_pos - current_state[0]
         velocity_error = -current_state[1]
-        self.integral_error += position_error * dt
+        self.integral_error += position_error * self.dt
 
         control_action = self.kp * position_error + self.kd * velocity_error + self.ki * self.integral_error
+        # control_action = np.maximum(-250, np.minimum(250, control_action))
 
         return control_action
 
 
-class Adapter(keras.Sequential):
-    def __init__(self):
+class Adapter(nn.Module):
+    def __init__(self, controller, system):
         super(Adapter, self).__init__()
-        self.add(keras.layers.Dense(2, kernel_initializer='zeros', bias_initializer='zeros'))
-        self.add(keras.layers.Dense(2, kernel_initializer='zeros', bias_initializer='zeros'))
+        self.state_adjuster = nn.Sequential(
+            nn.Linear(2, 8),
+            nn.Linear(8, 2))
+        # Define action adjuster layers
+        self.action_adjuster = nn.Sequential(
+            nn.Linear(1, 8),
+            nn.Linear(8, 1))
+        # Controller and system functions
+        self.controller = controller
+        self.system = system
+
+    def forward(self, inputs):
+        results = []
+        for input in inputs:
+            # Extract state, action, target from the input tensor
+            state = input[:2]         # Convert to NumPy array or list
+            action = input[2].item()  # Extract single value as Python float
+            target = input[3].item()  # Extract single value as Python float
+
+            # Pass them to the controller and system as regular Python types
+            adjusted_state = self.state_adjuster(state)
+
+            adjusted_state_np = adjusted_state.detach().numpy()
+            adjusted_action = self.controller.compute_control(adjusted_state_np, target)
+
+            adjusted_action_tensor = torch.tensor([adjusted_action], dtype=torch.float32)
+            adjusted_action_tensor = self.action_adjuster(adjusted_action_tensor)
+
+            adjusted_action_np = adjusted_action_tensor.item()
+            result = self.system.response(adjusted_state_np, adjusted_action_np)
+
+            # Convert the result back to a tensor and store
+            results.append(torch.tensor(result[0]))
+
+        # Stack all results into a single tensor
+        return torch.stack(results)
 
 
 def main():
     np.random.seed(16)
 
-    system = System(5, 10, 3, 5)
-    controller = PIDController(350, 107.5, 1257)
-    adapter = Adapter()
-    adapter.compile(optimizer='sgd', loss='mse')
-
     dt = 1 / 60
+
+    system = System(5, 10, 3, 5)
+    controller = PIDController(350, 107.5, 1257, dt)
+    adapter = Adapter(controller, system)
+    # Define optimizer and loss function
+    optimizer = optim.SGD(adapter.parameters(), lr=0.01)
+    loss_function = torch.nn.MSELoss()
+
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     signal = []
     targets = []
@@ -86,11 +127,19 @@ def main():
     for ti in t:
         if ti % 10 == 0 and ti != 0.:
             print("fitting")
-            adapter.fit(np.asarray(buffer)[:, -2:], np.asarray(buffer)[:, :2])
+            # Convert buffer to a PyTorch tensor
+            buffer_tensor = torch.tensor(buffer, dtype=torch.float32)
+            # Training loop
+            for epoch in range(10):  # Define num_epochs as needed
+                optimizer.zero_grad()
+                output = adapter(buffer_tensor)
+                loss = loss_function(output, buffer_tensor[:, -1])
+                loss.backward()
+                optimizer.step()
         if ti % 15 == 0:
             target = np.random.rand(1) * 6 + 7
         targets.append(target)
-        a = controller.compute_control(x0, target, dt)
+        a = controller.compute_control(x0, target)
         controls.append(a)
         x = system.response(x0, a, do_update=True)
         signal.append(x)
