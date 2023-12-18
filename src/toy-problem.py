@@ -166,4 +166,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # Check if CUDA is available
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+
     main()
