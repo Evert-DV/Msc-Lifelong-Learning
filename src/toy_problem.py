@@ -64,6 +64,34 @@ class PIDController:
         return control_action
 
 
+class CustomOperationFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inputs, custom_operation):
+        # Store the custom_operation for later use in the backward pass
+        ctx.custom_operation = custom_operation
+        # Perform the forward pass using the provided custom_operation
+        output = custom_operation(*inputs)
+        ctx.save_for_backward(output, *inputs)
+        return output
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        # Retrieve the stored custom_operation
+        custom_operation = ctx.custom_operation
+        # Retrieve the saved tensors from the forward pass
+        output, *inputs = ctx.saved_tensors
+
+        # Use numerical differentiation to approximate the gradients for each input
+        grad_inputs = []
+        epsilon = 1e-6
+        for input in inputs:
+            grad_input = torch.autograd.functional.jacobian(custom_operation, input, create_graph=True)
+            grad_input = grad_input.squeeze()  # Remove the extra dimension
+            grad_inputs.append(grad_input)
+
+        return (*grad_inputs, grad_output * 0), None  # Return gradients for all inputs (zeros for grad_output)
+
+
 class Adapter(nn.Module):
     def __init__(self, controller, system):
         super(Adapter, self).__init__()
@@ -75,34 +103,29 @@ class Adapter(nn.Module):
             nn.Linear(1, 8),
             nn.Linear(8, 1))
         # Controller and system functions
-        self.controller = controller
-        self.system = system
+        self.controller = controller.compute_control
+        self.system = system.response
 
     def forward(self, inputs):
+        state, action, result, target = inputs[:, :2], inputs[:, 2:3], inputs[:, 3:5], inputs[:, 5:]
+
+        adjusted_state = self.state_adjuster(state)
+
+        actions = []
+        for x, t in zip(adjusted_state, target):
+            y = CustomOperationFunction.apply((x.detach().numpy(), t.detach().numpy()), self.controller)
+            actions.append(torch.tensor(y, dtype=torch.float32))
+        actions = torch.stack(actions)
+
+        adjusted_action = self.action_adjuster(actions)
+
         results = []
-        for input in inputs:
-            # Extract state, action, target from the input tensor
-            state = input[:2]         # Convert to NumPy array or list
-            action = input[2].item()  # Extract single value as Python float
-            target = input[3].item()  # Extract single value as Python float
+        for x, a in zip(adjusted_state, adjusted_action):
+            y = CustomOperationFunction.apply((x.detach().numpy(), a.detach().numpy()), self.system)
+            results.append(torch.tensor(y))
+        results = torch.stack(results)
 
-            # Pass them to the controller and system as regular Python types
-            adjusted_state = self.state_adjuster(state)
-
-            adjusted_state_np = adjusted_state.detach().numpy()
-            adjusted_action = self.controller.compute_control(adjusted_state_np, target)
-
-            adjusted_action_tensor = torch.tensor([adjusted_action], dtype=torch.float32)
-            adjusted_action_tensor = self.action_adjuster(adjusted_action_tensor)
-
-            adjusted_action_np = adjusted_action_tensor.item()
-            result = self.system.response(adjusted_state_np, adjusted_action_np)
-
-            # Convert the result back to a tensor and store
-            results.append(torch.tensor(result[0]))
-
-        # Stack all results into a single tensor
-        return torch.stack(results)
+        return results
 
 
 def main():
@@ -126,17 +149,15 @@ def main():
     buffer = []
 
     for ti in t:
-        # if ti % 10 == 0 and ti != 0.:
-        #     print("fitting")
-        #     # Convert buffer to a PyTorch tensor
-        #     buffer_tensor = torch.tensor(buffer, dtype=torch.float32)
-        #     # Training loop
-        #     for epoch in range(10):  # Define num_epochs as needed
-        #         optimizer.zero_grad()
-        #         output = adapter(buffer_tensor)
-        #         loss = loss_function(output, buffer_tensor[:, -1])
-        #         loss.backward()
-        #         optimizer.step()
+        if ti % 10 == 0 and ti != 0.:
+            print("fitting")
+            # Single pass
+            # Convert buffer to a PyTorch tensor
+            buffer_tensor = torch.tensor(buffer, dtype=torch.float32, requires_grad=True)
+            output = adapter(buffer_tensor)
+            loss = loss_function(output, buffer_tensor[:, -1])
+            loss.backward()
+
         if ti % 15 == 0:
             target = np.random.rand(1) * 6 + 7
         targets.append(target)
