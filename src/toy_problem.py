@@ -1,4 +1,5 @@
 import os
+import copy
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -33,9 +34,9 @@ class System:
         return s[-1]
 
     def update(self):
-        self.k *= 0.995
-        self.c *= 0.995
-        self.l0 += 1 / self.l0
+        self.k *= 0.999
+        self.c *= 0.999
+        self.l0 += 0.1 / self.l0
         self.u = self.m * self.g + self.k * self.l0
 
         self.A = np.array([[0., 1.], [-self.k / self.m, -self.c / self.m]])
@@ -95,25 +96,31 @@ class CustomOperationFunction(torch.autograd.Function):
 class Adapter(nn.Module):
     def __init__(self, controller, system):
         super(Adapter, self).__init__()
+        # Define state adjuster layers
         self.state_adjuster = nn.Sequential(
             nn.Linear(2, 8),
-            nn.Linear(8, 2))
+            nn.ReLU(),
+            nn.Linear(8, 2),
+            nn.ReLU())
         # Define action adjuster layers
         self.action_adjuster = nn.Sequential(
             nn.Linear(1, 8),
-            nn.Linear(8, 1))
+            nn.ReLU(),
+            nn.Linear(8, 1),
+            nn.ReLU())
         # Controller and system functions
-        self.controller = controller.compute_control
-        self.system = system.response
+        self.controller = controller
+        self.system = system
 
     def forward(self, inputs):
+        controller, system = copy.deepcopy(self.controller.compute_control), copy.deepcopy(self.system.response)
         state, action, result, target = inputs[:, :2], inputs[:, 2:3], inputs[:, 3:5], inputs[:, 5:]
 
         adjusted_state = self.state_adjuster(state)
 
         actions = []
         for x, t in zip(adjusted_state, target):
-            y = CustomOperationFunction.apply((x.detach().numpy(), t.detach().numpy()), self.controller)
+            y = CustomOperationFunction.apply((x, t), controller)
             actions.append(torch.tensor(y, dtype=torch.float32))
         actions = torch.stack(actions)
 
@@ -121,10 +128,11 @@ class Adapter(nn.Module):
 
         results = []
         for x, a in zip(adjusted_state, adjusted_action):
-            y = CustomOperationFunction.apply((x.detach().numpy(), a.detach().numpy()), self.system)
+            y = CustomOperationFunction.apply((x, a), system)
             results.append(torch.tensor(y))
         results = torch.stack(results)
 
+        del controller, system
         return results
 
 
@@ -134,38 +142,52 @@ def main():
     dt = 1 / 60
 
     system = System(5, 10, 3, 5)
+
     controller = PIDController(350, 107.5, 1257, dt)
     adapter = Adapter(controller, system)
+
     # Define optimizer and loss function
-    optimizer = optim.SGD(adapter.parameters(), lr=0.01)
+    optimizer = optim.SGD(adapter.parameters(), lr=0.1)
     loss_function = torch.nn.MSELoss()
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     signal = []
     targets = []
     controls = []
-    t = np.arange(0, 45, dt)
-    target = None
+    t = np.arange(0, 60, dt)
+    # target = None
+    target = np.random.rand(1) * 6 + 7
     buffer = []
+    losses = []
 
     for ti in t:
         if ti % 10 == 0 and ti != 0.:
-            print("fitting")
-            # Single pass
-            # Convert buffer to a PyTorch tensor
-            buffer_tensor = torch.tensor(buffer, dtype=torch.float32, requires_grad=True)
-            output = adapter(buffer_tensor)
-            loss = loss_function(output, buffer_tensor[:, -1])
-            loss.backward()
+            print("\nfitting")
+            # training loop
+            for epoch in range(100):
+                print(f"\rEpoch {epoch}", end="")
+                optimizer.zero_grad()
+                buffer_tensor = torch.tensor(buffer, dtype=torch.float32, requires_grad=True)
+                output = adapter(buffer_tensor)
+                loss = loss_function(output[:, 0].float(), buffer_tensor[:, -1].float())
+                losses.append(loss.item())
+                loss.backward()
+                for param in adapter.parameters():
+                    print(param.grad)
+                optimizer.step()
+            buffer = []
 
-        if ti % 15 == 0:
-            target = np.random.rand(1) * 6 + 7
+        # if ti % 15 == 0:
+        #     target = np.random.rand(1) * 6 + 7
         targets.append(target)
-        a = controller.compute_control(x0, target)
-        controls.append(a)
-        x = system.response(x0, a, do_update=True)
+
+        x0_adj = adapter.state_adjuster(torch.tensor(x0, dtype=torch.float32)).detach().numpy()
+        a = controller.compute_control(x0_adj, target)
+        a_adj = adapter.action_adjuster(torch.tensor(a, dtype=torch.float32)).detach().numpy()
+        controls.append(a_adj)
+        x = system.response(x0, a_adj, do_update=True)
         signal.append(x)
-        buffer.append([*x0, *a, *x, *target])
+        buffer.append([*x0, *a_adj, *x, *target])
         x0 = x
 
     signal = np.asarray(signal)
@@ -181,9 +203,13 @@ def main():
 
     fig.tight_layout()
 
+    fig2, ax2 = plt.subplots(1)
+    ax2.plot(losses)
+
     if not os.path.exists("./tmp"):
         os.makedirs("./tmp")
-    plt.savefig("./tmp/plot.png", dpi=300)
+    fig.savefig("./tmp/plot.png", dpi=300)
+    plt.show()
 
     # # System identification
     # z = c / (2 * np.sqrt(m * k))
