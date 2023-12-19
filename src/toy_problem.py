@@ -67,35 +67,46 @@ class PIDController:
 
 class CustomOperationFunction(torch.autograd.Function):
     @staticmethod
-    def forward(ctx, inputs, custom_operation):
-        # Store the custom_operation for later use in the backward pass
-        ctx.custom_operation = custom_operation
+    def forward(inputs, custom_operation):
+        # Convert all input tensors to NumPy arrays
+        dx = np.random.rand(1) * 0.1
+        input_arrays = [x.numpy() if isinstance(x, torch.Tensor) else x for x in inputs]
+        perturbed_arrays = [copy.deepcopy(input_arrays[i]) + dx for i in range(len(input_arrays))]
+
         # Perform the forward pass using the provided custom_operation
-        output = custom_operation(*inputs)
-        ctx.save_for_backward(output, *inputs)
-        return output
+        result = custom_operation(*input_arrays)
+        perturbed_result = custom_operation(*perturbed_arrays)
+
+        dydx = (perturbed_result - result) / dx
+
+        return (torch.tensor(result, dtype=torch.float32, requires_grad=True),
+                torch.tensor(dydx, dtype=torch.float32, requires_grad=True))
+
+    @staticmethod
+    def setup_context(ctx, inputs, output):
+        input_arrays = inputs
+
+        result, dydx = output
+
+        ctx.save_for_backward(input_arrays, dydx)
 
     @staticmethod
     def backward(ctx, grad_output):
-        # Retrieve the stored custom_operation
-        custom_operation = ctx.custom_operation
-        # Retrieve the saved tensors from the forward pass
-        output, *inputs = ctx.saved_tensors
+        input_arrays, dydx = ctx.saved_tensors
 
-        # Use numerical differentiation to approximate the gradients for each input
-        grad_inputs = []
-        epsilon = 1e-6
-        for input in inputs:
-            grad_input = torch.autograd.functional.jacobian(custom_operation, input, create_graph=True)
-            grad_input = grad_input.squeeze()  # Remove the extra dimension
-            grad_inputs.append(grad_input)
+        grad_input = []
+        for x, dx in zip(input_arrays, dydx):
+            grad_input.append(torch.tensor(dx * grad_output, dtype=torch.float32))
 
-        return (*grad_inputs, grad_output * 0), None  # Return gradients for all inputs (zeros for grad_output)
+        return tuple(grad_input)
+
 
 
 class Adapter(nn.Module):
     def __init__(self, controller, system):
         super(Adapter, self).__init__()
+        self.requires_grad_(True)
+
         # Define state adjuster layers
         self.state_adjuster = nn.Sequential(
             nn.Linear(2, 8),
@@ -121,7 +132,7 @@ class Adapter(nn.Module):
         actions = []
         for x, t in zip(adjusted_state, target):
             y = CustomOperationFunction.apply((x, t), controller)
-            actions.append(torch.tensor(y, dtype=torch.float32))
+            actions.append(y)
         actions = torch.stack(actions)
 
         adjusted_action = self.action_adjuster(actions)
@@ -129,7 +140,7 @@ class Adapter(nn.Module):
         results = []
         for x, a in zip(adjusted_state, adjusted_action):
             y = CustomOperationFunction.apply((x, a), system)
-            results.append(torch.tensor(y))
+            results.append(y)
         results = torch.stack(results)
 
         del controller, system
@@ -154,17 +165,17 @@ def main():
     signal = []
     targets = []
     controls = []
-    t = np.arange(0, 60, dt)
+    t = np.arange(0, 45, dt)
     # target = None
     target = np.random.rand(1) * 6 + 7
     buffer = []
     losses = []
 
     for ti in t:
-        if ti % 10 == 0 and ti != 0.:
+        if ti % 3 == 0 and ti != 0.:
             print("\nfitting")
             # training loop
-            for epoch in range(100):
+            for epoch in range(10):
                 print(f"\rEpoch {epoch}", end="")
                 optimizer.zero_grad()
                 buffer_tensor = torch.tensor(buffer, dtype=torch.float32, requires_grad=True)
@@ -221,4 +232,5 @@ if __name__ == "__main__":
     if torch.cuda.is_available():
         device = torch.device("cuda")
 
+    torch.autograd.set_detect_anomaly(True)
     main()
