@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -125,17 +126,17 @@ def main():
     buffer = []
 
     for ti in t:
-        if ti % 10 == 0 and ti != 0.:
-            print("fitting")
-            # Convert buffer to a PyTorch tensor
-            buffer_tensor = torch.tensor(buffer, dtype=torch.float32)
-            # Training loop
-            for epoch in range(10):  # Define num_epochs as needed
-                optimizer.zero_grad()
-                output = adapter(buffer_tensor)
-                loss = loss_function(output, buffer_tensor[:, -1])
-                loss.backward()
-                optimizer.step()
+        # if ti % 10 == 0 and ti != 0.:
+        #     print("fitting")
+        #     # Convert buffer to a PyTorch tensor
+        #     buffer_tensor = torch.tensor(buffer, dtype=torch.float32)
+        #     # Training loop
+        #     for epoch in range(10):  # Define num_epochs as needed
+        #         optimizer.zero_grad()
+        #         output = adapter(buffer_tensor)
+        #         loss = loss_function(output, buffer_tensor[:, -1])
+        #         loss.backward()
+        #         optimizer.step()
         if ti % 15 == 0:
             target = np.random.rand(1) * 6 + 7
         targets.append(target)
@@ -158,6 +159,9 @@ def main():
     ax[1].invert_yaxis()
 
     fig.tight_layout()
+
+    if not os.path.exists("./tmp"):
+        os.makedirs("./tmp")
     plt.savefig("./tmp/plot.png", dpi=300)
 
     # # System identification
