@@ -101,7 +101,6 @@ class CustomOperationFunction(torch.autograd.Function):
         return tuple(grad_input)
 
 
-
 class Adapter(nn.Module):
     def __init__(self, controller, system):
         super(Adapter, self).__init__()
