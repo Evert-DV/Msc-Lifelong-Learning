@@ -67,38 +67,61 @@ class PIDController:
 
 class CustomOperationFunction(torch.autograd.Function):
     @staticmethod
-    def forward(inputs, custom_operation):
-        # Convert all input tensors to NumPy arrays
-        dx = np.random.rand(1) * 0.1
-        input_arrays = [x.numpy() if isinstance(x, torch.Tensor) else x for x in inputs]
-        perturbed_arrays = [copy.deepcopy(input_arrays[i]) + dx for i in range(len(input_arrays))]
+    def forward(ctx, custom_operation, *args):
+        # Convert all input tensors to NumPy array
+        input_arrays = [x.numpy() if isinstance(x, torch.Tensor) else x for x in args]
 
         # Perform the forward pass using the provided custom_operation
         result = custom_operation(*input_arrays)
-        perturbed_result = custom_operation(*perturbed_arrays)
 
-        dydx = (perturbed_result - result) / dx
+        ctx.save_for_backward(*args)
+        ctx.operation = custom_operation
 
-        return (torch.tensor(result, dtype=torch.float32, requires_grad=True),
-                torch.tensor(dydx, dtype=torch.float32, requires_grad=True))
+        return torch.tensor(result, dtype=torch.float32, requires_grad=True)
 
-    @staticmethod
-    def setup_context(ctx, inputs, output):
-        input_arrays = inputs
-
-        result, dydx = output
-
-        ctx.save_for_backward(input_arrays, dydx)
 
     @staticmethod
     def backward(ctx, grad_output):
-        input_arrays, dydx = ctx.saved_tensors
+        inputs = ctx.saved_tensors
+        np_inputs = [x.numpy() if isinstance(x, torch.Tensor) else x for x in inputs]
+        gradients = []
 
-        grad_input = []
-        for x, dx in zip(input_arrays, dydx):
-            grad_input.append(torch.tensor(dx * grad_output, dtype=torch.float32))
+        epsilon = 1e-3  # Small value for finite difference
 
-        return tuple(grad_input)
+        # Approximate the gradient for each input tensor
+        for k, input_tensor in enumerate(inputs):
+            grad_input = torch.zeros_like(input_tensor)
+
+            # Iterate over all elements of the input tensor
+            for idx in np.ndindex(input_tensor.shape):
+                # Create perturbed tensors
+                input_plus_eps = input_tensor.clone().detach().numpy()
+                input_plus_eps[idx] += epsilon
+                input_minus_eps = input_tensor.clone().detach().numpy()
+                input_minus_eps[idx] -= epsilon
+
+                # Prepare input arguments, replacing the current input tensor with its perturbed versions
+                inputs_plus_eps = np_inputs
+                inputs_minus_eps = np_inputs
+                inputs_plus_eps[k] = input_plus_eps
+                inputs_minus_eps[k] = input_minus_eps
+
+                # Evaluate the function with perturbed inputs
+                output_plus_eps = ctx.operation(*inputs_plus_eps)
+                output_minus_eps = ctx.operation(*inputs_minus_eps)
+
+                # Compute the gradient approximation
+                if output_plus_eps.ndim > 0:
+                    # For multi-dimensional output, compute dot product with grad_output
+                    grad_diff = (output_plus_eps - output_minus_eps).reshape(-1)
+                    grad_input[idx] = torch.dot(grad_output.reshape(-1), torch.tensor(grad_diff, dtype=torch.float32)) / (2 * epsilon)
+                else:
+                    # For scalar output, use simpler computation
+                    grad_input[idx] = (output_plus_eps - output_minus_eps) / (2 * epsilon)
+
+            gradients.append(grad_input)
+
+        return (None, *gradients)
 
 
 class Adapter(nn.Module):
@@ -130,7 +153,7 @@ class Adapter(nn.Module):
 
         actions = []
         for x, t in zip(adjusted_state, target):
-            y = CustomOperationFunction.apply((x, t), controller)
+            y = CustomOperationFunction.apply(controller, x, t)
             actions.append(y)
         actions = torch.stack(actions)
 
@@ -138,7 +161,7 @@ class Adapter(nn.Module):
 
         results = []
         for x, a in zip(adjusted_state, adjusted_action):
-            y = CustomOperationFunction.apply((x, a), system)
+            y = CustomOperationFunction.apply(system, x, a)
             results.append(y)
         results = torch.stack(results)
 
@@ -182,8 +205,8 @@ def main():
                 loss = loss_function(output[:, 0].float(), buffer_tensor[:, -1].float())
                 losses.append(loss.item())
                 loss.backward()
-                for param in adapter.parameters():
-                    print(param.grad)
+                # for param in adapter.parameters():
+                    # print(param.grad)
                 optimizer.step()
             buffer = []
 
@@ -220,10 +243,6 @@ def main():
         os.makedirs("./tmp")
     fig.savefig("./tmp/plot.png", dpi=300)
     plt.show()
-
-    # # System identification
-    # z = c / (2 * np.sqrt(m * k))
-    # wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
 
 
 if __name__ == "__main__":
