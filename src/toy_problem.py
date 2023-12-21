@@ -246,9 +246,9 @@ def main():
 
 
 if __name__ == "__main__":
-    # Check if CUDA is available
-    if torch.cuda.is_available():
-        device = torch.device("cuda")
-
     torch.autograd.set_detect_anomaly(True)
-    main()
+    if torch.cuda.is_available():
+        with torch.cuda.device(0):
+            main()
+    else:
+        main()
