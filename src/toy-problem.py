@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -96,11 +97,9 @@ def main():
     ax[1].invert_yaxis()
 
     fig.tight_layout()
-    plt.savefig("./tmp/plot.png", dpi=300)
-
-    # # System identification
-    # z = c / (2 * np.sqrt(m * k))
-    # wn = np.sqrt(k / m) * np.sqrt(1 - z ** 2)
+    if not os.path.exists("./tmp"):
+        os.makedirs("./tmp")
+    fig.savefig("./tmp/plot.png", dpi=300)
 
 
 if __name__ is "__main__":
