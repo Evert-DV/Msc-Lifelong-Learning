@@ -71,7 +71,8 @@ class Adapter(nn.Sequential):
 
 
 def main():
-    np.random.seed(15)
+    np.random.seed(16)
+    # torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
@@ -85,7 +86,7 @@ def main():
     signal = []
     targets = []
     controls = []
-    t = np.arange(0, 45, dt)
+    t = np.arange(0, 60, dt)
     target = None
     buffer = []
     x0_adj = x0
@@ -93,10 +94,12 @@ def main():
     for ti in t:
         if ti % 10 == 0 and ti != 0:
             print("Fitting model...")
+            adapter.train()
             buffer = np.asarray(buffer)
             features = buffer[:, :3]
             e = buffer[:, -3:-2] - buffer[:, -1:]
             features = torch.from_numpy(features).float()
+            features.requires_grad = True
             e = torch.from_numpy(e).float()
 
             for epoch in range(100):
@@ -109,8 +112,10 @@ def main():
 
             buffer = []
 
-        if ti % 45 == 0:
+        if ti % 120 == 0:
             target = np.random.rand(1) * 6 + 7
+
+        adapter.eval()
         targets.append(target)
         a = controller.compute_control(x0_adj, target, dt)
         controls.append(a)
