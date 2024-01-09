@@ -2,7 +2,7 @@
 Before exploring the literature on lifelong learning techniques, it is important to set appropriate definitions of several widely used terms, provide brief explanations of key concepts, and to give sufficient context for the scope of the research.
 
 
-\section{Lifelong, Continual, or Incremental Learning?}\label{sec:lifelong-def}
+\section{Lifelong, Continual, or Incremental Learning?}\label{sec:lifelong-def}  % TODO: an illustartive Venn diagram?
 The broad concept of lifelong learning has been given many names throughout the literature.
 Common terms are (among others) continual, incremental, and online learning.
 There are some nuances between these terminologies when it comes to the exact details of how regularly models are updated (retrained), the batch sizes of the update training sets, and whether the data shifts over time.
@@ -31,7 +31,7 @@ This section delves into various learning paradigms that are often considered wh
 One might consider gathering an immense amount of data for several settings and let a traditional machine learning model loose on it.
 Unfortunately, this would require several key assumptions, e.g., the data will always be accessible for later updates; the imbalance of different settings in the data perfectly resembles that of the real world; when and how the data will shift is known exactly beforehand; and several other assumptions~\cite{Lesort2020}.
 
-\paragraph{Policy learning}
+\paragraph{Policy learning}  % TODO: refs
 In this review, policies will simply relate to any decision-making process.\ The policy can be a program, explicitly coded by a software engineer, or it can be a decision tree, or a machine learning model of any kind.
 In short, any process that in someway reviews the current situation and subsequently produces an action or strategy, will be considered a policy.
 
@@ -45,6 +45,6 @@ The specific state and action are valued using a reward function.\ Ultimately, t
 Distinctions can be made in the manner in which the policy is obtained.
 Policy-based methods learn a direct mapping from state to action, while model-based methods use a model of the agent and/or environment to predict the outcome of an action before executing it~\cite{Zhang2021}.
 
-\paragraph{Replay buffers}
+\paragraph{Replay buffers}  % TODO: refs
 In reinforcement learning, the agent learns through interaction with the environment.\ This setting requires at least temporary storing data obtained through interaction.
 This storage is usually called a replay buffer.
