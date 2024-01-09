@@ -6,7 +6,7 @@ Well-designed control and learning architectures can either enable or facilitate
 In this chapter, these two main strategies will be further explored in the literature.
 
 
-\section{Traditional Adaptive Control}\label{sec:adaptive-control}\comment{Added: Section 4.1}
+\section{Traditional Adaptive Control}\label{sec:adaptive-control}
 Adaptive control is about real-time control of uncertain dynamic systems through adaptation and learning, an idea that has been in continuous development since the 1950s~\cite[section 2]{Annaswamy2021}.\ The basic principle of adaptive control, is to adapt to environmental changes for better performance.\ This concept was first applied in engineering in the late 1950s, marking the inception of adaptive control systems, which monitor their own performance and adjust parameters accordingly.
 
 Unlike conventional feedback control, which aims to mitigate disturbances acting on the \emph{controlled} variables by referencing the desired values and simply changing the controller's \emph{input} accordingly, an adaptive controller can deal with disturbances to the \emph{controller's} variables and change the \emph{parameters} of the controller.\ To further distinguish adaptive control from conventional feedback control, adaptive control is generally defined by three concepts, namely: measuring plant performance, a performance-based decision, and an adaptation mechanism~\cite[section 1.2]{Landau2011}.\
@@ -37,7 +37,6 @@ In \textcite{Zhou2022} the development of a policy exists of two phases: an onli
 
 \section{Architectural Expansions}\label{sec:expansions}
 This section groups methods where an already functional control scheme or policy is enhanced by adding one or more modules to the scheme, enabling it to learn and/or adapt continually without actually altering the preexisting policy.\
-\deleted{The idea behind such techniques was already discussed in \mbox{\cref{sec:adaptive-control}}, but here the focus will be on approaches that incorporate more of a learning aspect rather than simply adapting.}
 
 An example of such a scheme is given by \textcite{Nazeer2023}.\ Their use of a blackbox control policy and a data-driven dynamic model was discussed in \cref{sec:policies} and~\ref{sec:DM}.\ In this approach, the current state of the system is used to determine the next control action through the policy.\ This action then feeds into the dynamic model, predicting the system's next state.\ However, these models are static and do not adapt during operation.\ To ensure that the robot can continually adapt, an online regressing network is added in a feedback loop: With the physical robot as reference, the error between the actual state and the predicted state is measured.\ A buffer stores this error along with the policy's control action that produced these states.\ The online regressing network periodically trains on this buffer to predict the error that will result from a control input.\ This predicted error is added to the robot's actual resulting state to provide the policy with a mismatched state that will effectively result in a control action that compensates the error.
 
@@ -67,6 +66,3 @@ As discussed \cref{sec:policies}, the purpose of this method is to allow an MPPI
 %    \caption{}
 %    \label{tab:arch-summary}
 %\end{table}
-
-
-\todo{This chapter does not seem to lend itself as well to a summarizing table}
