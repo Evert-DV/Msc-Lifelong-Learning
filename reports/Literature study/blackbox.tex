@@ -24,9 +24,9 @@ One way of having continually adapting control for soft robots is by implementin
 
 Blackbox methods also allow for learning both forward and inverse dynamic models and can thus be used in several control schemes.\ When learning a forward model, the robot's actions and resulting states can be used as the inputs and outputs, respectively, this is so-called \emph{direct modeling}~\cite{Nguyen-Tuong2011}.\ In the case of learning inverse dynamic models, such direct approaches might not always be applicable, due to the multiple solutions that exist for the inverse dynamics of robots with redundant degrees of freedom.\ Instead, an \emph{indirect-modeling} approach can be taken, where the model is trained to minimize the error of the feedback controller~\cite{Nguyen-Tuong2011}.
 
-The form that the dynamic model takes can vary.\ For example, in \textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ the inputs are made available during the process of backpropagation and can be used in matrices $A$ and $B$ to form a more interpretable state-space system.\ In \textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.  % TODO: clarfy the SS-matrices part
+The form that the dynamic model takes can vary.\ For example, in \textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ the inputs are made available during the process of backpropagation and can be used \deleted{in matrices $A$ and $B$} to form a more interpretable state-space system\footnote{\added{The gradients are used in matrices $A$ and $B$ to obtain a linearized state-space system of the form $\bvec{x}_{k+1} = A\bvec{x}_k + B\bvec{u}_k$}}.\ In \textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.
 
-Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned matrices $A$ and $B$ from \textcite{Gillespie2018} are used in a model predictive control setting, while the generated trajectories from \textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step to create the blackbox policy mentioned in \cref{sec:policies}).\ More examples of several blackbox dynamic models and their control scheme can be found in the literature.
+Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned \replaced{state-space system}{matrices $A$ and $B$} from \textcite{Gillespie2018} is used in a model predictive control setting, while the generated trajectories from \textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step to create the blackbox policy mentioned in \cref{sec:policies}).\ More examples of several blackbox dynamic models and their control scheme can be found in the literature.
 
 \textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy (\cref{sec:policies}).
 
@@ -78,8 +78,8 @@ In \cref{tab:DM}, a clear comparison of blackbox methods in lifelong learning is
         \textcite{Gillespie2018}              & SS-matrices                     & MPC                                 & --            \\
         \textcite{Gijsberts2011}              & FNN (with kernel approximation) & --                                  & \checked      \\
         \textcite{Thuruthel2019}\footnotemark & RNN                             & Open-loop + trajectory optimization & --            \\
-        \textcite{Lu2020}                     & NN ensemble                     & MPPI + NN                           & \checked      \\  % TODO: check incremental
-        \textcite{Nguyen2011}                 & Gaussian process                & Feedforward                         & \checked      \\  % TODO verify model form, or replace by Nguyen2009
+        \textcite{Lu2020}                     & NN ensemble                     & MPPI + NN                           & \checked      \\
+        \textcite{Nguyen2011}                 & Gaussian process                & Feedforward                         & \checked      \\
         \textcite{Romeres2016}                & Gaussian process                & feedforward + feedback              & \checked      \\
         \textcite{Nazeer2023}                 & RNN                             & MLP                                 & \footnotemark \\
         \textcite{Thuruthel2019}\footnotemark & --                              & FNN                                 & --            \\
@@ -91,6 +91,6 @@ In \cref{tab:DM}, a clear comparison of blackbox methods in lifelong learning is
     \label{tab:DM}
 \end{table}
 
-\footnotetext[2]{Used for generating training samples}
-\footnotetext[3]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
-\footnotetext[4]{After training on generated samples}
+\footnotetext[3]{Used for generating training samples}
+\footnotetext[4]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
+\footnotetext[5]{After training on generated samples}
