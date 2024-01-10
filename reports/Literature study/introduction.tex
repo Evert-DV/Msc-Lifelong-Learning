@@ -1,4 +1,4 @@
-\chapter{Introduction}\label{ch:introduction}  % TODO: describe relevance from several perspectives, eg.: ecomomic, environmental, social, ethical, ...
+\chapter{Introduction}\label{ch:introduction}
 All robots suffer a certain degree of wear during their lifetime: unforeseen damages to structures, joints that lose friction, diminishing motor and battery power, etc.\ These evolutions change dynamics of the robot, which can be detrimental to its control.
 Consider a simplified example where a robot arm that normally reaches its target with a certain torque and timing might miss due to weaker motors or smoother joints.
 A solution to this could be that the user has instructions to update the software of the robot every few weeks; or preferably, the robot receives software updates which the user only needs to download and install; or even better, the robot automatically updates itself when necessary\dots\
@@ -9,10 +9,13 @@ The study will provide essential background for the thesis, which will aim to ac
 
 First, a note on `origami robots': These are not robots that fold origami, but rather robots constructed by origami techniques.
 This includes designs made out of flexible materials such as thin plastics or paper, where the folds can provide both structural integrity and serve as actuation mechanisms.
-These approaches offer advantages such as compact configurations and miniaturization, self-deployment, and unconventional actuation mechanisms (magnetic, thermal deformation,  \dots)~\cite{Tang2022a}.
+These approaches offer advantages such as compact configurations and miniaturization, self-deployment, \replaced{but often also require}{and} unconventional actuation mechanisms (magnetic, thermal deformation,  \dots~\added{See \cref{fig:origami-robot} for a good example of an unconventional actuation method for a highly miniaturized origami robot.})~\cite{Tang2022a}.
 Origami robots are a subset of soft robots, a field that has significantly evolved recently.
-Their flexibility and non-rigid materials make them inherently compliant and adaptable, which comes with numerous advantages.
-Soft robots are safer for human interaction, more maneuverable, and efficient in locomotion due to their flexible nature~\cite{Sun2021, Kim2021}.
+Their flexibility and non-rigid materials make them inherently compliant and adaptable, which comes with numerous advantages\added{, for example, the use of renewable and biodegradable materials~\protect\cite{Hartmann2021}}.
+Furthermore, soft robots are safer for human interaction, more maneuverable, and \added{energy-}efficient in locomotion due to their flexible nature~\cite{Sun2021, Kim2021}.
+\added{
+The combination of soft (biodegradable) materials, miniaturization, and innovative actuation methods has spawned many new concepts and various fields, such as search and rescue~\protect\cite{Hawkes2017} and medical applications~\protect\cite[see \cref{fig:kresling-pill}]{Ze2022}.
+}
 
 \begin{figure}[!htb]
     \centering
@@ -26,7 +29,7 @@ Soft robots are safer for human interaction, more maneuverable, and efficient in
     \begin{subfigure}[bl]{0.6\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Literature study/figures/kresling_pill}
-        \caption{"Conceptual scheme for drug storage and release using the Kresling crawler. (A) Exploded view and assembly of the modified Kresling crawler with a through hole. The internal cavity of the front Kresling unit is used for pill storage. (B) Pill positions at initial and contracted states of the Kresling crawler. The crawler contracts without interfering with the cylindrical pill. (C) Pill gradually dissolves in water as indicated by the intensity of the blue dye for 4 min. Scale bar, 5 mm"~\cite{Ze2022}. Figure and caption obtained from \textcite{Ze2022}.}
+        \caption{"Conceptual scheme for drug storage and release using the Kresling crawler. (\textbf{A}) Exploded view and assembly of the modified Kresling crawler with a through hole. The internal cavity of the front Kresling unit is used for pill storage. (\textbf{B}) Pill positions at initial and contracted states of the Kresling crawler. The crawler contracts without interfering with the cylindrical pill. (\textbf{C}) Pill gradually dissolves in water as indicated by the intensity of the blue dye for 4 min. Scale bar, 5 mm"~\cite{Ze2022}. Figure and caption obtained from \textcite{Ze2022}.}
         \label{fig:kresling-pill}
     \end{subfigure}
     \hfill
@@ -38,15 +41,13 @@ Soft robots are safer for human interaction, more maneuverable, and efficient in
     \end{subfigure}
 \end{figure}
 
-% TODO: reference figs in text
-
 \section{Application to Soft (Origami) Robots}\label{sec:origami}
 Why apply lifelong learning to soft (origami) robots?\ First, their flexibility makes modeling them a challenge, and their control thus tends towards machine-learning-based methods~\cite{Kim2021}.
 Additionally, consider the example about the updates for a conventional robot:
 whereas manually updating a robot every few weeks might not be such an expensive trade-off, updating a soft robot every few hours is considerably more cumbersome.
-Due to their materials, soft robots degrade faster than conventional robots and, although their compliance makes them in some way more resistive to damages, the materials are less sturdy and more prone to tearing or other \emph{traditional} modes of failure.
+Due to their materials, soft robots degrade faster than conventional robots and, although their compliance makes them in some way more resistive to damages, the materials are less sturdy and more prone to tearing or other \emph{traditional} modes of failure \added{(see \cref{fig:kirigami} as an example)}.
 Therefore, lifelong adaptive techniques are essential for their sustained operation and usefulness.
-Alternatively, lifelong learning could benefit conventional robots, but assessing its effectiveness might take months or years.\ Soft robots offer a quicker way to test various methods.
+Alternatively, lifelong learning could benefit conventional robots, but assessing its effectiveness might take months or years.\ Soft robots offer a quicker \added{and more economical} way to test various methods.
 
 
 \section{Challenges}\label{sec:challenges}
