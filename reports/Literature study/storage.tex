@@ -3,6 +3,9 @@ In \cref{sec:dual}, many of the methods discussed employ a dual architecture whe
 
 This chapter will aim to provide an overview of the many different shapes and forms such libraries can take, as well as the manner in which librarians might keep them organized.
 
+\added{An important note is that throughout this chapter, notations for vectors, buffers, policies, etc.\ will vary from paragraph to paragraph.
+This is because the notation is adopted from the notation used in the literature, aiming to reflect the ideas of the authors as they intended it.}
+
 
 \section{Knowledge bases}\label{sec:KB}
 In this section, a brief overview on the type of knowledge that is stored (e.g., a policy itself, state transitions), and the form in which they are stored (e.g., tuples, abstract representations).
@@ -15,7 +18,7 @@ To accomplish a good performance over several different classification tasks, \t
 
 As described in \cref{sec:dual}, \textcite{Sprechmann2018} introduce memory-based parameter adaptation, where a memory module $M$ provides context to a network $g_\theta$, allowing it to appropriately adapt its parameters for better performance.\ This memory contains key-value pairs $(h_j,\,v_j)$, obtained during training and given by the embedding networks output and the training labels, respectively, i.e., $h_j = f_{\gamma}(x_j)$ and $v_j = y_j$.\ This means that the keys are represented by abstract feature vectors, the values are dependent on the task (e,g., one-hot encoded class labels for classification, target values for regression), and memory $M$ is thus a higher-dimensional space spanned by these keys and values.\
 
-\textcite{Schwarz2018} use a knowledge base in the form of a separate policy $\pi_{KB}$ \added{\cref{fig:P-and-C}}.\ This policy would thus be a neural network and is obtained through knowledge distillation~\cite{Hinton2015}, a process where the outputs of one model are used as labels to train a second model.\ Active policies can reference the knowledge base to accelerate learning (\cref{sec:retrieval}).\ When it is time to store a newly learned policy $\pi_t$, the outputs of the knowledge base's policy $\pi^{KB}_{t+1}$ are trained to approximate the outputs of the active policy $\pi$, whilst also referencing $\pi^{KB}_{t}$ to prevent drastic forgetting of old policies (\cref{sec:KB-maintainance}).\
+\textcite{Schwarz2018} use a knowledge base in the form of a separate policy $\pi^{KB}$ \added{\cref{fig:P-and-C}}.\ This policy would thus be a neural network and is obtained through knowledge distillation~\cite{Hinton2015}, a process where the outputs of one model are used as labels to train a second model.\ Active policies can reference the knowledge base to accelerate learning (\cref{sec:retrieval}).\ When it is time to store a newly learned policy $\pi_t$, the outputs of the knowledge base's policy $\pi^{KB}_{t+1}$ are trained to approximate the outputs of the active policy $\pi$, whilst also referencing $\pi^{KB}_{t}$ to prevent drastic forgetting of old policies (\cref{sec:KB-maintainance}).\
 
 The knowledge base in \textcite{Wang2022} stores a potentially infinite number of pairwise parameters $(\bvec{\theta},\,\bvec{\vartheta})$, where $\bvec{\theta}$ are the policy parameters, and $\bvec{\vartheta}$ represents the parametrized environment.\ These pairs are assigned to an environment cluster $M^{(l)}$, the purpose being to recognize the most similar environment model compared to the one currently encountered, and to use the corresponding policy parameters as a strong initial policy to fine-tune (\cref{sec:retrieval}).\ The form of the policy parameters $\bvec{\theta}$ again depends on the form of the policy itself.\ The environments, however, can be parametrized as models by training the reward function $r = g^1_{\bvec{\vartheta}}(s, a)$ and the state transition function $s' = g^2_{\bvec{\vartheta}}(s, a)$ and concatenating them to obtain $[r, s'] = g_{\bvec{\vartheta}}(s, a)$.\ An environment model $g_{\bvec{\vartheta}}$ can be trained on sequences of state-action pairs to produce corresponding reward-state sequences, and the corresponding parameters $\bvec{\vartheta}$ are stored alongside $\bvec{\theta}$ in the library.\
 
@@ -44,47 +47,23 @@ In \textcite{Xie2021}, knowledge transfer happens by simply pretraining a policy
 
 The generative model and task solving model from \textcite{Shin2017} are combined into a module termed the \emph{Scholar}.\ Each task requires the training of a new \emph{Scholar}, which is informed by the \emph{Scholar} of the preceding task: Along with the input data $x$ and labels $y$ for the task at hand, the current task solving model also receives generated samples $x'$ from the old \emph{Generator}, labeled by outputs $y'$ from the corresponding old \emph{Solver} \added{(see \cref{fig:DGR})}.
 
-\begin{figure}[!htb]
+\begin{figure}[htb]
     \centering
-    \begin{subfigure}[t]{0.35\textwidth}
+    \begin{subfigure}[t]{0.27\textwidth}
         \centering
-        \includegraphics[width=0.8\textwidth]{independance}
+        \includegraphics[width=\textwidth]{independance}
         \caption{\emph{``Geometrical interpretation of the independence measure $\delta$. Here, the dictionary consists of two data points $\{\bvec{d}_1, \bvec{d}_2\}$ which span a linear plane in the feature space. The independence measure $\delta$ for a new data point $\bvec{d}_{new}$ can be interpreted as the distance to this plane."}~\cite{Nguyen2011}.
         Figure and caption obtained from \textcite{Nguyen2011}.}
         \label{fig:dict-independence}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.6\textwidth}
+    \begin{subfigure}[r]{0.68\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{dict_update}
-        \caption{\emph{``Geometrical interpretation of individual independence measures $\delta^i = 1, 2, 3$ for the dictionary $\mathcal{D} = \{\bvec{d}_1, \bvec{d}_2, \bvec{d}_3\}$. The dictionary point with a minimal $\delta^i$ is more likely to be deleted. After every dictionary operation (e.g., insertion and deletion of dictionary points), the individual independence measures $\delta^i$ have to be incrementally updated"}~\cite{Nguyen2011}.
-        Figure and caption obtained from \textcite{Nguyen2011}.}
-        \label{fig:dict-update}
-    \end{subfigure}
-    \vfill
-    \begin{subfigure}[t]{0.8\textwidth}
-        \centering
-        \includegraphics[width=0.8\textwidth]{retaining_experiences}
+        \includegraphics[width=\textwidth]{retaining_experiences}
         \caption{The process of relabelling rewards on old buffers and subsequent improvement through onlne interaction.\ Figure obtained from \textcite{Xie2021}}
         \label{fig:retaining-experiences}
     \end{subfigure}
-%    \vfill
-    \begin{subfigure}[l]{0.4\textwidth}
-        \centering
-        \includegraphics[width=1.1\textwidth]{map_elites}
-        \caption{Graphical representation for a MAP-elites search space and grid map.\ Figure obtained from \textcite{Mouret2015}}
-        \label{fig:map-elites}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[r]{0.55\textwidth}
-        \centering
-        \includegraphics[width=0.9\textwidth]{env_library}
-        \caption{\emph{``[\dots] Lifelong incremental RL.\ $M_t \in \mathcal{M}, t = 1, 2, \dots$ denotes the specific MDP\footnote{Markov decision process}/environment at time period $t$, and $D$ denotes the dynamic environment over the MDP space $\mathcal{M}$, and $\bvec{\theta}$ denote learning parameters"}~\cite{Wang2022}.
-        Figure and caption obtained from \textcite{Wang2022}}
-        \label{fig:env-library}
-    \end{subfigure}
 \end{figure}
-
 
 \section{Maintaining the Knowledge Base}\label{sec:KB-maintainance}
 Maintaining the knowledge base can ensure that it remains informative.\ A knowledge base can be updated by adding new data points, by adapting existing data points, or - if applicable - updating a network or policy.\ Furthermore, these updates could be performed dynamically throughout the application's operational lifetime, or during separate phases only, e.g., updating the knowledge base during training and keeping it static at test time.
@@ -106,12 +85,38 @@ In \textcite{Xie2021}, for the online improvement of the pretrained policy, the 
 
 To transfer knowledge ``stored'' by old generative models in \textcite{Shin2017}, new \emph{Generators} are not only trained to imitate real input data from the task at hand, but also to imitate ``fake'' data produced by old models.\ The exact ratio at which real new samples and old fake samples are mixed is an important aspect that influences the rate at which new \emph{Scholars} will forget data from older models \added{(see \cref{fig:DGR})}.
 
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[t]{0.55\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{dict_update}
+        \caption{\emph{``Geometrical interpretation of individual independence measures $\delta^i = 1, 2, 3$ for the dictionary $\mathcal{D} = \{\bvec{d}_1, \bvec{d}_2, \bvec{d}_3\}$. The dictionary point with a minimal $\delta^i$ is more likely to be deleted. After every dictionary operation (e.g., insertion and deletion of dictionary points), the individual independence measures $\delta^i$ have to be incrementally updated"}~\cite{Nguyen2011}.
+        Figure and caption obtained from \textcite{Nguyen2011}.}
+        \label{fig:dict-update}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[l]{0.4\textwidth}
+        \centering
+        \includegraphics[width=1.1\textwidth]{map_elites}
+        \caption{Graphical representation for a MAP-elites search space and grid map.\ Figure obtained from \textcite{Mouret2015}}
+        \label{fig:map-elites}
+    \end{subfigure}
+    \vfill
+    \begin{subfigure}[r]{0.55\textwidth}
+        \centering
+        \includegraphics[width=0.9\textwidth]{env_library}
+        \caption{\emph{``[\dots] Lifelong incremental RL.\ $M_t \in \mathcal{M}, t = 1, 2, \dots$ denotes the specific MDP\footnote{Markov decision process}/environment at time period $t$, and $D$ denotes the dynamic environment over the MDP space $\mathcal{M}$, and $\bvec{\theta}$ denote learning parameters"}~\cite{Wang2022}.
+        Figure and caption obtained from \textcite{Wang2022}}
+        \label{fig:env-library}
+    \end{subfigure}
+\end{figure}
+
 
 \section{Summary}\label{sec:KB-summary}
 In \cref{tab:KB-summary}, a comprehensive overview of the methods discussed in the literature is presented.
 % TODO: discuss table in text, qualitative results
 
-\begin{table}[!htb]
+\begin{table}[htb]
     \small
     \centering
     \begin{tabularx}{\textwidth}{
