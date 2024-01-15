@@ -55,7 +55,7 @@
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{venn.pdf}}%
     \put(0.2622007,0.8310711){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Traditional supervised ML\\(all data at once)\end{tabular}}}}%
-    \put(0.54209712,0.6627123){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Reinforecement\\learning\end{tabular}}}}%
+    \put(0.54209712,0.6727123){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Reinforecement\\learning\end{tabular}}}}%
     \put(0.49579848,0.54275667){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Adaptive ML\\(incremental, continual,  ...)\end{tabular}}}}%
     \put(0.42,0.3961708){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}Parameter\\adaptation\end{tabular}}}}%
     \put(0.7357097,0.26917386){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}E.g. a PID controller\end{tabular}}}}%
