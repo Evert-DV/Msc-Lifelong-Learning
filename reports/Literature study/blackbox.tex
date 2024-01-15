@@ -26,7 +26,16 @@ Blackbox methods also allow for learning both forward and inverse dynamic models
 
 The form that the dynamic model takes can vary.\ For example, in \textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ the inputs are made available during the process of backpropagation and can be used \deleted{in matrices $A$ and $B$} to form a more interpretable state-space system\footnote{\added{The gradients are used in matrices $A$ and $B$ to obtain a linearized state-space system of the form $\bvec{x}_{k+1} = A\bvec{x}_k + B\bvec{u}_k$}}.\ In \textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.
 
-Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned \replaced{state-space system}{matrices $A$ and $B$} from \textcite{Gillespie2018} is used in a model predictive control setting, while the generated trajectories from \textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step to create the blackbox policy mentioned in \cref{sec:policies}).\ More examples of several blackbox dynamic models and their control scheme can be found in the literature.
+Since the lifelong adapting nature of the techniques is embedded in the dynamic model, the choice of control scheme in which the learned dynamic model is used can vary from implementation to implementation.\ To illustrate, the aforementioned \replaced{state-space system}{matrices $A$ and $B$} from \textcite{Gillespie2018} is used in a model predictive control setting, while the generated trajectories from \textcite{Thuruthel2019} are used as samples to train a blackbox control policy (the dynamic model is in essence an intermediary step to create the blackbox policy mentioned in \cref{sec:policies}, \added{see \cref{fig:thuruthel}}).\ More examples of several blackbox dynamic models and their control scheme can be found in the literature.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{thuruthel}
+    \caption{\emph{"Block diagram describing the complete procedure for obtaining the closed-loop control policy (top). The learned control policy is encoded by a feedforward neural network and provided the appropriate closed-loop actions (bottom)"}~\cite{Thuruthel2019}.
+    Figure and caption obtained from \textcite{Thuruthel2019}.}
+    \label{fig:thuruthel}
+\end{figure}
+
 
 \textcite{Nazeer2023} represent a forward dynamic model of the soft robotic arm as an RNN model that uses the two preceding states and three preceding control actions to predict the next state.\ The model is then used with the previously discussed MLP policy (\cref{sec:policies}).
 
@@ -37,11 +46,11 @@ The models are employed in a feedforward control scheme, supplemented by a feedb
 
 To accurately capture the nonlinearities of an inverse dynamic model, \textcite{Gijsberts2011} want to use a kernel function to map inputs to a nonlinear feature space.\ However, due to the high computational cost of such a transformation, they approximate the kernel as a `random feature' $z_\omega(x)$.\ This approximation $z_\omega(x)$ is a predefined nonlinear activation of a standard feedforward layer, but where the parameters $\bvec{\omega}$ and $\beta$ are sampled from specific distributions to obtain a good approximation of the desired kernel function.\ This makes tha architecture of the dynamic model essentially akin to a FNN, but with specifically initialized and frozen parameters for the very first layer.
 
-\textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop (a) semi-parametric model(s) that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
+\textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop semi-parametric models that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
 
 Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{Nguyen2011}.\ For more complex tasks, a more intricate control system might be warranted.
 
-\begin{figure}[!htb]
+\begin{figure}[htb]
     \centering
     \begin{subfigure}[t]{0.43\textwidth}
         \centering
@@ -81,7 +90,7 @@ In \textcite{Nguyen2011}, the authors not only update their model incrementally,
 The semi-parametric models from \textcite{Romeres2016} are learned using the Recursive Least-Squares algorithm~\cite{Landau2011}, which inherently updates the model incrementally.\ Much alike \textcite{Gijsberts2011}, this method uses a numerical trick from the field of adaptive filtering (Cholesky-based updates) to improve efficiency and enable updates in real-time.
 
 
-\section{Summary}\label{sec:bb-summary}
+\section{Summary and Results}\label{sec:bb-summary}
 In \cref{tab:DM}, a clear comparison of blackbox methods in lifelong learning is provided.\ This summary aims to give a straightforward reference, highlighting the strengths of blackbox methods and their role in lifelong learning.  % TODO: discuss table in text
 
 \begin{table}[!htb]
@@ -114,3 +123,27 @@ In \cref{tab:DM}, a clear comparison of blackbox methods in lifelong learning is
 \footnotetext[3]{Used for generating training samples}
 \footnotetext[4]{The incremental nature of the method is achieved by a third network, not by the dynamics model or control policy}
 \footnotetext[5]{After training on generated samples}
+
+\added{Some significant/promising results related to the representations of dynamic models and control policies in \cref{tab:DM} can be pointed out\protect\footnote{\added{Note that for some methods, the specific implementation of a dynamic model or control policy is more of an afterthought, as opposed to the framework in which they are used.\ Such results will be dicussed in later chapters.}}.
+For example, \protect\textcite{Gillespie2018} provide a qualitative result of the dynamic model's performance (\emph{Fig. 4} in \protect\textcite{Gillespie2018}) showing only minor deviations from the measured labels.
+The resulting MPC controller using said model is more robust to changes in the robot dynamics, as the model can be easily updated using new data.}
+
+\added{The approach taken by \protect\textcite{Gijsberts2011} was evaluated on several datasets relating to different robotic manipulators with varying degrees of freedom (1-7).
+The results show that the performance steadily improves with an increasing number of random features, outperforming other methods such as Gaussian processes from 1000 features onwards.
+Moreover, the method is the fastest to both train and predict of all methods compared in \protect\textcite{Gijsberts2011}, with a constant prediction time for training samples ranging up to 14000 samples.}
+
+\added{The learned dynamic model from \protect\textcite{Nguyen2011} is evaluated on a 7-DOF robotic arm, and is shown to be competitive with models obtained by other regression methods, which is significant due to its use of a much sparser dataset (\cref{ch:storage}).
+The model is able to adapt to alterations in the dynamics of the arm (such as added mass to the end-effector) within a matter of \emph{tens of seconds} (online).}  % TODO: expand on sparsification results and realtime applicability in ch5 results
+
+\added{\protect\textcite{Romeres2016} show that informing the blackbox Gaussian process regression with information of a 6-DOF robotic arm's physical parameters can slightly improve the performance of the model.
+Noteably, however, no qualitative results are provided for the claim of real-time applicability.}
+
+\added{The performance of the dynamic model and control policy from \protect\textcite{Nazeer2023} are not directly compared to other implementations, but the improvements made by the use of their pecific architecture will be discussed in \cref{sec:expansions}.}  % TODO: dual architecture result section
+
+\added{No specific results are given for the accuracy of the dynamic model from \protect\textcite{Thuruthel2019}, but the control policy resulting from the generated sample trajectories is shown to be robust to both dynamic changes and variations in control frequency, and sensory noise.}
+
+\added{The controller fron \protect\textcite{Alessi2023} is able to generalize over environment dynamics as well as the dynaics of the robot itself.
+Futhermore, the polcy generalizes over new tasks and new observations.}
+
+\added{The resulting distilled policy from \protect\textcite{Zhou2022} is shown to be more stable in both encountered environments, while maintaining better performance than pure MPO (used in online interaction).
+The advantages related to the specific implementation of their framework are discussed in \Cref{ch:architecture}.}  % TODO: discuss pipeline in ch4
