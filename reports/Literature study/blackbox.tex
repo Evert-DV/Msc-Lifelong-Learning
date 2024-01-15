@@ -22,7 +22,7 @@ In \textcite{Lu2020}, a more complicated technique is used.\ A probabilistic `sk
 \section{Learning the Dynamic Model}\label{sec:DM}
 One way of having continually adapting control for soft robots is by implementing a (traditional) control scheme that uses a dynamic model (either forward or inverse) of the robot and then to incrementally update that model.\ The idea of learning a dynamic model for soft robots has advantages even outside the context of lifelong adaptation: many soft robots have such a large number of degrees of freedom and complex and nonlinear dynamics, that analytically deriving a dynamic model is both cumbersome and often insufficiently accurate~\cite{Kim2021, Thuruthel2019, Giorelli2015, Gillespie2018}.
 
-Blackbox methods also allow for learning both forward and inverse dynamic models and can thus be used in several control schemes.\ When learning a forward model, the robot's actions and resulting states can be used as the inputs and outputs, respectively, this is so-called \emph{direct modeling}~\cite{Nguyen-Tuong2011}.\ In the case of learning inverse dynamic models, such direct approaches might not always be applicable, due to the multiple solutions that exist for the inverse dynamics of robots with redundant degrees of freedom.\ Instead, an \emph{indirect-modeling} approach can be taken, where the model is trained to minimize the error of the feedback controller~\cite{Nguyen-Tuong2011}.
+Blackbox methods also allow for learning both forward and inverse dynamic models \added{(see \cref{fig:model-types})} and can thus be used in several control schemes.\ When learning a forward model, the robot's actions and resulting states can be used as the inputs and outputs, respectively, this is so-called \emph{direct modeling}~\cite[\added{see \cref{fig:direct-v-indirect}}]{Nguyen-Tuong2011}.\ In the case of learning inverse dynamic models, such direct approaches might not always be applicable, due to the multiple solutions that exist for the inverse dynamics of robots with redundant degrees of freedom.\ Instead, an \emph{indirect-modeling} approach can be taken, where the model is trained to minimize the error of the feedback controller~\cite{Nguyen-Tuong2011}.
 
 The form that the dynamic model takes can vary.\ For example, in \textcite{Gillespie2018}, a neural network is trained to predict the next state of the robot, given the current state and a control action, the analytical gradients of these outputs w.r.t.\ the inputs are made available during the process of backpropagation and can be used \deleted{in matrices $A$ and $B$} to form a more interpretable state-space system\footnote{\added{The gradients are used in matrices $A$ and $B$ to obtain a linearized state-space system of the form $\bvec{x}_{k+1} = A\bvec{x}_k + B\bvec{u}_k$}}.\ In \textcite{Thuruthel2019} on the other hand, a forward model is learned for open-loop control, using the control action, the current state, and the previous state as input, and the next state as output to train a recurrent neural network.\ This forward model is kept in its more abstract blackbox form as a recurrent neural network (RNN), and is used in combination with trajectory optimization to generate trajectories in open-loop control.
 
@@ -40,6 +40,26 @@ To accurately capture the nonlinearities of an inverse dynamic model, \textcite{
 \textcite{Romeres2016} represent an inverse dynamic model of a robotic arm as a Gaussian process, but also experiment with using the arm's rigid body dynamics in several ways to enhance the model's performance.\ By incorporating the information from the robot's physical parameters into both the mean function and the covariance kernel of the Gaussian process, they develop (a) semi-parametric model(s) that are used in a feedforward manner where a feedback controller adds small corrections to the control actions outputted by the dynamic model.
 
 Contrary to blackbox policy learning methods, the adaptation to new tasks is not included in the learning process of the dynamic model, but is entirely dependent on the control policy.\ In case control policies have been defined in advance for several tasks, these task settings might serve as a test to verify that the dynamic model generalizes well over these different settings.\ In situations where tasks are not known in advance, a control scheme such as an incrementally updated (inverse) dynamics model in some form of a feedback control loop might serve for simple applications~\cite{Nguyen2011}.\ For more complex tasks, a more intricate control system might be warranted.
+
+\begin{figure}[!htb]
+    \centering
+    \begin{subfigure}[t]{0.43\textwidth}
+        \centering
+        \includegraphics[width=0.8\textwidth]{model_types}
+        \caption{\emph{``Graphical illustrations for different types of models. The \emph{white nodes} denote the observed quantities, while the \emph{gray nodes} represent the quantities to be \emph{inferred}.
+        \textbf{a} The forward model allows inferring the next state given current state and action.
+        \textbf{b} The inverse model determines the action required to move the system from the current state to the next state}~\cite{Nguyen-Tuong2011}.\ Figure (cropped) and caption obtained from \textcite{Nguyen-Tuong2011}.}
+        \label{fig:model-types}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.55\textwidth}
+        \centering
+        \includegraphics[width=1\textwidth]{direct_v_indirect}
+        \caption{\emph{``\textbf{a} In the direct modeling approach, the model is learned directly from the observations.
+        \textbf{b} Indirect modeling approximates the model using the output of the feedback controller as error signal [\dots]}~\cite{Nguyen-Tuong2011}.\ Figure (cropped) and caption obtained from \textcite{Nguyen-Tuong2011}.}
+        \label{fig:direct-v-indirect}
+    \end{subfigure}
+\end{figure}
 
 
 \section{Incremental Learning}\label{sec:incremental}
