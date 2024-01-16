@@ -72,11 +72,11 @@ class Adapter(nn.Sequential):
 
 def main():
     np.random.seed(16)
-    # torch.manual_seed(16)
+    torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
-    adapter = Adapter(3, 1)
+    adapter = Adapter(5, 1)
 
     optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
@@ -84,21 +84,23 @@ def main():
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     signal = []
+    signal_naive = []
     targets = []
     controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 180, dt)
+    t = np.arange(0, 300, dt)
     target = np.array([11.])
     buffer = []
     x0_adj = x0
+    x0_naive = x0
 
     for ti in t:
         if ti % 10 == 0 and ti != 0:
             print("\nFitting model...")
             adapter.train()
             buffer = np.asarray(buffer)
-            features = buffer[:, :3]
+            features = buffer[:, :-1]
             label_e = buffer[:, -3:-2] - buffer[:, -1:]
             features = torch.from_numpy(features).float()
             features.requires_grad = True
@@ -119,37 +121,48 @@ def main():
 
         adapter.eval()
         targets.append(target)
-        a = controller.compute_control(x0_adj, target, dt)
-        controls.append(a)
+        a_w_adj = controller.compute_control(x0_adj, target, dt)
+        a_naive = controller.compute_control(x0_naive, target, dt)
+        controls.append(a_w_adj)
 
         disturbance = 0.
-        # if np.random.rand() < 0.015:
-        #     disturbance = np.random.rand(1) * 1000
+        # if np.random.rand() < 0.005:
+        #     disturbance = np.random.rand(1) * 10000
 
-        x = system.response(x0, a + disturbance, do_update=True)
+        x = system.response(x0, a_w_adj + disturbance, do_update=False)
+        x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
         labels.append(x[0] - target)
-        predicted_e = adapter(torch.tensor([*x0, *a]).float())
+        predicted_e = adapter(torch.tensor([*x0, *a_w_adj, *x]).float())
         predictions.append(predicted_e.item())
         x_adj = x
-        # x_adj[0] += e.item()
+        # x_adj[0] -= predicted_e.item()
 
         signal.append(x)
-        buffer.append([*x0, *a, *x, *target])
+        signal_naive.append(x_naive)
+        buffer.append([*x0, *a_w_adj, *x, *target])
 
         x0 = x
+        x0_naive = x_naive
         x0_adj = x_adj
 
+        if ti % 30 == 0:
+            x0 = [9.9, 0]
+            x0_naive = x0
+            # x0 = [np.random.rand() * 6 + 11., 0.]
+            x0_adj = x0
+
     signal = np.asarray(signal)
+    signal_naive = np.asarray(signal_naive)
 
     fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal[:, 0])
-    ax[0].plot(t, targets)
+    ax[0].plot(t, signal_naive[:, 0])
+    ax[0].plot(t, targets, '--')
     ax[0].invert_yaxis()
 
     ax[1].plot(t, controls)
     ax[1].invert_yaxis()
-
 
     ax[2].plot(t, predictions)
     ax[2].plot(t, labels)
