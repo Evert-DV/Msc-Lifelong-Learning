@@ -86,7 +86,9 @@ def main():
     signal = []
     targets = []
     controls = []
-    t = np.arange(0, 120, dt)
+    predictions = []
+    labels = []
+    t = np.arange(0, 180, dt)
     target = np.array([11.])
     buffer = []
     x0_adj = x0
@@ -97,16 +99,16 @@ def main():
             adapter.train()
             buffer = np.asarray(buffer)
             features = buffer[:, :3]
-            e = buffer[:, -3:-2] - buffer[:, -1:]
+            label_e = buffer[:, -3:-2] - buffer[:, -1:]
             features = torch.from_numpy(features).float()
             features.requires_grad = True
-            e = torch.from_numpy(e).float()
+            label_e = torch.from_numpy(label_e).float()
 
             for epoch in range(100):
                 print(f"\rEpoch {epoch}", end="")
                 optimizer.zero_grad()
                 output = adapter(features)
-                loss = loss_fn(output, e)
+                loss = loss_fn(output, label_e)
                 loss.backward()
                 optimizer.step()
 
@@ -121,11 +123,13 @@ def main():
         controls.append(a)
 
         disturbance = 0.
-        if np.random.rand() < 0.1:
-            disturbance = np.random.rand(1) * 50
+        # if np.random.rand() < 0.015:
+        #     disturbance = np.random.rand(1) * 1000
 
         x = system.response(x0, a + disturbance, do_update=True)
-        e = adapter(torch.tensor([*x0, *a]).float())
+        labels.append(x[0] - target)
+        predicted_e = adapter(torch.tensor([*x0, *a]).float())
+        predictions.append(predicted_e.item())
         x_adj = x
         # x_adj[0] += e.item()
 
@@ -137,7 +141,7 @@ def main():
 
     signal = np.asarray(signal)
 
-    fig, ax = plt.subplots(2, 1, sharex=True)
+    fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal[:, 0])
     ax[0].plot(t, targets)
@@ -145,6 +149,10 @@ def main():
 
     ax[1].plot(t, controls)
     ax[1].invert_yaxis()
+
+
+    ax[2].plot(t, predictions)
+    ax[2].plot(t, labels)
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
