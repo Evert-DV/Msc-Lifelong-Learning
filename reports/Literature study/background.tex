@@ -1,4 +1,4 @@
-\chapter{Background and Definition}\label{ch:background}\comment{Added: chapter}
+\chapter{Background and Definition}\label{ch:background}
 Before exploring the literature on lifelong learning techniques, it is important to set appropriate definitions of several widely used terms, provide brief explanations of key concepts, and to give sufficient context for the scope of the research.
 
 
@@ -23,6 +23,23 @@ Adapting to a change or disturbance does not have to directly involve learning m
 Any methods that involve tuning the parameters of models or control systems will be considered under `learning'.
 This spans some implementations of traditional adaptive control (refer to \cref{sec:adaptive-control}) to state-of-the-art reinforcement learning algorithms.
 
+\added{
+To provide an illustrative example: A classic PID controller can, if tuned correctly, nearly instantaniously adapt to disturbances, bringing a system back to the desired state.
+Consider now a mass-spring-damper system for which this controller has been tuned for position control, if the system parameters evolve, the PID controller will still eventually bring the system to the desired state, but in a less optimal manner (e.g.\ larger overshoots, over-/underdamped behaviour, etc.).
+In the context of this study, this would be considered adapting.
+If, however, the parameters of the PID controller were continuously updated to maintain ideal performance, that would be considered learning.
+}
+
+\begin{figure}[!htb]
+    \begin{center}
+        \def\svgwidth{0.35\textwidth}
+        \fontsize{7pt}{1pt}\selectfont\input{Literature study/figures/venn.pdf_tex}
+    \end{center}
+    \captionsetup{width=0.8\textwidth}
+    \caption{Venn diagram showing the differences and overlap between the concepts of `learning' and `adapting'.
+    In the intersection of the two, reinforcement learning relates to interaction-based methods (see \cref{par:RL}), adaptive ML encompasses (supervised) ML methods where models are trained on sequential batches of data (during deployment), and parameter adaptation ties ML into adaptive control (see \cref{sec:adaptive-control}).}
+    \label{fig:venn}
+\end{figure}
 
 \section{Learning Paradigms and Terminology}\label{sec:paradigms}
 This section delves into various learning paradigms that are often considered when facing the lifelong learning challenge and explains some key terminology essential for understanding these paradigms.
@@ -32,10 +49,10 @@ One might consider gathering an immense amount of data for several settings and 
 Unfortunately, this would require several key assumptions, e.g., the data will always be accessible for later updates; the imbalance of different settings in the data perfectly resembles that of the real world; when and how the data will shift is known exactly beforehand; and several other assumptions~\cite{Lesort2020}.
 
 \paragraph{Policy learning}
-In this review, policies will simply relate to any decision-making process.\ The policy can be a program, explicitly coded by a software engineer, or it can be a decision tree, or a machine learning model of any kind.
-In short, any process that in someway reviews the current situation and subsequently produces an action or strategy, will be considered a policy.
+In this review, policies will simply relate to any decision-making process.\ \replaced{For example, the}{The} policy can be a program, explicitly coded by a software engineer, or it can be a decision tree, or a machine learning model of any kind.
+In short, any process that in someway reviews the current situation and subsequently produces an action or strategy, will be considered a policy~\added{\protect\cite{Nguyen-Tuong2011, Han2023a, Ibarz2021}}.
 
-\paragraph{Reinforcement learning}
+\paragraph{Reinforcement learning}\label{par:RL}
 Reinforcement learning is a goal-based learning method where interaction with the environment is key.
 It is akin to teaching a pet a trick, where good behaviors are rewarded with a treat, thereby encouraging the decision-making process to repeat the behavior or produce others like it.
 
@@ -47,4 +64,4 @@ Policy-based methods learn a direct mapping from state to action, while model-ba
 
 \paragraph{Replay buffers}
 In reinforcement learning, the agent learns through interaction with the environment.\ This setting requires at least temporary storing data obtained through interaction.
-This storage is usually called a replay buffer.
+This storage is usually called a replay buffer~\added{\protect\cite{Lesort2020, Ibarz2021}}.

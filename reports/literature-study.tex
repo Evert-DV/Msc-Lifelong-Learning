@@ -16,10 +16,12 @@
 \usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{cleveref}
+\usepackage{subcaption}
 %\usepackage{showframe}
 
 \addbibresource{Literature study/library.bib}
 
+\graphicspath{{Literature study/figures/}}
 % bold italic notation in math mode
 \newcommand{\bvec}[1]{\mathbfit{#1}}
 
@@ -117,7 +119,8 @@
 %% Use letters for the chapter numbers of the appendices.
     \appendix
 
-    \listoftodos
+%    \listoftodos
+    \newpage
     \listofchanges
 
 %\input{appendix-a}
