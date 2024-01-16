@@ -86,14 +86,14 @@ def main():
     signal = []
     targets = []
     controls = []
-    t = np.arange(0, 60, dt)
-    target = None
+    t = np.arange(0, 120, dt)
+    target = np.array([11.])
     buffer = []
     x0_adj = x0
 
     for ti in t:
         if ti % 10 == 0 and ti != 0:
-            print("Fitting model...")
+            print("\nFitting model...")
             adapter.train()
             buffer = np.asarray(buffer)
             features = buffer[:, :3]
@@ -112,17 +112,22 @@ def main():
 
             buffer = []
 
-        if ti % 120 == 0:
-            target = np.random.rand(1) * 6 + 7
+        # if ti % 20 == 0:
+        #     target = np.random.rand(1) * 6 + 7
 
         adapter.eval()
         targets.append(target)
         a = controller.compute_control(x0_adj, target, dt)
         controls.append(a)
-        x = system.response(x0, a, do_update=True)
+
+        disturbance = 0.
+        if np.random.rand() < 0.1:
+            disturbance = np.random.rand(1) * 50
+
+        x = system.response(x0, a + disturbance, do_update=True)
         e = adapter(torch.tensor([*x0, *a]).float())
         x_adj = x
-        x_adj[0] += e.item()
+        # x_adj[0] += e.item()
 
         signal.append(x)
         buffer.append([*x0, *a, *x, *target])
@@ -145,6 +150,7 @@ def main():
     if not os.path.exists("./tmp"):
         os.makedirs("./tmp")
     fig.savefig("./tmp/plot.png", dpi=300)
+    plt.show()
 
 
 if __name__ == "__main__":
