@@ -6,7 +6,7 @@ Well-designed control and learning architectures can either enable or facilitate
 In this chapter, these two main strategies will be further explored in the literature.
 
 
-\section{Traditional Adaptive Control}\label{sec:adaptive-control}\comment{Added: Section 4.1}
+\section{Traditional Adaptive Control}\label{sec:adaptive-control}
 Adaptive control is about real-time control of uncertain dynamic systems through adaptation and learning, an idea that has been in continuous development since the 1950s~\cite[section 2]{Annaswamy2021}.\ The basic principle of adaptive control, is to adapt to environmental changes for better performance.\ This concept was first applied in engineering in the late 1950s, marking the inception of adaptive control systems, which monitor their own performance and adjust parameters accordingly.
 
 Unlike conventional feedback control, which aims to mitigate disturbances acting on the \emph{controlled} variables by referencing the desired values and simply changing the controller's \emph{input} accordingly, an adaptive controller can deal with disturbances to the \emph{controller's} variables and change the \emph{parameters} of the controller.\ To further distinguish adaptive control from conventional feedback control, adaptive control is generally defined by three concepts, namely: measuring plant performance, a performance-based decision, and an adaptation mechanism~\cite[section 1.2]{Landau2011}.\
@@ -14,6 +14,7 @@ Unlike conventional feedback control, which aims to mitigate disturbances acting
 The architecture and the interactions of these three main mechanisms can vary between implementations.\ For example, some systems use a reference model of the plant for performance measurements, such as in Model Reference Adaptive Control.\ Likewise, for adaptation mechanisms options include methods such as having a separate controller as an extension to the scheme, or several preset controllers to switch between~\cite[section 1.3]{Landau2011}.
 
 Recent developments demonstrate the increasing use of machine learning techniques with traditional adaptive control concepts.\ Machine learning, particularly reinforcement learning, has enriched the adaptation mechanisms, enabling more intricate and nuanced performance-based decisions in adaptive control systems, reflecting a broader trend towards more learning-based control methods~\cite[section 2]{Annaswamy2021}.
+
 
 \section{Dual Architectures}\label{sec:dual}
 Under `dual architectures' the methods are gathered that have separate modules for solving different aspects of the lifelong learning challenge.\ The term `dual' is used here in a very broad sense because each module might be a grouping of various techniques with intricate architectures.\ However, studying the literature, it can be found that most of the methods discussed here can be broken down into two main modules.\ Generally, these dual architectures often exist either of a policy/control module in combination with some type of knowledge base used for storing previous experiences and informing the policy (refer to \cref{ch:storage} for details on how knowledge bases can differ in implementation), or two (or more) control policies that are each in turn capable of handling low uncertainty and high uncertainty situations.
@@ -24,49 +25,84 @@ Having established the broad framework and significance of dual architectures, e
 
 In \textcite{Wang2022}, a knowledge base stores potentially infinite sets of parametrized environments along with their respective control strategies.\ This repository is used to guide the current control policy: When a new environment is encountered, the environment models in the knowledge base are evaluated on how well they fit the observations.\ The control policy is then initialized using the policy parameters belonging to the most similar environment found in this knowledge base, and the policy continues to learn online.\ In addition, environment models can be added to the library when no suitable match to the observations can be found.
 
-\textcite{Schwarz2018} utilize an architecture consisting of two modules, which they name the knowledge base and the active column.\ During two alternating phases, progression and compression, the active column learns a new task and the learned policy is distilled into the knowledge base, respectively.\ The knowledge base in this case is a policy $\pi_{t}^{KB}$ that serves as a stable reference for the active policy $\pi_{t+1}$ during progression and remains unchanged at this time.\ During compression, the newly learned active policy is distilled into $\pi_{t}^{KB}$ resulting in an updated policy $\pi_{t+1}^{KB}$, and the cycle can repeat.
+\textcite{Schwarz2018} utilize an architecture consisting of two modules, which they name the knowledge base and the active column.\ During two alternating phases, progression and compression, the active column learns a new task and the learned policy is distilled into the knowledge base, respectively.\ The knowledge base in this case is a policy $\pi_{t}^{KB}$ that serves as a stable reference for the active policy $\pi_{t+1}$ during progression and remains unchanged at this time.\ During compression, the newly learned active policy is distilled into $\pi_{t}^{KB}$ resulting in an updated policy $\pi_{t+1}^{KB}$, and the cycle can repeat \added{(see \cref{fig:P-and-C})}.
 
 To combat the issue of forgetting previous policies while training on new tasks, a common approach is to store old experiences and intermittently reuse them during the training process of a new policy.\ One downside is that this approach can be very memory-inefficient.\ \textcite{Shin2017} therefore propose a method where a deep generative model, a so-called \emph{Generator}, is trained to mimic the training data provided for a task-solving model called the \emph{Solver}.\ The Solver is then trained on a mix of actual training data and generated samples provided by the Generator.\ Likewise, when a new Generator is trained to mimic the data of the next task, some samples created by the previous Generator are mixed in.\ This ensures that knowledge is not forgotten, since each Generator also learns to recreate data generated by its predecessor.
+\added{A schematic of this process can be found in \cref{fig:DGR}.}
 
-In \textcite{Sprechmann2018}, an embedding network $f_{\gamma}$ and an output network $g_{\theta}$ learn to maximize the likelihood of $p(y\mid x, \gamma, \theta) = g_{\theta}(f_{\gamma}(x))$.\ The reason for the embedding-output architecture is the expansion of the embedding network with a memory $M$.\ This memory contains embeddings from $f_\gamma$ and corresponding training labels, stored during training.\ At test time, the embedding network queries the memory for similar embeddings it might contain, and uses these to construct a context (refer to \cref{ch:storage} for technical details).\ Based on this context, the parameters $\theta$ of the output network are adapted to obtain the more optimal $\theta^x = \theta + \Delta_{M}(x, \theta)$, where $\Delta_{M}(x, \theta)$ is a learned adaptation based on the context provided by $x$.
+In \textcite{Sprechmann2018}, an embedding network $f_{\gamma}$ and an output network $g_{\theta}$ learn to maximize the likelihood of \replaced{a correct prediction from}{$p(y\mid x, \gamma, \theta) = $}$g_{\theta}(f_{\gamma}(x))$\added{, given the networks' parameters}.\ The reason for the embedding-output architecture is the expansion of the embedding network with a memory $M$.\ This memory contains embeddings from $f_\gamma$ and corresponding training labels, stored during training.\ At test time, the embedding network queries the memory for similar embeddings it might contain, and uses these to construct a context (refer to \Cref{ch:storage} for technical details).\ Based on this context, the parameters $\theta$ of the output network are adapted to obtain \deleted{the} more optimal \replaced{parameters, resulting in better predictions}{$\theta^x = \theta + \Delta_{M}(x, \theta)$, where $\Delta_{M}(x, \theta)$ is a learned adaptation based on the context provided by $x$}.
+
+\begin{figure}[htb]
+    \centering
+    \begin{subfigure}[tl]{0.315\textwidth}
+        \centering
+        \adjincludegraphics[trim={0 0 {0.34\width} 0}, width=\textwidth, clip]{progress_and_compress}
+        \caption{\emph{``Illustration of the Progress \& Compress learning process. In the compress phases (C), the policy learnt most recently by the active column (green) is distilled to the knowledge base (blue) while protecting previous contents with EWC (Elastic Weight Consolidation). In the progress phases (P), new tasks are learnt by the active column while reusing features from the knowledge base via lateral, layerwise connections"}~\cite{Schwarz2018}. Figure (cropped) and caption obtained from \textcite{Schwarz2018}, see \Cref{ch:storage} for more technical details.}
+        \label{fig:P-and-C}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[tr]{0.635\textwidth}
+        \centering
+        \adjincludegraphics[trim={{0.2\width} 0 0 0}, width=\textwidth, clip]{DGR}
+        \caption{\emph{``Sequential training of scholar models.
+            [\dots] Training a sequence of scholar models is equivalent to continuous training of a single scholar while referring to its most recent copy.
+            (b) A new generator is trained to mimic a mixed data distribution of real samples $\bvec{x}$ and replayed inputs $\bvec{x'}$ from previous generator.
+            (c) A new solver learns from real input-target pairs $(\bvec{x,\ y})$ and replayed input-target pairs $(\bvec{x',\ y'})$, where replayed response $\bvec{y'}$ is obtained by feeding generated inputs into previous solver"}~\cite{Shin2017}. Figure (cropped) and caption obtained from \textcite{Shin2017}, see \Cref{ch:storage} for more technical details.}
+        \label{fig:DGR}
+    \end{subfigure}
+    \vfill
+    \begin{subfigure}[tr]{0.8\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{forgetting_and_imbalance}
+        \caption{The `offline distillation pipeline'.\ Figure obtained from \textcite{Zhou2022}.}
+        \label{fig:F_and_I}
+    \end{subfigure}
+\end{figure}
 
 An example of another approach taken when using dual architectures is found in \textcite{Lu2019}.\ Two modules, a model-free and a model-based module, work in synthesis to simulate the way human beings behave: functioning on \emph{autopilot} most of the time and extensively planning only when we are uncertain.\ In the model-free module, a policy optimization algorithm (in this case, TD3~\cite{Fujimoto2018}) uses the policy to propose an initial plan, while the standard deviation across an ensemble of value functions is used to provide a measure of uncertainty.\ Based on this uncertainty, a planning horizon $H$ is set (short horizons for high uncertainty, and vice versa) and the model-based planner (MPPI) begins updating the initial plan for the given horizon, using the ensemble of value functions to evaluate its plans.\ During this model-based planning, any rollouts of potential plans are added to a replay buffer $\mathcal{D}_{\pi}$ which is subsequently used to train the TD3 policy.
 
-In \textcite{Zhou2022} the development of a policy exists of two phases: an online interaction phase and an offline distillation phase.\ Each phase employs a different learning algorithm.\ During interaction, a policy $\pi_0$ is trained online using MPO, which is good at exploring and quickly adapting to new environments, but does not necessarily counter forgetting.\ This interaction and simultaneous training happens over multiple environments or tasks, and data such as the state transitions, actions, and rewards, is gathered and saved in a replay buffer $\mathcal{D}$.\ Once finished, the policy $\pi_0$ is discarded, and a new policy $\pi_1$ is trained offline on buffer $\mathcal{D}$ using CRR, which is much better for generalization.\ This second policy is then deployed, and the agent is able to function in all environments encountered during interaction.\ Intuitively, the data in the buffer reflects the strong adaptability from the online algorithm and is therefore a good guide for the second policy.\ Additionally, whilst the initial policy $\pi_0$ might have forgotten important experiences by the end of its training, the second policy can generalize over the data and thus counter forgetting, while also resulting in a more refined or distilled version of the initial policy.
+In \textcite{Zhou2022} the development of a policy exists of two phases: an online interaction phase and an offline distillation phase.\ Each phase employs a different learning algorithm.\ During interaction, a policy $\pi_0$ is trained online using MPO, which is good at exploring and quickly adapting to new environments, but does not necessarily counter forgetting.\ This interaction and simultaneous training happens over multiple environments or tasks, and data such as the state transitions, actions, and rewards, is gathered and saved in a replay buffer $\mathcal{D}$.\ Once finished, the policy $\pi_0$ is discarded, and a new policy $\pi_1$ is trained offline on buffer $\mathcal{D}$ using CRR, which is much better for generalization.\ This second policy is then deployed, and the agent is able to function in all environments encountered during interaction.
+\added{Refer to \cref{fig:F_and_I} for a comprehensive overview of the method.}
+Intuitively, the data in the buffer reflects the strong adaptability from the online algorithm and is therefore a good guide for the second policy.\ Additionally, whilst the initial policy $\pi_0$ might have forgotten important experiences by the end of its training, the second policy can generalize over the data and thus counter forgetting, while also resulting in a more refined or distilled version of the initial policy.
 
 
 \section{Architectural Expansions}\label{sec:expansions}
 This section groups methods where an already functional control scheme or policy is enhanced by adding one or more modules to the scheme, enabling it to learn and/or adapt continually without actually altering the preexisting policy.\
-\deleted{The idea behind such techniques was already discussed in \mbox{\cref{sec:adaptive-control}}, but here the focus will be on approaches that incorporate more of a learning aspect rather than simply adapting.}
 
-An example of such a scheme is given by \textcite{Nazeer2023}.\ Their use of a blackbox control policy and a data-driven dynamic model was discussed in \cref{sec:policies} and~\ref{sec:DM}.\ In this approach, the current state of the system is used to determine the next control action through the policy.\ This action then feeds into the dynamic model, predicting the system's next state.\ However, these models are static and do not adapt during operation.\ To ensure that the robot can continually adapt, an online regressing network is added in a feedback loop: With the physical robot as reference, the error between the actual state and the predicted state is measured.\ A buffer stores this error along with the policy's control action that produced these states.\ The online regressing network periodically trains on this buffer to predict the error that will result from a control input.\ This predicted error is added to the robot's actual resulting state to provide the policy with a mismatched state that will effectively result in a control action that compensates the error.
+An example of such a scheme is given by \textcite{Nazeer2023} \added{(\cref{fig:policy-adaptation})}.\ Their use of a blackbox control policy and a data-driven dynamic model was discussed in \cref{sec:policies} and~\ref{sec:DM}.\ In this approach, the current state of the system is used to determine the next control action through the policy.\ This action then feeds into the dynamic model, predicting the system's next state.\ However, these models are static and do not adapt during operation.\ To ensure that the robot can continually adapt, an online regressing network is added in a feedback loop: With the physical robot as reference, the error between the actual state and the predicted state is measured.\ A buffer stores this error along with the policy's control action that produced these states.\ The online regressing network periodically trains on this buffer to predict the error that will result from a control input.\ This predicted error is added to the robot's actual resulting state to provide the policy with a mismatched state that will effectively result in a control action that compensates the error.
 
-A planner of choice is used to control a robot in \textcite{Chatzilygeroudis2016}.\ However, once a significant drop in performance is detected (e.g.,\ due to unexpected damage), the method employs various extra modules to counter this performance-drop.\ Based on the \emph{Intelligent Trial and Error} algorithm (IT\&E)~\cite{Cully2015}, the authors use MAP-elites~\cite[refer to \cref{ch:storage}]{Mouret2015} offline to create a behavior-performance map of atomic behaviors the robot could execute.\ Contrary to standard IT\&E, the \emph{performance} of a behavior is not a qualitative measure, but rather a Gaussian Process that describes the relative outcome of the behavior (termed the \emph{Generic Reward} by the authors) and is aimed to be generic enough so that it is task-independent.\ A separate \emph{Reward Selection Layer} (RSL) chooses the actual qualitative measure\footnote{The authors do not provide any details on \emph{how} this is achieved} to use as an evaluation of the \emph{Generic Reward}.\\
+A planner of choice is used to control a robot in \textcite{Chatzilygeroudis2016}.\ However, once a significant drop in performance is detected (e.g.,\ due to unexpected damage), the method employs various extra modules to counter this performance-drop.\ Based on the \emph{Intelligent Trial and Error} algorithm (IT\&E)~\cite{Cully2015}, the authors use MAP-elites~\cite[refer to \Cref{ch:storage}]{Mouret2015} offline to create a behavior-performance map of atomic behaviors the robot could execute.\ Contrary to standard IT\&E, the \emph{performance} of a behavior is not a qualitative measure, but rather a Gaussian Process that describes the relative outcome of the behavior (termed the \emph{Generic Reward} by the authors) and is aimed to be generic enough so that it is task-independent.\ A separate \emph{Reward Selection Layer} (RSL) chooses the actual qualitative measure\footnote{The authors do not provide any details on \emph{how} this is achieved} to use as an evaluation of the \emph{Generic Reward}.\\
 As an illustrative example, a \emph{Generic Reward} could be the relative position after executing an atomic behavior.\ The planner provides a target position to reach, and the RSL chooses the Euclidean distance to this point as a performance measure.\ Now, the behavior-performance map can be searched for the atomic behavior that will maximize the reward for the outcome of executing this behavior (i.e., the maximum reward of the \emph{Generic Reward} of the behavior).\ The chosen behavior is executed (in the real world, or using simulation), the behavior and its outcome are used to update the Gaussian Processes, after which this process is repeated until a good compensatory behavior is reached.
 
 In \textcite{Lu2020}, an agent initially learns a policy and a data-driven dynamic model.\ As discussed in \cref{ch:blackbox}, the authors then expand on this basic setting by the inclusion of a skill-practice distribution $p_{\psi}(z\mid s)$.\ Related to this distribution is the skill-space itself, represented by an abstract higher-dimensional space $z \in [-1, 1]^{\dim(z)}$, and a skill-discriminator $q_{\nu}(s'\mid s, z)$.\ All trained independently, the skill-practice distribution $p_{\psi}(z\mid s)$ learns which skill to use given a certain state, a skill-discriminator $q_{\nu}$ learns to model the result of using a skill in a certain state, and policy $\pi_{\theta}(a\mid s, z)$ learns a control action.\ These models update online by sampling a state uniformly from a replay buffer and sampling a skill from $p_\psi$.\ The resulting control action by $\pi_\theta$ is used in the data-driven dynamic model to obtain the next state, and the transition $(s, a, z, s')$ is added to the buffer.\ Discriminator $q_\nu$ updates based on the transition, and an \emph{intrinsic reward}\footnote{This is a skill-specific reward $r(s, z, s')$ that the policy is trying to oprimise, as opposed to a more traditional $r(s, a)$.} is calculated, aimed to encourage distinguishable and learnable skills.\ $p_\psi$, $\pi_\theta$, and $q_\nu$ are finally updated using soft actor-critic.\\
 As discussed \cref{sec:policies}, the purpose of this method is to allow an MPPI planner to plan in the skill-space, where it will result in a selection of skills the agent is ``confident'' in, and that will subsequently, through $\pi_{\theta}$, result in more predictable and robust actions.
 
-
-%\section{Summary}\label{sec:arch-summary}
-%\cref{tab:arch-summary} provides an overview of the implementations found in the literature that was discussed in this chapter.\comment{Added: table}
-%
-%\begin{table}[!htb]
-%    \small
-%    \centering
-%    \begin{tabularx}{\textwidth}{
-%            >{\raggedright\arraybackslash}m{3cm} |
-%            >{\centering\arraybackslash}X
-%            >{\centering\arraybackslash}X}
-%        \toprule
-%        Reference & Architecture & something \\
-%        \midrule
-%        &              & \\[\tablespace]
-%        \bottomrule
-%    \end{tabularx}
-%    \caption{}
-%    \label{tab:arch-summary}
-%\end{table}
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.5\textwidth]{policy_adaptation}
+    \caption{Policy adaptation control scheme.\ Figure obtained from \textcite{Nazeer2023}.}
+    \label{fig:policy-adaptation}
+\end{figure}
 
 
-\todo{This chapter does not seem to lend itself as well to a summarizing table}
+\section{Summary and Results}\label{sec:arch-summary}
+
+\added{Results on the performance of frameworks that use dual architectures of the form \emph{knowledge base + policy} (i.e.\ \protect\textcite{Wang2022, Schwarz2018, Shin2017, Sprechmann2018}) will be discussed in \cref{sec:KB-summary}.}
+
+\added{The combination of a model-free and model-based modules from \protect\textcite{Lu2019} was evaluated on several lifelong learning environments (with changing task settings, and changing environments) and compared to common benchmarks (e.g.\ MPC, PPO).
+Te results show that their method succeeds in performing better or on par with the benchmarks, while only planning for a fraction of the timesteps compared to the benchmarks (making it more computationaly efficient).}
+
+\added{\protect\textcite{Zhou2022} show that the policy resulting from an online interaction phase (using MPO) and subsequent distillation phase (using CRR) outperforms both a pure MPO and CRR policy in the environments encountered.
+Furthermore, the robustness of the distilled policy in both environments (during deployment) shows that the distillation process is a good solution to maintain both forward and backward transfer of experiences encountered in the interaction phase.}
+
+\added{In \protect\textcite{Nazeer2023}, the authors compare the performance of their control scheme without the online regressing network to the same scheme with the network for several trajectory tracking problems for a soft robotic arm.
+The scheme with the online regressing network significantly outperforms the scheme without the network in all cases.
+Additionally, the authors show that the expansion allows the policy to adapt to changes in dynamics, bridge the gap between training and deployment, and mitigate unforeseen external factors in the environment.}
+
+\added{The use of a \emph{Generic Reward} and \emph{Reward Selection Layer} by \protect\textcite{Chatzilygeroudis2016} is compared to two variants of traditional IT\&E algorithms.
+The authors evaluate the methods on a six-legged robot that has to navigate to a certain position, but has had one leg removed.
+The results show that the improved method is able succeed in the task using significantly fewer trials than the other methods, finding good compensatory behaviours in half the number of iterations than the other two.}
+
+\added{\protect\textcite{Lu2020} show that their method of planning in the skill-space has significant advantages over other action-based planners.
+Comparing performance over several lifelong learning benchmarks, they show that skill-space planning allows for  long-horizon planning, whereas traditional MPC is not stable in this setting.
+Furthermore, as agents update during deployment, the skill-space planning frame work is shown to be very stable during these changes, whereas e.g.\ pure SAC is not.}
