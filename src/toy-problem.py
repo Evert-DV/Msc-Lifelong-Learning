@@ -66,7 +66,7 @@ class Adapter(nn.Sequential):
             nn.Linear(input_size, 32),
             nn.Softsign(),
             nn.Linear(32, output_size),
-            nn.Tanh()
+            # nn.LeakyReLU()
         )
 
 
@@ -76,9 +76,9 @@ def main():
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
-    adapter = Adapter(1, 1)
+    adapter = Adapter(4, 1)
 
-    optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
+    optimizer = torch.optim.SGD(adapter.parameters(), lr=0.01)
     loss_fn = nn.MSELoss()
 
     dt = 1 / 60
@@ -89,7 +89,7 @@ def main():
     controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 300, dt)
+    t = np.arange(0, 600, dt)
     target = np.array([11.])
     buffer = []
     x0_adj = x0
@@ -100,19 +100,20 @@ def main():
             print("\nFitting model...")
             adapter.train()
             buffer = np.asarray(buffer)
-            features = buffer[:, 2:3]
-            label_e = buffer[:, -3:-2] - buffer[:, -1:]
+            features = buffer[:-1, 2:]
+            # label_e = buffer[:, -3:-2] - buffer[:, -1:]
+            label_e = buffer[1:, 2:3]
             features = torch.from_numpy(features).float()
             features.requires_grad = True
             label_e = torch.from_numpy(label_e).float()
 
             for epoch in range(100):
-                print(f"\rEpoch {epoch}", end="")
                 optimizer.zero_grad()
                 output = adapter(features)
                 loss = loss_fn(output, label_e)
                 loss.backward()
                 optimizer.step()
+                print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
 
             buffer = []
 
@@ -122,7 +123,7 @@ def main():
         adapter.eval()
         targets.append(target)
         a_w_adj = controller.compute_control(x0_adj, target, dt)
-        a_naive = controller.compute_control(x0_naive, target, dt)
+        # a_naive = controller.compute_control(x0_naive, target, dt)
         controls.append(a_w_adj)
 
         disturbance = 0.
@@ -130,23 +131,24 @@ def main():
         #     disturbance = np.random.rand(1) * 10000
 
         x = system.response(x0, a_w_adj + disturbance, do_update=False)
-        x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
-        labels.append(x[0] - target)
-        predicted_e = adapter(torch.tensor([*a_w_adj]).float())
+        # x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
+        # labels.append(x[0] - target)
+        labels.append(a_w_adj)
+        predicted_e = adapter(torch.tensor([*a_w_adj, *x, *target]).float())
         predictions.append(predicted_e.item())
         x_adj = np.copy(x)
         # x_adj[0] -= predicted_e.item()
 
         signal.append(x)
-        signal_naive.append(x_naive)
+        # signal_naive.append(x_naive)
         buffer.append([*x0, *a_w_adj, *x, *target])
 
         x0 = x
-        x0_naive = x_naive
+        # x0_naive = x_naive
         x0_adj = x_adj
 
         if ti % 30 == 0:
-            x0 = [9.9, 0]
+            x0 = [9.9 + np.random.rand() - .5, 0]
             x0_naive = x0
             # x0 = [np.random.rand() * 6 + 11., 0.]
             x0_adj = x0
@@ -157,15 +159,15 @@ def main():
     fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal[:, 0])
-    ax[0].plot(t, signal_naive[:, 0])
+    # ax[0].plot(t, signal_naive[:, 0])
     ax[0].plot(t, targets, '--')
     ax[0].invert_yaxis()
 
     ax[1].plot(t, controls)
     ax[1].invert_yaxis()
 
-    ax[2].plot(t, predictions)
-    ax[2].plot(t, labels)
+    ax[2].plot(t[1:], predictions[:-1])
+    ax[2].plot(t[1:], labels[1:])
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
