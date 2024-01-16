@@ -71,7 +71,7 @@ class Adapter(nn.Sequential):
 
 
 def main():
-    np.random.seed(16)
+    # np.random.seed(16)
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
@@ -92,15 +92,15 @@ def main():
     t = np.arange(0, 600, dt)
     target = np.array([11.])
     buffer = []
-    x0_adj = x0
     x0_naive = x0
+    predicted_e = [0.]
 
     for ti in t:
-        if ti % 10 == 0 and ti != 0:
+        if ti % 20 == 0 and ti != 0:
             print("\nFitting model...")
             adapter.train()
             buffer = np.asarray(buffer)
-            features = buffer[:-1, 2:]
+            features = buffer[:-1, 2:]  # assuming that the model obtains the current error from this
             # label_e = buffer[:, -3:-2] - buffer[:, -1:]
             label_e = buffer[1:, 2:3]
             features = torch.from_numpy(features).float()
@@ -117,41 +117,40 @@ def main():
 
             buffer = []
 
-        # if ti % 20 == 0:
-        #     target = np.random.rand(1) * 6 + 7
+        if ti % 20 == 0:
+            target = np.random.rand(1) * 6 + 7
 
         adapter.eval()
         targets.append(target)
-        a_w_adj = controller.compute_control(x0_adj, target, dt)
-        # a_naive = controller.compute_control(x0_naive, target, dt)
-        controls.append(a_w_adj)
+        control_action = controller.compute_control(x0, target, dt)
+        control_action = control_action + predicted_e
+        a_naive = controller.compute_control(x0_naive, target, dt)
+        controls.append(control_action)
 
         disturbance = 0.
         # if np.random.rand() < 0.005:
         #     disturbance = np.random.rand(1) * 10000
 
-        x = system.response(x0, a_w_adj + disturbance, do_update=False)
-        # x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
+        x = system.response(x0, control_action + disturbance, do_update=False)
+        x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
         # labels.append(x[0] - target)
-        labels.append(a_w_adj)
-        predicted_e = adapter(torch.tensor([*a_w_adj, *x, *target]).float())
+        labels.append(control_action)
+        predicted_e = adapter(torch.tensor([*control_action, *target, 0., *target]).float())
         predictions.append(predicted_e.item())
-        x_adj = np.copy(x)
-        # x_adj[0] -= predicted_e.item()
+        predicted_e = predicted_e.item()
 
         signal.append(x)
-        # signal_naive.append(x_naive)
-        buffer.append([*x0, *a_w_adj, *x, *target])
+        signal_naive.append(x_naive)
+        buffer.append([*x0, *control_action, *x, *target])
 
         x0 = x
-        # x0_naive = x_naive
-        x0_adj = x_adj
+        x0_naive = x_naive
 
-        if ti % 30 == 0:
-            x0 = [9.9 + np.random.rand() - .5, 0]
-            x0_naive = x0
-            # x0 = [np.random.rand() * 6 + 11., 0.]
-            x0_adj = x0
+        # if ti % 30 == 0:
+        #     x0 = [9.9 + np.random.rand() - .5, 0]
+        #     x0_naive = x0
+        #     # x0 = [np.random.rand() * 6 + 11., 0.]
+        #     x0_adj = x0
 
     signal = np.asarray(signal)
     signal_naive = np.asarray(signal_naive)
@@ -159,7 +158,7 @@ def main():
     fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal[:, 0])
-    # ax[0].plot(t, signal_naive[:, 0])
+    ax[0].plot(t, signal_naive[:, 0])
     ax[0].plot(t, targets, '--')
     ax[0].invert_yaxis()
 
@@ -167,7 +166,7 @@ def main():
     ax[1].invert_yaxis()
 
     ax[2].plot(t[1:], predictions[:-1])
-    ax[2].plot(t[1:], labels[1:])
+    ax[2].plot(t[1:], labels[1:], '--')
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
