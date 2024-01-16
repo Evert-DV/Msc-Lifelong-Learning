@@ -66,7 +66,7 @@ class Adapter(nn.Sequential):
             nn.Linear(input_size, 32),
             nn.Softsign(),
             nn.Linear(32, output_size),
-            nn.ReLU()
+            nn.Tanh()
         )
 
 
@@ -76,7 +76,7 @@ def main():
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
-    adapter = Adapter(5, 1)
+    adapter = Adapter(1, 1)
 
     optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
     loss_fn = nn.MSELoss()
@@ -100,7 +100,7 @@ def main():
             print("\nFitting model...")
             adapter.train()
             buffer = np.asarray(buffer)
-            features = buffer[:, :-1]
+            features = buffer[:, 2:3]
             label_e = buffer[:, -3:-2] - buffer[:, -1:]
             features = torch.from_numpy(features).float()
             features.requires_grad = True
@@ -132,9 +132,9 @@ def main():
         x = system.response(x0, a_w_adj + disturbance, do_update=False)
         x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
         labels.append(x[0] - target)
-        predicted_e = adapter(torch.tensor([*x0, *a_w_adj, *x]).float())
+        predicted_e = adapter(torch.tensor([*a_w_adj]).float())
         predictions.append(predicted_e.item())
-        x_adj = x
+        x_adj = np.copy(x)
         # x_adj[0] -= predicted_e.item()
 
         signal.append(x)
