@@ -65,6 +65,7 @@ The generative model and task solving model from \textcite{Shin2017} are combine
     \end{subfigure}
 \end{figure}
 
+
 \section{Maintaining the Knowledge Base}\label{sec:KB-maintainance}
 Maintaining the knowledge base can ensure that it remains informative.\ A knowledge base can be updated by adding new data points, by adapting existing data points, or - if applicable - updating a network or policy.\ Furthermore, these updates could be performed dynamically throughout the application's operational lifetime, or during separate phases only, e.g., updating the knowledge base during training and keeping it static at test time.
 
@@ -112,7 +113,7 @@ To transfer knowledge ``stored'' by old generative models in \textcite{Shin2017}
 \end{figure}
 
 
-\section{Summary}\label{sec:KB-summary}
+\section{Summary and Results}\label{sec:KB-summary}
 In \cref{tab:KB-summary}, a comprehensive overview of the methods discussed in the literature is presented\added{, which can serve as a quick reference for the methods discussed}.
 
 \begin{table}[htb]
@@ -124,16 +125,17 @@ In \cref{tab:KB-summary}, a comprehensive overview of the methods discussed in t
             >{\raggedright\arraybackslash}X
             >{\raggedright\arraybackslash}X}
         \toprule
-        Reference                       & Storage                           & Retrieval                                  & Maintenance                                   \\
+        Reference                              & Storage                               & Retrieval                                               & Maintenance                                   \\
         \midrule
-        \textcite{Nguyen2011}           & input-output vectors              & training on knowledge base                 & incrementally expanded                        \\ [\tablespace]
-        \textcite{Mouret2015}           & solution features + performance   & --                                         & static                                        \\ [\tablespace]
-        \textcite{Chatzilygeroudis2016} & behavior features + GP of outcome & Bayesian optimisation                  & incrementally updated (GPs)      \\ [\tablespace]
-        \textcite{Sprechmann2018}       & embeddings + labels               & KNN to query                               & static                                        \\ [\tablespace]
-        \textcite{Schwarz2018}          & policy                            & layer-wise adapters                        & distillation + EWC                            \\ [\tablespace]
-        \textcite{Wang2022}             & policy \& environment parameters  & predictive likelihood on transitions   & incrementally expanded + updated \\ [\tablespace]
-        \textcite{Xie2021}              & transition tuples                 & training on (relabeled) knowledge base     & incrementally expanded                        \\ [\tablespace]
-        \textcite{Shin2017}             & generative model                  & training on generated data (\emph{Solver}) & training on generated data (\emph{Generator}) \\
+        \textcite{Nguyen2011}                  & input-output vectors                  & training on knowledge base                              & incrementally expanded                        \\ [\tablespace]
+        \textcite{Mouret2015}                  & solution features + performance       & --                                                      & static                                        \\ [\tablespace]
+        \textcite{Chatzilygeroudis2016}        & behavior features + GP of outcome     & Bayesian optimisation                  & incrementally updated (GPs)      \\ [\tablespace]
+        \added{\protect\textcite{Aljundi2016}} & \added{Collection of neural networks} & \added{auto-encoder reconstruction error of input data} & \added{--}                                       \\ [\tablespace]
+        \textcite{Sprechmann2018}              & embeddings + labels                   & KNN to query                                            & static                                        \\ [\tablespace]
+        \textcite{Schwarz2018}                 & policy                                & layer-wise adapters                                     & distillation + EWC                            \\ [\tablespace]
+        \textcite{Wang2022}                    & policy \& environment parameters      & predictive likelihood on transitions   & incrementally expanded + updated \\ [\tablespace]
+        \textcite{Xie2021}                     & transition tuples                     & training on (relabeled) knowledge base                  & incrementally expanded                        \\ [\tablespace]
+        \textcite{Shin2017}                    & generative model                      & training on generated data (\emph{Solver})              & training on generated data (\emph{Generator}) \\
         \bottomrule
     \end{tabularx}
     \caption{A summary of knowledge base implementations in the literature, specifying the form of the knowledge, how it is used to inform an agent, and how the knowledge base is maintained. Note: for maintenace, ``expanding'' relates to adding entries to a knowledge base, and ``updating'' relates to editing the entries.}
@@ -145,8 +147,12 @@ They achieve this performance using a dictionary containing only 2000 datapoints
 Additionally, they mention that the method is fast enough to be used in real-time applications.}
 
 \added{The method used to create the knowledge base from \protect\textcite{Chatzilygeroudis2016} is the MAP-elites algorithm by \protect\textcite{Mouret2015}.
-In their original paper, the authors show that MAP-elites proves to have the best performance over a variety of criteria (such as reliability, precision, and coverage) as well as tasks ( such as designing neural networks and soft-robot morphologies).
+In their original paper, the authors show that MAP-elites proves to have the best performance over a variety of criteria (such as reliability, precision, and coverage) as well as tasks (such as designing neural networks and soft-robot morphologies) compared to other search algorithms.
 For retrieving the atomic behaviors, \protect\textcite{Chatzilygeroudis2016} use Bayesian optimization, which is shown to be an improvement over the original IT\&E algorithm (\cref{sec:arch-summary}).}
+
+\added{\protect\textcite{Aljundi2016} compare their method against several common approaches (single jointly-trained model, multiple finetuened models, multiple \emph{learning-without-forgetting models}, \dots) on the sequential learning of classification tasks.
+They show that the auto-encoder based task relatedness measure is highly effective at selecting the most relevant expert for a given task, and that their method is superior to more common sequential-training approaches.
+Likewise, they are able to compete with other multiple-model approaches.}
 
 \added{The implementation of memory-based parameter adaptations from \protect\textcite{Sprechmann2018} is shown to be effective in a number of tasks, from classification to language modeling.
 The memory also allows for continual adaptation to shifts in the data (new, unseen classes, etc.) as well as being robust to unbalanced data during training.}
@@ -156,4 +162,13 @@ They show that the distillation process with EWC maintains good negative transfe
 Improvements in positive transfer of knowledge (through layer-wise connections) are less significant, but still competetive with other methods if the weights of the new \emph{active column} are reinitialized.}
 
 \added{In \protect\textcite{Wang2022}, the authors show that their method can indeed correctly (as in, in an optimally useful manner) cluster environments, as well as correctly identify the current environment as one previously seen.
-Moreover, they show that the policies initiated from these corresponding environments outperform (after fine-tuning) cutting edge methods in continual learning over a range of tasks  with dynamic environments (2D navigation, 3D agent locomotion, \dots).}
+Moreover, they show that the policies initiated from these corresponding environments outperform (after fine-tuning) cutting edge methods in continual learning over a range of tasks with dynamic environments (2D navigation, 3D agent locomotion, \dots).}
+
+\added{In \protect\textcite{Xie2021}, the method is compared to common sequential learning approaches (such as fine-tuning) and more state-of-the art methods that reuse previous data.
+The tasks used to compare performance vary from 3D key insertion to rotating a valve in a certain direction.
+At all vale rotation tasks, they outperform the other methods, while for the key insertion tasks, they perform among the best state-of-the-art approaches, with only very slight differences in performance.
+Additionally, they find that online performance increases with the number of tasks previously trained on.}
+
+\added{Finally, \protect\textcite{Shin2017} show that \emph{generative replay} can indeed recover past knowledge by generating old data and outperforms simple sequentially trained models.
+They show that their method is applicable to the transfer of tasks, domains, and classes by enhancing a \emph{learning-without-forgetting} model with their \emph{generative replay} framework and finding in increased performance on all test settings.
+Lastly, they aknowledge that the choice and quality of the generator is a major factor to the performance.}
