@@ -74,8 +74,9 @@ class Adapter(nn.Sequential):
 
 def main():
     pretrain = False
-
-    np.random.seed(24)
+    seed = np.random.randint(0, 1000)
+    print(f"Seed: {seed}")
+    np.random.seed(seed)
     if pretrain:
         np.random.seed(16)
 
@@ -86,8 +87,8 @@ def main():
 
     adapter = Adapter(4, 10)
     if not pretrain:
-        adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
-
+        # adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
+        pass
     optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-2)
     loss_fn = nn.MSELoss()
 
@@ -96,13 +97,15 @@ def main():
 
         print("\nPretraining model...")
         adapter.train()
-        features = np.concatenate((pretrain_data[:-10, [0, 1]], pretrain_data[10:, [3, 4]]), axis=1)  # state transitions
-        label_action = np.asarray([pretrain_data[i:i+10, 2:3].ravel() for i in range(len(pretrain_data) - 10)])  # control actions as labels
+        features = np.concatenate((pretrain_data[:-10, [0, 1]], pretrain_data[10:, [3, 4]]),
+                                  axis=1)  # state transitions
+        label_action = np.asarray(
+            [pretrain_data[i:i + 10, 2:3].ravel() for i in range(len(pretrain_data) - 10)])  # control actions as labels
         dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
         for epoch in range(100):
-            for i, (inputs, targets) in enumerate(dataloader):
+            for inputs, targets in dataloader:
                 optimizer.zero_grad()
                 output = adapter(inputs)
                 loss = loss_fn(output, targets)
@@ -117,9 +120,10 @@ def main():
     signal = []
     signal_naive = []
     targets = []
-    controls = []
-    predictions = []
-    t = np.arange(0, 300, dt)
+    default_controls = []
+    adapted_controls = []
+    predicted_controls = []
+    t = np.arange(0, 600, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
@@ -131,15 +135,15 @@ def main():
                 adapter.train()
                 buffer = np.asarray(buffer)
                 features = np.concatenate((buffer[:-10, [0, 1]], buffer[10:, [3, 4]]), axis=1)  # state transitions
-                label_action = np.asarray([buffer[i:i+10, 2:3].ravel() for i in range(len(buffer) - 10)])  # control actions as labels
-                features = torch.from_numpy(features).float()
-                features.requires_grad = True
-                label_action = torch.from_numpy(label_action).float()
+                label_action = np.asarray(
+                    [buffer[i:i + 10, 2:3].ravel() for i in range(len(buffer) - 10)])  # control actions as labels
+                dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
+                X, y = dataset.tensors
 
                 for epoch in range(100):
                     optimizer.zero_grad()
-                    output = adapter(features)
-                    loss = loss_fn(output, label_action)
+                    output = adapter(X)
+                    loss = loss_fn(output, y)
                     loss.backward()
                     optimizer.step()
                     print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
@@ -151,18 +155,25 @@ def main():
 
             adapter.eval()
             targets.append(target)
-            # control_action = controller.compute_control(x0, target, dt)
-            control_action = adapter(torch.tensor([*x0, *target]).float())
-            control_action = control_action[0].item()
+            control_action = controller.compute_control(x0, target, dt)
+
+            if ti > 15:
+                predicted_action = adapter(torch.tensor([*x0, *target]).float())
+                adjustment = predicted_action[0].item() - control_action
+                predicted_controls.append(predicted_action[0].item())
+            else:
+                adjustment = 0
+                predicted_controls.append(0)
+
+            control_action += adjustment
 
             a_naive = controller.compute_control(x0_naive, target, dt)
-            controls.append(a_naive)
+            default_controls.append(a_naive)
 
             x = system.response(x0, control_action, do_update=False)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-            predicted_action = control_action
-            predictions.append(predicted_action)
+            adapted_controls.append(control_action)
 
             signal.append(x)
             signal_naive.append(x_naive)
@@ -171,16 +182,12 @@ def main():
             x0 = x
             x0_naive = x_naive
 
-            # if ti % 15 == 0:
-            #     x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
-            #     x0_naive = x0
-
         signal = np.asarray(signal)
         signal_naive = np.asarray(signal_naive)
         targets = np.asarray(targets)
-        labels = controls
+        labels = default_controls
 
-        fig, ax = plt.subplots(2, 1, sharex=True)
+        fig, ax = plt.subplots(3, 1, sharex=True)
 
         ax[0].plot(t, signal[:, 0], label="Adaptive controller")
         ax[0].plot(t, signal_naive[:, 0], label="Default controller")
@@ -188,9 +195,12 @@ def main():
         ax[0].invert_yaxis()
         ax[0].legend()
 
-        ax[1].plot(t, predictions, label="Predicted control actions")
-        ax[1].plot(t, labels, '--', label="Actual control actions")
+        ax[1].plot(t, adapted_controls, label="Adapted control actions")
+        ax[1].plot(t, labels, '--', label="Default control actions")
         ax[1].legend()
+
+        ax[2].plot(t, predicted_controls, label="Predicted control actions")
+        ax[2].plot(t, adapted_controls, '--', label="Adapted control actions (labels)")
 
         fig.tight_layout()
         if not os.path.exists("./tmp"):
