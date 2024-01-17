@@ -50,9 +50,9 @@ class PIDController:
         self.ki = ki
         self.integral_error = 0.
 
-    def compute_control(self, current_state, target_pos, dt):
-        position_error = target_pos - current_state[0]
-        velocity_error = -current_state[1]
+    def compute_control(self, current_state, target, dt):
+        position_error = target[0] - current_state[0]
+        velocity_error = target[1] - current_state[1]
         self.integral_error += position_error * dt
 
         control_action = self.kp * position_error + self.kd * velocity_error + self.ki * self.integral_error
@@ -91,59 +91,46 @@ def main():
     predictions = []
     labels = []
     t = np.arange(0, 300, dt)
-    target = np.array([11.])
+    target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    predicted_action = [0.]
 
     for ti in t:
-        if ti % 30 == 0 and ti != 0:
-            print("\nFitting model...")
-            adapter.train()
-            buffer = np.asarray(buffer)
-            error_labels = buffer[:-1, 0:1] - buffer[:-1, -1:]  # current error as labels
-            features = np.concatenate((error_labels, buffer[:-1, 2:3]), axis=1)  # concat with current action
-            # label_e = buffer[:, -3:-2] - buffer[:, -1:]
-            label_action = buffer[1:, 2:3]  # next control actions as labels
-            features = torch.from_numpy(features).float()
-            features.requires_grad = True
-            label_action = torch.from_numpy(label_action).float()
-
-            for epoch in range(100):
-                optimizer.zero_grad()
-                output = adapter(features)
-                loss = loss_fn(output, label_action)
-                loss.backward()
-                optimizer.step()
-                print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
-
-            buffer = []
+        # if ti % 30 == 0 and ti != 0:
+        #     print("\nFitting model...")
+        #     adapter.train()
+        #     buffer = np.asarray(buffer)
+        #     features = buffer[]  # concat with current action
+        #     label_action = buffer[1:, 2:3]  # next control actions as labels
+        #     features = torch.from_numpy(features).float()
+        #     features.requires_grad = True
+        #     label_action = torch.from_numpy(label_action).float()
+        #
+        #     for epoch in range(100):
+        #         optimizer.zero_grad()
+        #         output = adapter(features)
+        #         loss = loss_fn(output, label_action)
+        #         loss.backward()
+        #         optimizer.step()
+        #         print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
+        #
+        #     buffer = []
 
         # if ti % 20 == 0:
         #     target = np.random.rand(1) * 6 + 7
 
-        adapter.eval()
+        # adapter.eval()
         targets.append(target)
         control_action = controller.compute_control(x0, target, dt)
-        # control_action = control_action + predicted_action
         a_naive = controller.compute_control(x0_naive, target, dt)
         controls.append(control_action)
 
-        disturbance = 0.
-        # if np.random.rand() < 0.005:
-        #     disturbance = np.random.rand(1) * 10000
-
-        x = system.response(x0, control_action + disturbance, do_update=False)
-        x_naive = system.response(x0_naive, a_naive + disturbance, do_update=False)
-        # labels.append(x[0] - target)
-        labels.append(control_action)
-        predicted_action = adapter(torch.tensor([x0[0] - target[0], *control_action]).float())  # e = x0[0] - target[0]
-        predictions.append(predicted_action.item())
-        predicted_action = predicted_action.item()
+        x = system.response(x0, control_action, do_update=False)
+        x_naive = system.response(x0_naive, a_naive, do_update=False)
 
         signal.append(x)
         signal_naive.append(x_naive)
-        buffer.append([*x0, *control_action, *x, *target])
+        buffer.append([*x0, control_action, *x, *target])
 
         x0 = x
         x0_naive = x_naive
@@ -154,22 +141,20 @@ def main():
 
     signal = np.asarray(signal)
     signal_naive = np.asarray(signal_naive)
+    targets = np.asarray(targets)
+    labels = controls
 
-    fig, ax = plt.subplots(3, 1, sharex=True)
+    fig, ax = plt.subplots(2, 1, sharex=True)
 
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
-    ax[0].plot(t, targets, '--', label="Target")
+    ax[0].plot(t, targets[:, 0], '--', label="Target position")
     ax[0].invert_yaxis()
     ax[0].legend()
 
-    ax[1].plot(t, controls, label="Control actions (default)")
-    ax[1].invert_yaxis()
+    # ax[1].plot(t, predictions, label="Predicted control actions")
+    ax[1].plot(t, labels, '--', label="Actual control actions")
     ax[1].legend()
-
-    ax[2].plot(t[1:], predictions[:-1], label="Predicted control actions")
-    ax[2].plot(t[1:], labels[1:], '--', label="Actual control actions")
-    ax[2].legend()
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
