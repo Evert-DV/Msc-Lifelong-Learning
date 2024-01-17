@@ -84,7 +84,7 @@ def main():
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
 
-    adapter = Adapter(4, 1)
+    adapter = Adapter(4, 10)
     if not pretrain:
         adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
 
@@ -96,8 +96,8 @@ def main():
 
         print("\nPretraining model...")
         adapter.train()
-        features = pretrain_data[:, [0, 1, 3, 4]]  # state transitions
-        label_action = pretrain_data[:, 2:3]  # control actions as labels
+        features = np.concatenate((pretrain_data[:-10, [0, 1]], pretrain_data[10:, [3, 4]]), axis=1)  # state transitions
+        label_action = np.asarray([pretrain_data[i:i+10, 2:3].ravel() for i in range(len(pretrain_data) - 10)])  # control actions as labels
         dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
@@ -130,8 +130,8 @@ def main():
                 print("\nFitting model...")
                 adapter.train()
                 buffer = np.asarray(buffer)
-                features = buffer[:, [0, 1, 3, 4]]  # state transitions
-                label_action = buffer[:, 2:3]  # control actions as labels
+                features = np.concatenate((buffer[:-10, [0, 1]], buffer[10:, [3, 4]]), axis=1)  # state transitions
+                label_action = np.asarray([buffer[i:i+10, 2:3].ravel() for i in range(len(buffer) - 10)])  # control actions as labels
                 features = torch.from_numpy(features).float()
                 features.requires_grad = True
                 label_action = torch.from_numpy(label_action).float()
@@ -153,7 +153,7 @@ def main():
             targets.append(target)
             # control_action = controller.compute_control(x0, target, dt)
             control_action = adapter(torch.tensor([*x0, *target]).float())
-            control_action = control_action.item()
+            control_action = control_action[0].item()
 
             a_naive = controller.compute_control(x0_naive, target, dt)
             controls.append(a_naive)
