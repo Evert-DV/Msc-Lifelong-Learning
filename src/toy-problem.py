@@ -75,7 +75,7 @@ class Adapter(nn.Sequential):
 def main():
     pretrain = False
 
-    np.random.seed(16)
+    np.random.seed(19)
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
@@ -97,9 +97,6 @@ def main():
         label_action = pretrain_data[:, 2:3]  # control actions as labels
         dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
-        features = torch.from_numpy(features).float()
-        features.requires_grad = True
-        label_action = torch.from_numpy(label_action).float()
 
         for epoch in range(100):
             for i, (inputs, targets) in enumerate(dataloader):
@@ -120,47 +117,51 @@ def main():
     controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
 
     if not pretrain:
         for ti in t:
-        #     if ti % 15 == 0 and ti != 0:
-        #         print("\nFitting model...")
-        #         adapter.train()
-        #         buffer = np.asarray(buffer)
-        #         features = buffer[:, [0, 1, 3, 4]]  # state transitions
-        #         label_action = buffer[:, 2:3]  # control actions as labels
-        #         features = torch.from_numpy(features).float()
-        #         features.requires_grad = True
-        #         label_action = torch.from_numpy(label_action).float()
-        #
-        #         for epoch in range(100):
-        #             optimizer.zero_grad()
-        #             output = adapter(features)
-        #             loss = loss_fn(output, label_action)
-        #             loss.backward()
-        #             optimizer.step()
-        #             print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
-        #
-        #         buffer = []
+            if ti % 15 == 0 and ti != 0:
+                print("\nFitting model...")
+                adapter.train()
+                buffer = np.asarray(buffer)
+                features = buffer[:, [0, 1, 3, 4]]  # state transitions
+                label_action = buffer[:, 2:3]  # control actions as labels
+                features = torch.from_numpy(features).float()
+                features.requires_grad = True
+                label_action = torch.from_numpy(label_action).float()
 
-            # if ti % 20 == 0:
-            #     target = [np.random.rand() * 6 + 7, 0.]
+                for epoch in range(100):
+                    optimizer.zero_grad()
+                    output = adapter(features)
+                    loss = loss_fn(output, label_action)
+                    loss.backward()
+                    optimizer.step()
+                    print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
+
+                buffer = []
+
+            if ti % 20 == 0:
+                target = [np.random.rand() * 6 + 7, 0.]
 
             adapter.eval()
             targets.append(target)
-            control_action = controller.compute_control(x0, target, dt)
+            # control_action = controller.compute_control(x0, target, dt)
+            control_action = adapter(torch.tensor([*x0, *target]).float())
+            control_action = control_action.item()
+
             a_naive = controller.compute_control(x0_naive, target, dt)
-            controls.append(control_action)
+            controls.append(a_naive)
 
             x = system.response(x0, control_action, do_update=False)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-            predicted_action = adapter(torch.tensor([*x0, *x]).float())
-            predictions.append(predicted_action.item())
+            # predicted_action = adapter(torch.tensor([*x0, *x]).float())
+            predicted_action = control_action
+            predictions.append(predicted_action)
 
             signal.append(x)
             signal_naive.append(x_naive)
@@ -169,9 +170,9 @@ def main():
             x0 = x
             x0_naive = x_naive
 
-            if ti % 15 == 0:
-                x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
-                x0_naive = x0
+            # if ti % 15 == 0:
+            #     x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
+            #     x0_naive = x0
 
         signal = np.asarray(signal)
         signal_naive = np.asarray(signal_naive)
