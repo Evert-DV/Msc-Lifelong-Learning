@@ -4,6 +4,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader, TensorDataset
 
 
 # Create a mass-spring-damper toy problem
@@ -84,7 +85,7 @@ def main():
     if not pretrain:
         adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
 
-    optimizer = torch.optim.SGD(adapter.parameters(), lr=0.005)
+    optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-2)
     loss_fn = nn.MSELoss()
 
     if pretrain:
@@ -94,17 +95,20 @@ def main():
         adapter.train()
         features = pretrain_data[:, [0, 1, 3, 4]]  # state transitions
         label_action = pretrain_data[:, 2:3]  # control actions as labels
+        dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
+        dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
         features = torch.from_numpy(features).float()
         features.requires_grad = True
         label_action = torch.from_numpy(label_action).float()
 
-        for epoch in range(1000):
-            optimizer.zero_grad()
-            output = adapter(features)
-            loss = loss_fn(output, label_action)
-            loss.backward()
-            optimizer.step()
-            print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
+        for epoch in range(100):
+            for i, (inputs, targets) in enumerate(dataloader):
+                optimizer.zero_grad()
+                output = adapter(inputs)
+                loss = loss_fn(output, targets)
+                loss.backward()
+                optimizer.step()
+            print(f"\rEpoch {epoch}\t Loss: {loss.item():.2f}", end="")
 
         torch.save(adapter.state_dict(), './tmp/adapter_state_dict.pth')
 
