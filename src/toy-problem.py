@@ -66,8 +66,8 @@ class Adapter(nn.Sequential):
         super(Adapter, self).__init__(
             nn.Linear(input_size, 32),
             nn.Softsign(),
-            # nn.Linear(32, 32),
-            # nn.LeakyReLU(),
+            nn.Linear(32, 32),
+            nn.LeakyReLU(),
             nn.Linear(32, output_size),
         )
 
@@ -75,7 +75,10 @@ class Adapter(nn.Sequential):
 def main():
     pretrain = False
 
-    np.random.seed(19)
+    np.random.seed(24)
+    if pretrain:
+        np.random.seed(16)
+
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
@@ -116,7 +119,6 @@ def main():
     targets = []
     controls = []
     predictions = []
-    labels = []
     t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -159,7 +161,6 @@ def main():
             x = system.response(x0, control_action, do_update=False)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-            # predicted_action = adapter(torch.tensor([*x0, *x]).float())
             predicted_action = control_action
             predictions.append(predicted_action)
 
