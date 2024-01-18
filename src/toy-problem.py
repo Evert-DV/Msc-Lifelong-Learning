@@ -92,7 +92,7 @@ def main():
     adapted_controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 300, dt)
+    t = np.arange(0, 240, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
@@ -119,8 +119,8 @@ def main():
         #
         #     buffer = []
 
-        # if ti % 20 == 0:
-        #     target = np.random.rand(1) * 6 + 7
+        if ti % 20 == 0:
+            target = [np.random.rand() * 6 + 7, 0.]
 
         # adapter.eval()
         targets.append(target)
@@ -143,9 +143,9 @@ def main():
         x0 = x
         x0_naive = x_naive
 
-        if ti % 15 == 0:
-            x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
-            x0_naive = x0
+        # if ti % 15 == 0:
+        #     x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
+        #     x0_naive = x0
 
     signal = np.asarray(signal)
     signal_naive = np.asarray(signal_naive)
