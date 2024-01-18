@@ -104,34 +104,28 @@ def main():
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    adapted_target = np.copy(target)
+    adaptations = np.zeros((15*60, 2))
+    i = 0
 
     for ti in t:
-        # if ti % 30 == 0 and ti != 0:
-        #     print("\nFitting model...")
-        #     adapter.train()
-        #     buffer = np.asarray(buffer)
-        #     features = buffer[]  # concat with current action
-        #     label_action = buffer[1:, 2:3]  # next control actions as labels
-        #     features = torch.from_numpy(features).float()
-        #     features.requires_grad = True
-        #     label_action = torch.from_numpy(label_action).float()
-        #
-        #     for epoch in range(100):
-        #         optimizer.zero_grad()
-        #         output = adapter(features)
-        #         loss = loss_fn(output, label_action)
-        #         loss.backward()
-        #         optimizer.step()
-        #         print(f"\rEpoch {epoch}\t Loss: {loss:.2f}", end="")
-        #
-        #     buffer = []
+        if ti % 15 == 0 and ti != 0:
+            i = 0
+            print("\nFitting model...")
+            buffer = np.asarray(buffer)
+            references = buffer[:, -2:]
+            responses = buffer[:, 3:5]
+            errors = references - responses
 
-        if ti % 20 == 0:
+            adaptations = errors * 0.5
+
+            buffer = []
+
+        if ti % 15 == 0:
             target = [np.random.rand() * 6 + 7, 0.]
 
         # adapter.eval()
         targets.append(target)
+        adapted_target = target + adaptations[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
         a_naive = controller.compute_control(x0_naive, target, dt)
         default_controls.append(a_naive)
@@ -140,7 +134,7 @@ def main():
         x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-        adapted_target = simple_ilc(x, target)
+        # adapted_target = simple_ilc(x, target)
         adapted_targets.append(adapted_target)
 
         signal.append(x)
@@ -149,6 +143,8 @@ def main():
 
         x0 = x
         x0_naive = x_naive
+
+        i+=1
 
         # if ti % 15 == 0:
         #     x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
