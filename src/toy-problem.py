@@ -72,7 +72,9 @@ class Adapter(nn.Sequential):
 
 
 def main():
-    np.random.seed(16)
+    seed = np.random.randint(0, 1000)
+    np.random.seed(seed)
+    print(f"Seed: {seed}")
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
@@ -169,7 +171,7 @@ def main():
     fig.tight_layout()
     if not os.path.exists("./tmp"):
         os.makedirs("./tmp")
-    # fig.savefig("./tmp/plot.png", dpi=300)
+    fig.savefig("./tmp/plot.png", dpi=300)
     plt.show()
 
 
