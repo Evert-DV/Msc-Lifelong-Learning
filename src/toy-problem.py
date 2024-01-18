@@ -87,9 +87,9 @@ def main():
 
     adapter = Adapter(4, 10)
     if not pretrain:
-        # adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
-        pass
-    optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-2)
+        adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
+        # pass
+    optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-3)
     loss_fn = nn.MSELoss()
 
     if pretrain:
@@ -123,10 +123,10 @@ def main():
     default_controls = []
     adapted_controls = []
     predicted_controls = []
-    t = np.arange(0, 300, dt)
+    t = np.arange(0, 600, dt)
     target = np.array([11., 0.])
     buffer = []
-    x0_naive = x0
+    x0_naive = [9.9, 0]
 
     if not pretrain:
         for ti in t:
@@ -170,7 +170,7 @@ def main():
             a_naive = controller.compute_control(x0_naive, target, dt)
             default_controls.append(a_naive)
 
-            x = system.response(x0, control_action, do_update=False)
+            x = system.response(x0, control_action, do_update=True)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
             adapted_controls.append(control_action)
@@ -205,7 +205,7 @@ def main():
         fig.tight_layout()
         if not os.path.exists("./tmp"):
             os.makedirs("./tmp")
-        # fig.savefig("./tmp/plot.png", dpi=300)
+        fig.savefig("./tmp/plot.png", dpi=300)
         plt.show()
 
 
