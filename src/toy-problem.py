@@ -87,6 +87,7 @@ def main():
     signal = []
     signal_naive = []
     targets = []
+    adapted_targets = []
     controls = []
     predictions = []
     labels = []
@@ -94,6 +95,7 @@ def main():
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
+    adapted_target = np.copy(target)
 
     for ti in t:
         # if ti % 30 == 0 and ti != 0:
@@ -121,12 +123,16 @@ def main():
 
         # adapter.eval()
         targets.append(target)
-        control_action = controller.compute_control(x0, target, dt)
+        control_action = controller.compute_control(x0, adapted_target, dt)
         a_naive = controller.compute_control(x0_naive, target, dt)
         controls.append(control_action)
 
         x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
+
+        error = target - x
+        adapted_target = target + 1 * error
+        adapted_targets.append(adapted_target)
 
         signal.append(x)
         signal_naive.append(x_naive)
@@ -142,6 +148,7 @@ def main():
     signal = np.asarray(signal)
     signal_naive = np.asarray(signal_naive)
     targets = np.asarray(targets)
+    adapted_targets = np.asarray(adapted_targets)
     labels = controls
 
     fig, ax = plt.subplots(2, 1, sharex=True)
@@ -149,6 +156,7 @@ def main():
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
+    ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[0].invert_yaxis()
     ax[0].legend()
 
