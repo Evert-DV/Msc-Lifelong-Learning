@@ -88,7 +88,8 @@ def main():
     signal_naive = []
     targets = []
     adapted_targets = []
-    controls = []
+    default_controls = []
+    adapted_controls = []
     predictions = []
     labels = []
     t = np.arange(0, 300, dt)
@@ -125,13 +126,14 @@ def main():
         targets.append(target)
         control_action = controller.compute_control(x0, adapted_target, dt)
         a_naive = controller.compute_control(x0_naive, target, dt)
-        controls.append(control_action)
+        default_controls.append(a_naive)
+        adapted_controls.append(control_action)
 
         x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
         error = target - x
-        adapted_target = target + 1 * error
+        adapted_target = target + 5 * error
         adapted_targets.append(adapted_target)
 
         signal.append(x)
@@ -149,19 +151,19 @@ def main():
     signal_naive = np.asarray(signal_naive)
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
-    labels = controls
 
     fig, ax = plt.subplots(2, 1, sharex=True)
 
-    ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
+    ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
     ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[0].invert_yaxis()
     ax[0].legend()
 
     # ax[1].plot(t, predictions, label="Predicted control actions")
-    ax[1].plot(t, labels, '--', label="Actual control actions")
+    ax[1].plot(t, default_controls, label="Default control actions")
+    ax[1].plot(t, adapted_controls, label="Adapted control actions")
     ax[1].legend()
 
     fig.tight_layout()
