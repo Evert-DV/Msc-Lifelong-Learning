@@ -123,7 +123,7 @@ def main():
     default_controls = []
     adapted_controls = []
     predicted_controls = []
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 240, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = [9.9, 0]
@@ -163,7 +163,7 @@ def main():
                 predicted_controls.append(predicted_action[0].item())
             else:
                 adjustment = 0
-                predicted_controls.append(0)
+                predicted_controls.append(np.nan)
 
             control_action += adjustment
 
@@ -187,7 +187,7 @@ def main():
         targets = np.asarray(targets)
         labels = default_controls
 
-        fig, ax = plt.subplots(3, 1, sharex=True)
+        fig, ax = plt.subplots(2, 1, sharex=True)
 
         ax[0].plot(t, signal[:, 0], label="Adaptive controller")
         ax[0].plot(t, signal_naive[:, 0], label="Default controller")
@@ -199,8 +199,9 @@ def main():
         ax[1].plot(t, labels, '--', label="Default control actions")
         ax[1].legend()
 
-        ax[2].plot(t, predicted_controls, label="Predicted control actions")
-        ax[2].plot(t, adapted_controls, '--', label="Control actions (labels)")
+        # ax[2].plot(t, predicted_controls, label="Predicted control actions")
+        # ax[2].plot(t, adapted_controls, '--', label="Control actions (labels)")
+        # ax[2].legend()
 
         fig.tight_layout()
         if not os.path.exists("./tmp"):
