@@ -71,6 +71,12 @@ class Adapter(nn.Sequential):
         )
 
 
+def simple_ilc(response, target, gain=5.):
+    error = target - response
+    target += gain * error
+    return target
+
+
 def main():
     seed = np.random.randint(0, 1000)
     np.random.seed(seed)
@@ -134,8 +140,7 @@ def main():
         x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-        error = target - x
-        adapted_target = target + 5 * error
+        adapted_target = simple_ilc(x, target)
         adapted_targets.append(adapted_target)
 
         signal.append(x)
