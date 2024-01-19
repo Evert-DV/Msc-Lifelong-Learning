@@ -71,10 +71,23 @@ class Adapter(nn.Sequential):
         )
 
 
-def simple_ilc(response, target, gain=.5):
+def simple_ilc(response, target, previous_error, gain=.5):
     error = target - response
+    gain = adaptive_gain(np.linalg.norm(error), previous_error, gain)
     adaptations = gain * error
-    return adaptations
+    return adaptations, gain, np.linalg.norm(error)
+
+
+def adaptive_gain(error, previous_error, gain, max_gain=5.):
+    if error > previous_error:
+        gain *= 1.05
+    else:
+        gain *= 0.95
+
+    if gain > max_gain:
+        gain = max_gain
+
+    return gain
 
 
 def main():
@@ -100,11 +113,14 @@ def main():
     adapted_controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 300, dt)
+    t = np.arange(0, 240, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
     adaptations = np.zeros((15 * 60, 2))
+    gain = .75
+    previous_error = 0.
+    ilc_gains = []
     i = 0
 
     for ti in t:
@@ -118,9 +134,12 @@ def main():
             buffer = np.asarray(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
-            adaptations += simple_ilc(responses, references, gain=.75)
+            delta_control, gain, previous_error = simple_ilc(responses, references, previous_error, gain=gain)
+            adaptations += delta_control
 
             buffer = []
+
+        ilc_gains.append(gain)
 
         # if ti % 15 == 0:
         #     target = [np.random.rand() * 6 + 7, 0.]
@@ -133,7 +152,7 @@ def main():
         default_controls.append(a_naive)
         adapted_controls.append(control_action)
 
-        x = system.response(x0, control_action, do_update=False)
+        x = system.response(x0, control_action, do_update=True)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
         # adapted_target = simple_ilc(x, target)
@@ -153,12 +172,13 @@ def main():
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
 
-    fig, ax = plt.subplots(2, 1, sharex=True)
+    fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
     ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
+    ax[0].set_ylim([8, 12])
     ax[0].invert_yaxis()
     ax[0].legend()
 
@@ -166,6 +186,9 @@ def main():
     ax[1].plot(t, default_controls, label="Default control actions")
     ax[1].plot(t, adapted_controls, label="Adapted control actions")
     ax[1].legend()
+
+    ax[2].plot(t, ilc_gains, label="ILC gain")
+    ax[2].legend()
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
