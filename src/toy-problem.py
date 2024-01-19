@@ -73,8 +73,8 @@ class Adapter(nn.Sequential):
 
 def simple_ilc(response, target, gain=5.):
     error = target - response
-    target += gain * error
-    return target
+    adaptations = gain * error
+    return adaptations
 
 
 def main():
@@ -100,14 +100,18 @@ def main():
     adapted_controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 240, dt)
+    t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    adaptations = np.zeros((15*60, 2))
+    adaptations = np.zeros((15 * 60, 2))
     i = 0
 
     for ti in t:
+        if ti % 15 == 0:
+            x0 = [9.9, 0]
+            x0_naive = x0
+
         if ti % 15 == 0 and ti != 0:
             i = 0
             print("\nFitting model...")
@@ -116,12 +120,12 @@ def main():
             responses = buffer[:, 3:5]
             errors = references - responses
 
-            adaptations = errors * 0.5
+            adaptations += 0.75 * errors
 
             buffer = []
 
-        if ti % 15 == 0:
-            target = [np.random.rand() * 6 + 7, 0.]
+        # if ti % 15 == 0:
+        #     target = [np.random.rand() * 6 + 7, 0.]
 
         # adapter.eval()
         targets.append(target)
@@ -144,11 +148,7 @@ def main():
         x0 = x
         x0_naive = x_naive
 
-        i+=1
-
-        # if ti % 15 == 0:
-        #     x0 = [9.9 + (np.random.rand() - .5) * .5, 0]
-        #     x0_naive = x0
+        i += 1
 
     signal = np.asarray(signal)
     signal_naive = np.asarray(signal_naive)
