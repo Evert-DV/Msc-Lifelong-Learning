@@ -84,6 +84,7 @@ def main():
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
+    default_controller = PIDController(350, 107.5, 1257)
 
     prediction_window = 10
     adapter = Adapter(4, prediction_window)
@@ -172,7 +173,7 @@ def main():
 
             control_action += adjustment
 
-            a_naive = controller.compute_control(x0_naive, target, dt)
+            a_naive = default_controller.compute_control(x0_naive, target, dt)
             default_controls.append(a_naive)
 
             x = system.response(x0, control_action, do_update=True)
