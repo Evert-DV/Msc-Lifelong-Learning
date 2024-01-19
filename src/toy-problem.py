@@ -85,11 +85,12 @@ def main():
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
 
-    adapter = Adapter(4, 10)
+    prediction_window = 10
+    adapter = Adapter(4, prediction_window)
     if not pretrain:
         adapter.load_state_dict(torch.load('./tmp/adapter_state_dict.pth'))
         # pass
-    optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(adapter.parameters(), lr=1e-2)
     loss_fn = nn.MSELoss()
 
     if pretrain:
@@ -97,10 +98,12 @@ def main():
 
         print("\nPretraining model...")
         adapter.train()
-        features = np.concatenate((pretrain_data[:-10, [0, 1]], pretrain_data[10:, [3, 4]]),
-                                  axis=1)  # state transitions
+        features = np.concatenate(
+            (pretrain_data[:-prediction_window, [0, 1]], pretrain_data[prediction_window:, [3, 4]]),
+            axis=1)  # state transitions
         label_action = np.asarray(
-            [pretrain_data[i:i + 10, 2:3].ravel() for i in range(len(pretrain_data) - 10)])  # control actions as labels
+            [pretrain_data[i:i + prediction_window, 2:3].ravel() for i in
+             range(len(pretrain_data) - prediction_window)])  # control actions as labels
         dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
@@ -134,9 +137,11 @@ def main():
                 print("\nFitting model...")
                 adapter.train()
                 buffer = np.asarray(buffer)
-                features = np.concatenate((buffer[:-10, [0, 1]], buffer[10:, [3, 4]]), axis=1)  # state transitions
+                features = np.concatenate((buffer[:-prediction_window, [0, 1]], buffer[prediction_window:, [3, 4]]),
+                                          axis=1)  # state transitions
                 label_action = np.asarray(
-                    [buffer[i:i + 10, 2:3].ravel() for i in range(len(buffer) - 10)])  # control actions as labels
+                    [buffer[i:i + prediction_window, 2:3].ravel() for i in
+                     range(len(buffer) - prediction_window)])  # control actions as labels
                 dataset = TensorDataset(torch.from_numpy(features).float(), torch.from_numpy(label_action).float())
                 X, y = dataset.tensors
 
