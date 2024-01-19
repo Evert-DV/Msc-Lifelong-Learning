@@ -71,7 +71,7 @@ class Adapter(nn.Sequential):
         )
 
 
-def simple_ilc(response, target, gain=5.):
+def simple_ilc(response, target, gain=.5):
     error = target - response
     adaptations = gain * error
     return adaptations
@@ -118,9 +118,7 @@ def main():
             buffer = np.asarray(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
-            errors = references - responses
-
-            adaptations += 0.75 * errors
+            adaptations += simple_ilc(responses, references, gain=.75)
 
             buffer = []
 
