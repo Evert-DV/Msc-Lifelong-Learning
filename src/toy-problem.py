@@ -4,6 +4,7 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
+from copy import deepcopy
 
 
 # Create a mass-spring-damper toy problem
@@ -23,12 +24,12 @@ class System:
         self.sys = sp.signal.StateSpace(self.A, self.B, self.C, self.D)
 
     def response(self, s, a=0, dt=0.01, do_update=False):
-        _, _, s = sp.signal.lsim(self.sys, 2 * [self.u + a], [0, dt], s)
+        _, _, output = sp.signal.lsim(self.sys, 2 * [self.u + a], [0, dt], s)
 
         if do_update:
             self.update()
 
-        return s[-1]
+        return output[-1]
 
     def update(self):
         self.k *= 0.995
@@ -92,11 +93,13 @@ def adaptive_gain(error, previous_error, gain, max_gain=5.):
 
 def main():
     seed = np.random.randint(0, 1000)
+    # seed = 131
     np.random.seed(seed)
     print(f"Seed: {seed}")
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
+    default_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
     adapter = Adapter(2, 1)
 
@@ -113,7 +116,7 @@ def main():
     adapted_controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 240, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
@@ -148,11 +151,11 @@ def main():
         targets.append(target)
         adapted_target = target + adaptations[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
-        a_naive = controller.compute_control(x0_naive, target, dt)
+        a_naive = default_controller.compute_control(x0_naive, target, dt)
         default_controls.append(a_naive)
         adapted_controls.append(control_action)
 
-        x = system.response(x0, control_action, do_update=True)
+        x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
         # adapted_target = simple_ilc(x, target)
