@@ -79,8 +79,8 @@ def simple_ilc(response, target, previous_error, gain=.5):
 
 
 def adaptive_gain(error, previous_error, gain, max_gain=5.):
-    if error > previous_error:
-        gain *= 1.05
+    if error < previous_error:
+        gain *= 1.1
     else:
         gain *= 0.95
 
@@ -113,12 +113,12 @@ def main():
     adapted_controls = []
     predictions = []
     labels = []
-    t = np.arange(0, 240, dt)
+    t = np.arange(0, 600, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
     adaptations = np.zeros((15 * 60, 2))
-    gain = .75
+    gain = .5
     previous_error = 0.
     ilc_gains = []
     i = 0
@@ -178,7 +178,7 @@ def main():
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
     ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
-    ax[0].set_ylim([8, 12])
+    ax[0].set_ylim([9.5, 12.])
     ax[0].invert_yaxis()
     ax[0].legend()
 
