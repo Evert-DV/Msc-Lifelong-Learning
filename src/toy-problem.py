@@ -79,16 +79,18 @@ def simple_ilc(response, target, previous_error, gain=.5):
     return adaptations, gain, np.linalg.norm(error)
 
 
+def predictive_ilc(response, target, previous_error, gain=.5, step=5):
+    future_errors_sum = []
+    for i in range(len(target)):
+        future_errors_sum.append(np.sum(target[i:i + step] - response[i:i + step], axis=0))
+    gain = adaptive_gain(np.linalg.norm(future_errors_sum), previous_error, gain)
+    adaptations = gain * np.asarray(future_errors_sum)
+    return adaptations, gain, np.linalg.norm(future_errors_sum)
+
+
 def adaptive_gain(error, previous_error, gain, max_gain=5.):
-    if error < previous_error:
-        gain *= 1.1
-    else:
-        gain *= 0.95
-
-    if gain > max_gain:
-        gain = max_gain
-
-    return gain
+    gain *= 1.1 if error < previous_error else 0.95
+    return min(gain, max_gain)
 
 
 def main():
@@ -137,7 +139,7 @@ def main():
             buffer = np.asarray(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
-            delta_control, gain, previous_error = simple_ilc(responses, references, previous_error, gain=gain)
+            delta_control, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
             adaptations += delta_control
 
             buffer = []
