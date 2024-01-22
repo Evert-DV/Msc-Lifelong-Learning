@@ -72,6 +72,18 @@ class Adapter(nn.Sequential):
         )
 
 
+def ilc_nn(response, target, model, optimizer):
+    errors = torch.tensor((target - response).ravel(), requires_grad=True).float()
+    manual_loss = torch.norm(errors)
+    manual_loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+
+    delta_control = model(errors)
+
+    return np.reshape(delta_control.detach().numpy(), (15*60, 2))
+
+
 def simple_ilc(response, target, previous_error, gain=.5):
     error = target - response
     gain = adaptive_gain(np.linalg.norm(error), previous_error, gain)
@@ -103,10 +115,13 @@ def main():
     system = System(5, 10, 3, 5)
     default_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
-    adapter = Adapter(2, 1)
 
-    optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
-    loss_fn = nn.MSELoss()
+    # adapter = Adapter(2, 1)
+    # optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
+    # loss_fn = nn.MSELoss()
+
+    ilc_model = nn.Linear(2 * 60 * 15, 2 * 60 * 15)
+    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -116,9 +131,7 @@ def main():
     adapted_targets = []
     default_controls = []
     adapted_controls = []
-    predictions = []
-    labels = []
-    t = np.arange(0, 240, dt)
+    t = np.arange(0, 600, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
@@ -129,6 +142,7 @@ def main():
     i = 0
 
     for ti in t:
+        # Reset the task every 15 seconds
         if ti % 15 == 0:
             x0 = [9.9, 0]
             x0_naive = x0
@@ -139,8 +153,10 @@ def main():
             buffer = np.asarray(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
-            delta_control, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
-            adaptations += delta_control
+
+            # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
+            delta_target = ilc_nn(responses, references, ilc_model, ilc_optim)
+            adaptations = delta_target
 
             buffer = []
 
@@ -149,7 +165,6 @@ def main():
         # if ti % 15 == 0:
         #     target = [np.random.rand() * 6 + 7, 0.]
 
-        # adapter.eval()
         targets.append(target)
         adapted_target = target + adaptations[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
@@ -160,7 +175,6 @@ def main():
         x = system.response(x0, control_action, do_update=False)
         x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-        # adapted_target = simple_ilc(x, target)
         adapted_targets.append(adapted_target)
 
         signal.append(x)
@@ -182,12 +196,11 @@ def main():
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
-    ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
+    # ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[0].set_ylim([9.5, 12.])
     ax[0].invert_yaxis()
     ax[0].legend()
 
-    # ax[1].plot(t, predictions, label="Predicted control actions")
     ax[1].plot(t, default_controls, label="Default control actions")
     ax[1].plot(t, adapted_controls, label="Adapted control actions")
     ax[1].legend()
