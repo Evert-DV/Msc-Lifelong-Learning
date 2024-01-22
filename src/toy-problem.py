@@ -4,7 +4,6 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
-from copy import deepcopy
 
 
 # Create a mass-spring-damper toy problem
@@ -72,16 +71,18 @@ class Adapter(nn.Sequential):
         )
 
 
-def ilc_nn(response, target, model, optimizer):
-    errors = torch.tensor((target - response).ravel(), requires_grad=True).float()
-    manual_loss = torch.norm(errors)
-    manual_loss.backward()
-    optimizer.step()
+def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations):
+    model.train()
     optimizer.zero_grad()
+    errors = torch.tensor((target - response).ravel()).float()
+    delta_target = model(errors)
+    manual_loss = torch.tensor(np.linalg.norm(errors), requires_grad=True)
+    grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
+    delta_target.backward(grad)
+    optimizer.step()
+    print(f"Loss: {manual_loss.item()}")
 
-    delta_control = model(errors)
-
-    return np.reshape(delta_control.detach().numpy(), (15*60, 2))
+    return np.reshape(delta_target.detach().numpy(), (15 * 60, 2)), manual_loss
 
 
 def simple_ilc(response, target, previous_error, gain=.5):
@@ -113,7 +114,7 @@ def main():
     torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
-    default_controller = PIDController(350, 107.5, 1257)
+    reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
     # adapter = Adapter(2, 1)
@@ -121,7 +122,12 @@ def main():
     # loss_fn = nn.MSELoss()
 
     ilc_model = nn.Linear(2 * 60 * 15, 2 * 60 * 15)
-    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.)
+    # ilc_model = nn.Sequential(
+    #     nn.Linear(2*15*60, 128),
+    #     nn.Softsign(),
+    #     nn.Linear(128, 2*60*15)
+    # )
+    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-4)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -137,7 +143,8 @@ def main():
     x0_naive = x0
     adaptations = np.zeros((15 * 60, 2))
     gain = .5
-    previous_error = 0.
+    # previous_error = 0.
+    old_loss = torch.tensor(0.)
     ilc_gains = []
     i = 0
 
@@ -155,12 +162,12 @@ def main():
             responses = buffer[:, 3:5]
 
             # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
-            delta_target = ilc_nn(responses, references, ilc_model, ilc_optim)
+            delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations)
             adaptations = delta_target
 
             buffer = []
 
-        ilc_gains.append(gain)
+        # ilc_gains.append(gain)
 
         # if ti % 15 == 0:
         #     target = [np.random.rand() * 6 + 7, 0.]
@@ -168,7 +175,7 @@ def main():
         targets.append(target)
         adapted_target = target + adaptations[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
-        a_naive = default_controller.compute_control(x0_naive, target, dt)
+        a_naive = reference_controller.compute_control(x0_naive, target, dt)
         default_controls.append(a_naive)
         adapted_controls.append(control_action)
 
@@ -191,7 +198,7 @@ def main():
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
 
-    fig, ax = plt.subplots(3, 1, sharex=True)
+    fig, ax = plt.subplots(2, 1, sharex=True)
 
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
@@ -204,9 +211,9 @@ def main():
     ax[1].plot(t, default_controls, label="Default control actions")
     ax[1].plot(t, adapted_controls, label="Adapted control actions")
     ax[1].legend()
-
-    ax[2].plot(t, ilc_gains, label="ILC gain")
-    ax[2].legend()
+    #
+    # ax[2].plot(t, ilc_gains, label="ILC gain")
+    # ax[2].legend()
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
