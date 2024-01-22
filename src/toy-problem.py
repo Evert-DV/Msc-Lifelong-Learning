@@ -74,12 +74,11 @@ class Adapter(nn.Sequential):
 def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update_ilc=True):
     model.train()
     optimizer.zero_grad()
-    inputs = torch.ones(64)
+    inputs = torch.ones(1)
     delta_target = model(inputs)
     manual_loss = torch.tensor((target - response).ravel()).float()
     if update_ilc:
-        manual_loss = torch.norm(manual_loss - old_loss)
-        grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
+        grad = (torch.norm(manual_loss) - torch.norm(old_loss)) / (delta_target - torch.tensor(old_adaptations.ravel()))
         delta_target.backward(grad)
         optimizer.step()
         print(f"Loss: {torch.norm(manual_loss).item()}")
@@ -123,15 +122,15 @@ def main():
     # optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
     # loss_fn = nn.MSELoss()
 
-    ilc_model = nn.Linear(64, 2 * 60 * 15)
-    # ilc_model = nn.Sequential(
-    #     nn.Linear(2*15*60, 128),
-    #     nn.Softsign(),
-    #     nn.Linear(128, 2*60*15)
-    # )
-    torch.nn.init.uniform_(ilc_model.weight, -0.01, 0.01)
-    torch.nn.init.uniform_(ilc_model.bias, -0.01, 0.01)
-    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-4)
+    # ilc_model = nn.Linear(1, 2 * 60 * 15)
+    ilc_model = nn.Sequential(
+        nn.Linear(1, 16),
+        nn.Softsign(),
+        nn.Linear(16, 2*60*15)
+    )
+    # torch.nn.init.uniform_(ilc_model.weight, -0.1, 0.1)
+    # torch.nn.init.uniform_(ilc_model.bias, -0.1, 0.1)
+    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-2)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -141,7 +140,7 @@ def main():
     adapted_targets = []
     default_controls = []
     adapted_controls = []
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 1200, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
@@ -172,7 +171,6 @@ def main():
             delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations, update_ilc)
             adaptations = delta_target
 
-            old_buffer = buffer
             buffer = []
 
         # ilc_gains.append(gain)
@@ -211,7 +209,7 @@ def main():
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
-    ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
+    # ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[0].set_ylim([9.5, 12.])
     ax[0].invert_yaxis()
     ax[0].legend()
