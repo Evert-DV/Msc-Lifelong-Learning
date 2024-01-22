@@ -74,9 +74,9 @@ class Adapter(nn.Sequential):
 def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations):
     model.train()
     optimizer.zero_grad()
-    errors = torch.tensor((target - response).ravel()).float()
-    delta_target = model(errors)
-    manual_loss = errors
+    inputs = torch.ones(64)
+    delta_target = model(inputs)
+    manual_loss = torch.tensor((target - response).ravel()).float()
     grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
     delta_target.backward(grad)
     optimizer.step()
@@ -121,7 +121,7 @@ def main():
     # optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
     # loss_fn = nn.MSELoss()
 
-    ilc_model = nn.Linear(2 * 60 * 15, 2 * 60 * 15)
+    ilc_model = nn.Linear(64, 2 * 60 * 15)
     # ilc_model = nn.Sequential(
     #     nn.Linear(2*15*60, 128),
     #     nn.Softsign(),
@@ -205,7 +205,7 @@ def main():
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
-    # ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
+    ax[0].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[0].set_ylim([9.5, 12.])
     ax[0].invert_yaxis()
     ax[0].legend()
