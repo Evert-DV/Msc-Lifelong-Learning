@@ -81,7 +81,8 @@ def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update
         grad = (torch.norm(manual_loss) - torch.norm(old_loss)) / (delta_target - torch.tensor(old_adaptations.ravel()))
         delta_target.backward(grad)
         optimizer.step()
-        print(f"Loss: {torch.norm(manual_loss).item()}")
+        print(f"Loss: {torch.norm(manual_loss).item()}\n"
+              f"Parameters have gradients: {model[0].weight.grad is not None}")
 
     return np.reshape(delta_target.detach().numpy(), (15 * 60, 2)), manual_loss
 
