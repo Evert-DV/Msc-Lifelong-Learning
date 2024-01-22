@@ -76,11 +76,11 @@ def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations):
     optimizer.zero_grad()
     errors = torch.tensor((target - response).ravel()).float()
     delta_target = model(errors)
-    manual_loss = torch.tensor(np.linalg.norm(errors), requires_grad=True)
+    manual_loss = errors
     grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
     delta_target.backward(grad)
     optimizer.step()
-    print(f"Loss: {manual_loss.item()}")
+    print(f"Loss: {torch.norm(manual_loss).item()}")
 
     return np.reshape(delta_target.detach().numpy(), (15 * 60, 2)), manual_loss
 
@@ -127,6 +127,8 @@ def main():
     #     nn.Softsign(),
     #     nn.Linear(128, 2*60*15)
     # )
+    torch.nn.init.uniform_(ilc_model.weight, -0.01, 0.01)
+    torch.nn.init.uniform_(ilc_model.bias, -0.01, 0.01)
     ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-4)
 
     dt = 1 / 60
@@ -141,10 +143,10 @@ def main():
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    adaptations = np.zeros((15 * 60, 2))
+    adaptations = np.zeros((15 * 60 * 2))
     gain = .5
     # previous_error = 0.
-    old_loss = torch.tensor(0.)
+    old_loss = torch.zeros((15 * 60 * 2))
     ilc_gains = []
     i = 0
 
