@@ -71,16 +71,18 @@ class Adapter(nn.Sequential):
         )
 
 
-def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations):
+def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update_ilc=True):
     model.train()
     optimizer.zero_grad()
     inputs = torch.ones(64)
     delta_target = model(inputs)
     manual_loss = torch.tensor((target - response).ravel()).float()
-    grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
-    delta_target.backward(grad)
-    optimizer.step()
-    print(f"Loss: {torch.norm(manual_loss).item()}")
+    if update_ilc:
+        manual_loss = torch.norm(manual_loss - old_loss)
+        grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
+        delta_target.backward(grad)
+        optimizer.step()
+        print(f"Loss: {torch.norm(manual_loss).item()}")
 
     return np.reshape(delta_target.detach().numpy(), (15 * 60, 2)), manual_loss
 
@@ -164,9 +166,13 @@ def main():
             responses = buffer[:, 3:5]
 
             # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
-            delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations)
+            update_ilc = (ti > 15)
+            if ti == 30:
+                adaptations = np.zeros((15 * 60 * 2))
+            delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations, update_ilc)
             adaptations = delta_target
 
+            old_buffer = buffer
             buffer = []
 
         # ilc_gains.append(gain)
