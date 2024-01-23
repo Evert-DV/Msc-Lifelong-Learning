@@ -78,7 +78,7 @@ def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update
     delta_target = model(inputs)
     manual_loss = torch.tensor(((target - response)**2).ravel()).float()
     if update_ilc:
-        grad = (torch.mean(manual_loss) - torch.mean(old_loss)) / (delta_target - torch.tensor(old_adaptations.ravel()))
+        grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
         delta_target.backward(grad)
         optimizer.step()
         print(f"Loss: {torch.mean(manual_loss).item()}\n"
