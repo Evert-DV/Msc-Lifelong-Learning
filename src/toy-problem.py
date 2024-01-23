@@ -123,14 +123,17 @@ def main():
     # optimizer = torch.optim.SGD(adapter.parameters(), lr=0.001)
     # loss_fn = nn.MSELoss()
 
-    # ilc_model = nn.Linear(1, 2 * 60 * 15)
     ilc_model = nn.Sequential(
+        # nn.Linear(1, 2 * 60 * 15)
         nn.Linear(1, 16),
         nn.Softsign(),
         nn.Linear(16, 2*60*15)
     )
-    # torch.nn.init.uniform_(ilc_model.weight, -0.1, 0.1)
-    # torch.nn.init.uniform_(ilc_model.bias, -0.1, 0.1)
+    for layer in ilc_model:
+        if isinstance(layer, nn.Linear):
+            torch.nn.init.uniform_(layer.weight, -0.05, 0.05)
+            torch.nn.init.uniform_(layer.bias, -0.05, 0.05)
+
     ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-3)
 
     dt = 1 / 60
@@ -205,7 +208,7 @@ def main():
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
 
-    fig, ax = plt.subplots(2, 1, sharex=True)
+    fig, ax = plt.subplots(3, 1, sharex=True)
 
     ax[0].plot(t, signal_naive[:, 0], label="Default controller")
     ax[0].plot(t, signal[:, 0], label="Adaptive controller")
@@ -218,9 +221,11 @@ def main():
     ax[1].plot(t, default_controls, label="Default control actions")
     ax[1].plot(t, adapted_controls, label="Adapted control actions")
     ax[1].legend()
-    #
+
+    ax[2].plot(t, targets[:, 0], '--', label="Target position")
+    ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     # ax[2].plot(t, ilc_gains, label="ILC gain")
-    # ax[2].legend()
+    ax[2].legend()
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
