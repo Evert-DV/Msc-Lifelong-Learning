@@ -84,17 +84,19 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     delta_pre_prev_update = torch.tensor(
         old_adaptations.ravel())  # the adaptations from before the 15 sec, before the previous update
     delta_post_prev_update = old_errors * gains  # the adaptations of the past 15 sec, after the previous update
+    delta_post_prev_update.retain_grad()
 
     if update_ilc:
         model.train()
         optimizer.zero_grad()
-        # Loss is calculated as mse of errors.  dLoss/dGain = dLoss/dDelta * dDelta/dGain = dLoss/dDelta * old_errors
-        grad = old_errors * (torch.mean(errors ** 2) - torch.mean(old_errors ** 2)) / (
+        # Loss is calculated as mse of errors.  dLoss/dGain = dLoss/dDelta * dDelta/dGain, \
+        # manually calculating dLoss/dDelta:
+        grad = (torch.mean(errors ** 2) - torch.mean(old_errors ** 2)) / (
                 delta_post_prev_update - delta_pre_prev_update)
         # From here, autograd should take care of the rest
-        gains.backward(grad)
+        delta_post_prev_update.backward(grad)
         optimizer.step()
-        print(f"Loss: {torch.mean(errors ** 2).item()}\n"
+        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
               f"Parameters have gradients: {model[-1].weight.grad is not None}")
 
     model.eval()
@@ -141,18 +143,18 @@ def main():
     # loss_fn = nn.MSELoss()
 
     ilc_model = nn.Sequential(
-        nn.Linear(1, 2 * 15 * 60, bias=False),
+        nn.Linear(1, 2 * 15 * 60),
         # nn.Linear(2 * 15 * 60, 16),
         # nn.ReLU(),
         # nn.Linear(32, 2*60*15)
     )
     for layer in ilc_model:
         if isinstance(layer, nn.Linear):
-            # torch.nn.init.uniform_(layer.weight, -0.01, 0.01)
-            # torch.nn.init.uniform_(layer.bias, -0.01, 0.01)
-            pass
+            torch.nn.init.constant_(layer.weight, 0.5)
+            torch.nn.init.constant_(layer.bias, 0.)
+            # pass
 
-    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-1)
+    ilc_optim = torch.optim.Rprop(ilc_model.parameters(), lr=1.e-3)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -162,7 +164,7 @@ def main():
     adapted_targets = []
     default_controls = []
     adapted_controls = []
-    t = np.arange(0, 1800, dt)
+    t = np.arange(0, 3600, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
