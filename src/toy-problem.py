@@ -76,12 +76,12 @@ def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update
     optimizer.zero_grad()
     inputs = torch.ones(1)
     delta_target = model(inputs)
-    manual_loss = torch.tensor((target - response).ravel()).float()
+    manual_loss = torch.tensor(((target - response)**2).ravel()).float()
     if update_ilc:
-        grad = (torch.norm(manual_loss) - torch.norm(old_loss)) / (delta_target - torch.tensor(old_adaptations.ravel()))
+        grad = (torch.mean(manual_loss) - torch.mean(old_loss)) / (delta_target - torch.tensor(old_adaptations.ravel()))
         delta_target.backward(grad)
         optimizer.step()
-        print(f"Loss: {torch.norm(manual_loss).item()}\n"
+        print(f"Loss: {torch.mean(manual_loss).item()}\n"
               f"Parameters have gradients: {model[0].weight.grad is not None}")
 
     return np.reshape(delta_target.detach().numpy(), (15 * 60, 2)), manual_loss
@@ -131,7 +131,7 @@ def main():
     )
     # torch.nn.init.uniform_(ilc_model.weight, -0.1, 0.1)
     # torch.nn.init.uniform_(ilc_model.bias, -0.1, 0.1)
-    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-2)
+    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-3)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -145,7 +145,7 @@ def main():
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    adaptations = np.zeros((15 * 60 * 2))
+    adaptations = np.zeros((15 * 60, 2))
     gain = .5
     # previous_error = 0.
     old_loss = torch.zeros((15 * 60 * 2))
@@ -168,7 +168,7 @@ def main():
             # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
             update_ilc = (ti > 15)
             if ti == 30:
-                adaptations = np.zeros((15 * 60 * 2))
+                adaptations = np.zeros((15 * 60, 2))
             delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations, update_ilc)
             adaptations = delta_target
 
