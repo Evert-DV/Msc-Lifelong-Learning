@@ -75,11 +75,13 @@ def ilc_nn(response, target, model, optimizer, old_loss, old_adaptations, update
     model.train()
     optimizer.zero_grad()
     inputs = torch.ones(1)
-    delta_target = model(inputs)
-    manual_loss = torch.tensor(((target - response)**2).ravel()).float()
+    errors = torch.tensor((target - response).ravel()).float()
+    gains = model(inputs)
+    delta_target = gains * errors
+    manual_loss = errors ** 2
     if update_ilc:
-        grad = (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
-        delta_target.backward(grad)
+        grad = errors * (manual_loss - old_loss) / (delta_target - torch.tensor(old_adaptations.ravel()))
+        gains.backward(grad)
         optimizer.step()
         print(f"Loss: {torch.mean(manual_loss).item()}\n"
               f"Parameters have gradients: {model[0].weight.grad is not None}")
@@ -124,15 +126,15 @@ def main():
     # loss_fn = nn.MSELoss()
 
     ilc_model = nn.Sequential(
-        # nn.Linear(1, 2 * 60 * 15)
-        nn.Linear(1, 16),
-        nn.Softsign(),
-        nn.Linear(16, 2*60*15)
+        nn.Linear(1, 2 * 60 * 15)
+        # nn.Linear(2 * 15 * 60, 16),
+        # nn.Softsign(),
+        # nn.Linear(16, 2*60*15)
     )
     for layer in ilc_model:
         if isinstance(layer, nn.Linear):
-            torch.nn.init.uniform_(layer.weight, -0.05, 0.05)
-            torch.nn.init.uniform_(layer.bias, -0.05, 0.05)
+            torch.nn.init.uniform_(layer.weight, 0.3, 0.7)
+            torch.nn.init.uniform_(layer.bias, -0.01, 0.01)
 
     ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-3)
 
@@ -163,7 +165,7 @@ def main():
 
         if ti % 15 == 0 and ti != 0:
             i = 0
-            print("\nFitting model...")
+            print(f"\nt = {ti:.0f}\t\tFitting model...")
             buffer = np.asarray(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
@@ -172,8 +174,9 @@ def main():
             update_ilc = (ti > 15)
             if ti == 30:
                 adaptations = np.zeros((15 * 60, 2))
-            delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations, update_ilc)
-            adaptations = delta_target
+            delta_target, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss, adaptations,
+                                            update_ilc)
+            adaptations += delta_target
 
             buffer = []
 
