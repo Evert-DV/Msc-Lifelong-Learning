@@ -74,7 +74,7 @@ class Adapter(keras.Sequential):
 
 
 def main():
-    pretrain = True
+    pretrain = False
     seed = np.random.randint(0, 1000)
     print(f"Seed: {seed}")
     np.random.seed(seed)
@@ -89,7 +89,7 @@ def main():
     # adapter = Adapter(4, prediction_window)
     adapter = Adapter(4, 2)
     if not pretrain:
-        load_model('./tmp/target_adapter.keras')
+        adapter = load_model('./tmp/target_adapter.keras')
         # pass
     optimizer = keras.optimizers.Adam(learning_rate=1.e-2)
     loss_fn = keras.losses.MeanSquaredError()
@@ -119,29 +119,6 @@ def main():
                               epochs=100,
                               batch_size=32,
                               callbacks=[callback])
-
-        # best_loss = float('inf')
-        # best_params = None
-        # old_loss = float('inf')
-        #
-        # for epoch in range(100):
-        #     for inputs, targets in dataloader:
-        #         optimizer.zero_grad()
-        #         output = adapter(inputs)
-        #         loss = loss_fn(output, targets)
-        #         loss.backward()
-        #         optimizer.step()
-        #
-        #     print(f"\rEpoch {epoch}\t Loss: {loss.item():.4f}", end="")
-        #
-        #     if loss.item() < best_loss:
-        #         best_loss = loss.item()
-        #         best_params = deepcopy(adapter.state_dict())
-        #
-        #     if abs(old_loss - loss.item()) < 1e-4:
-        #         break
-        #
-        #     old_loss = loss.item()
 
         save_model(adapter, './tmp/target_adapter.keras')
 
@@ -188,8 +165,7 @@ def main():
             if ti % 15 == 0:
                 target = [np.random.rand() * 6 + 7, 0.]
 
-            adapter.eval()
-            if ti > 15.:
+            if ti < 0.:  # essentially disable adapter
                 adapted_target = adapter(torch.tensor([control_action, *target]).float())
                 adapted_target = adapted_target.detach().numpy()
                 adapted_targets.append(adapted_target)
@@ -216,8 +192,8 @@ def main():
             x = system.response(x0, control_action, do_update=False)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-            prediction = adapter(torch.tensor([control_action, *x]).float())
-            predicted_targets.append(prediction.detach().numpy())
+            prediction = adapter([*x0, *target])
+            predicted_targets.append(prediction)
 
             adapted_controls.append(control_action)
 
