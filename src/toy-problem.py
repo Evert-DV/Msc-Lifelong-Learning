@@ -75,7 +75,8 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     model.eval()
 
     # the errors of the past 15 sec, after the previous update
-    errors = torch.tensor((target - response).ravel()).float()
+    errors = torch.tensor((target - response).ravel(), requires_grad=True).float()
+    errors.retain_grad()
 
     # the gains used during the past 15 sec
     gains = model(torch.ones(1))
@@ -89,12 +90,13 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     if update_ilc:
         model.train()
         optimizer.zero_grad()
-        # Loss is calculated as mse of errors.  dLoss/dGain = dLoss/dDelta * dDelta/dGain, \
-        # manually calculating dLoss/dDelta:
-        grad = (torch.mean(errors ** 2) - torch.mean(old_errors ** 2)) / (
-                delta_post_prev_update - delta_pre_prev_update)
+        # Loss is calculated as mse of errors. dLoss/dGain = dLoss/dErrors * dErrors/dDelta * dDelta/dGain
+        loss = torch.mean(errors ** 2)
+        loss.backward()
+        dl_de = errors.grad
+        de_delta = (errors - old_errors) / (delta_post_prev_update - delta_pre_prev_update)
         # From here, autograd should take care of the rest
-        delta_post_prev_update.backward(grad)
+        delta_post_prev_update.backward(dl_de * de_delta)
         optimizer.step()
         print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
               f"Parameters have gradients: {model[-1].weight.grad is not None}")
@@ -143,18 +145,17 @@ def main():
     # loss_fn = nn.MSELoss()
 
     ilc_model = nn.Sequential(
-        nn.Linear(1, 2 * 15 * 60),
-        # nn.Linear(2 * 15 * 60, 16),
-        # nn.ReLU(),
-        # nn.Linear(32, 2*60*15)
+        nn.Linear(1, 16),
+        nn.ReLU(),
+        nn.Linear(16, 2 * 60 * 15)
     )
     for layer in ilc_model:
         if isinstance(layer, nn.Linear):
-            torch.nn.init.constant_(layer.weight, 0.5)
+            torch.nn.init.constant_(layer.weight, .1)
             torch.nn.init.constant_(layer.bias, 0.)
             # pass
 
-    ilc_optim = torch.optim.Rprop(ilc_model.parameters(), lr=1.e-3)
+    ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-2)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -164,16 +165,16 @@ def main():
     adapted_targets = []
     default_controls = []
     adapted_controls = []
-    t = np.arange(0, 3600, dt)
+    t = np.arange(0, 1200, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_naive = x0
-    adaptations = np.zeros((15 * 60, 2))
-    old_adaptations = adaptations
-    gain = .5
+    delta_target = np.zeros((15 * 60, 2))
+    old_adaptations = delta_target
+    # gain = .5
     # previous_error = 0.
     old_loss = torch.zeros((15 * 60 * 2))
-    ilc_gains = []
+    # ilc_gains = []
     i = 0
 
     for ti in t:
@@ -195,7 +196,6 @@ def main():
                 old_adaptations = np.zeros((15 * 60, 2))
             delta_target, old_adaptations, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss,
                                                              old_adaptations, update_ilc)
-            adaptations = delta_target
 
             buffer = []
 
@@ -205,7 +205,7 @@ def main():
         #     target = [np.random.rand() * 6 + 7, 0.]
 
         targets.append(target)
-        adapted_target = target + adaptations[i]
+        adapted_target = target + delta_target[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
         a_naive = reference_controller.compute_control(x0_naive, target, dt)
         default_controls.append(a_naive)
