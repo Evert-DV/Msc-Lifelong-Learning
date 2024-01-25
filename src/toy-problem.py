@@ -4,12 +4,12 @@ os.environ["KERAS_BACKEND"] = "torch"
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-import torch
 import keras
-from keras import layers
-from keras.models import load_model, save_model
+from keras import ops, layers
+from keras.saving import load_model
+import torch
+from torch import nn, optim
 from torch.utils.data import DataLoader, TensorDataset
-from copy import deepcopy
 
 
 class System:
@@ -65,14 +65,6 @@ class PIDController:
         return control_action
 
 
-class Adapter(keras.Sequential):
-    def __init__(self, input_size, output_size):
-        super(Adapter, self).__init__()
-        self.add(layers.Dense(32, activation='softmax'))
-        self.add(layers.Dense(32, activation='leaky_relu'))
-        self.add(layers.Dense(output_size))
-
-
 def main():
     pretrain = False
     seed = np.random.randint(0, 1000)
@@ -86,8 +78,11 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     prediction_window = 10
-    # adapter = Adapter(4, prediction_window)
-    adapter = Adapter(4, 2)
+    adapter = keras.Sequential([
+        layers.Dense(32, activation='softmax'),
+        layers.Dense(32, activation='leaky_relu'),
+        layers.Dense(2)
+    ])
     if not pretrain:
         adapter = load_model('./tmp/target_adapter.keras')
         # pass
@@ -96,31 +91,32 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
+        # adapter.train()
         pretrain_data = np.load("./tmp/pretrain_data.npy")
-
+        pretrain_data = ops.array(pretrain_data)
         print("\nPretraining model...")
-        # features = np.concatenate(
+        # features = ops.concatenate(
         #     (pretrain_data[:-prediction_window, [0, 1]], pretrain_data[prediction_window:, [3, 4]]),
         #     axis=1)  # state transitions
-        # labels = np.asarray(
+        # labels = ops.asarray(
         #     [pretrain_data[i:i + prediction_window, 2:3].ravel() for i in
         #      range(len(pretrain_data) - prediction_window)])  # control actions as labels
         features = pretrain_data[:, [0, 1, 3, 4]]
         labels = pretrain_data[:, -2:]
-        dataset = TensorDataset(torch.from_numpy(features), torch.from_numpy(labels))
+        dataset = TensorDataset(features, labels)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
         callback = keras.callbacks.EarlyStopping(monitor='loss',
                                                  mode='min',
                                                  min_delta=1e-4,
                                                  patience=5)
+        adapter.fit(dataloader,
+                    # optimizer=optimizer,
+                    # loss=loss_fn,
+                    epochs=100,
+                    callbacks=[callback])
 
-        history = adapter.fit(dataloader,
-                              epochs=100,
-                              batch_size=32,
-                              callbacks=[callback])
-
-        save_model(adapter, './tmp/target_adapter.keras')
+        adapter.save('./tmp/target_adapter.keras')
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -192,7 +188,7 @@ def main():
             x = system.response(x0, control_action, do_update=False)
             x_naive = system.response(x0_naive, a_naive, do_update=False)
 
-            prediction = adapter([*x0, *target])
+            prediction = adapter.predict(ops.array([[*x0, *target]]), verbose=False)[0]
             predicted_targets.append(prediction)
 
             adapted_controls.append(control_action)
