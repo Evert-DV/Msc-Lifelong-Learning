@@ -72,16 +72,23 @@ class EpochLogger(keras.callbacks.Callback):
 
     def on_epoch_begin(self, epoch, logs=None):
         if self.verbose:
-            print(f"\rEpoch: {epoch}\t", end="")
+            print(f"\rEpoch {epoch}\t", end="")
+
+    def on_epoch_end(self, epoch, logs=None):
+        if self.verbose:
+            print(f"\r", end="")
 
 
 def main():
     pretrain = False
+    incremental_updates = True
+    use_adaptation = True
+
     seed = np.random.randint(0, 1000)
     print(f"Seed: {seed}")
     np.random.seed(seed)
     if pretrain:
-        np.random.seed(16)
+        torch.manual_seed(16)
 
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
@@ -96,13 +103,12 @@ def main():
     model_location = './tmp/action_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)
-        # pass
+
     optimizer = keras.optimizers.Adam(learning_rate=1.e-2)
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
-        # adapter.train()
         pretrain_data = np.load("./tmp/pretrain_data.npy")
         pretrain_data = ops.array(pretrain_data)
         print("\nPretraining model...")
@@ -111,15 +117,13 @@ def main():
             axis=1)  # state transitions
         labels = ops.array([pretrain_data[i:i + prediction_window, 2:3].ravel() for i in
                             range(len(pretrain_data) - prediction_window)])  # control actions as labels
-        # features = pretrain_data[:, [0, 1, 3, 4]]
-        # labels = pretrain_data[:, -2:]
         dataset = TensorDataset(features, labels)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
         callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
                                                    mode='min',
-                                                   min_delta=1e-5,
-                                                   patience=10,
+                                                   min_delta=1e-4,
+                                                   patience=7,
                                                    restore_best_weights=True,
                                                    verbose=1),
                      ]
@@ -137,8 +141,6 @@ def main():
     reference_controls = []
     adapted_controls = []
     predicted_controls = []
-    adapted_targets = []
-    predicted_targets = []
     t = np.arange(0, 240, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -154,60 +156,45 @@ def main():
                                            axis=1)  # state transitions
                 labels = ops.array([buffer[i:i + prediction_window, 2:3].ravel() for i in
                                     range(len(buffer) - prediction_window)])  # control actions as labels
-                # features = buffer[:, [0, 1, 3, 4]]
-                # labels = buffer[:, -2:]
-                dataset = TensorDataset(features, labels)
-                dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
+                if incremental_updates:
+                    dataset = TensorDataset(features, labels)
+                    dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
 
-                callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
-                                                           mode='min',
-                                                           min_delta=1e-5,
-                                                           patience=10,
-                                                           restore_best_weights=True,
-                                                           verbose=1),
-                             EpochLogger()]
+                    callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
+                                                               mode='min',
+                                                               min_delta=1e-5,
+                                                               patience=10,
+                                                               restore_best_weights=True,
+                                                               verbose=1),
+                                 EpochLogger()]
 
-                adapter.fit(dataloader,
-                            epochs=100,
-                            callbacks=callbacks,
-                            verbose=0)
+                    adapter.fit(dataloader,
+                                epochs=100,
+                                callbacks=callbacks,
+                                verbose=0)
 
                 ref_prediction = adapter.predict(features, verbose=0)
                 predicted_controls += ref_prediction[:, 0].ravel().tolist()
                 predicted_controls += prediction_window * [float('nan')]
-                # predicted_controls = predicted_controls.ravel().tolist()
+
                 buffer = []
 
             if ti % 15 == 0:
                 target = [np.random.rand() * 6 + 7, 0.]
 
-            # if ti < 0.:  # essentially disable adapter
-            #     adapted_target = adapter(torch.tensor([control_action, *target]).float())
-            #     adapted_target = adapted_target.detach().numpy()
-            #     adapted_targets.append(adapted_target)
-            # else:
-            #     adapted_target = target
-            #     adapted_targets.append(2 * [float('nan')])
-
             targets.append(target)
             control_action = controller.compute_control(x0, target, dt)
 
-            if ti > 15.:
-                predicted_action = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
-                adjustment = predicted_action[0] - control_action
-            else:
-                adjustment = 0
+            predicted_action = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+            adjustment = predicted_action[0] - control_action
 
-            control_action += adjustment
+            control_action += adjustment * use_adaptation
 
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
 
             x = system.response(x0, control_action, do_update=False)
             x_reference = system.response(x0_reference, reference_control, do_update=False)
-
-            # prediction = adapter.predict(ops.array([*x0, *target])[None], verbose=False)[0]
-            # predicted_targets.append(prediction)
 
             adapted_controls.append(control_action)
 
@@ -218,11 +205,11 @@ def main():
             x0 = x
             x0_reference = x_reference
 
+        # adapter.save(model_location)
+
         signal = np.asarray(signal)
         signal_naive = np.asarray(signal_naive)
         targets = np.asarray(targets)
-        # predicted_targets = np.asarray(predicted_targets)
-        # adapted_targets = np.asarray(adapted_targets)
         predicted_controls = np.asarray(predicted_controls).ravel()
         adapted_controls = np.asarray(adapted_controls)
 
@@ -238,12 +225,6 @@ def main():
         ax[1].plot(t, reference_controls, label="Reference control actions")
         ax[1].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted control actions")
         ax[1].legend()
-
-        # ax[2].plot(t, targets[:, 0], label="Reference targets")
-        # ax[2].plot(t, predicted_targets[:, 0], '--', label="Predicted targets")
-        # ax[2].plot(t, adapted_targets[:, 0], label="Adapted targets")
-        # ax[2].invert_yaxis()
-        # ax[2].legend()
 
         fig.tight_layout()
         if not os.path.exists("./tmp"):
