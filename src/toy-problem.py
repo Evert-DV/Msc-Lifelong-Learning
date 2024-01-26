@@ -79,6 +79,18 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
+def prep_data(data, prediction_window, interval=15):
+    # First sort by target
+    windowed_data = ops.array(
+        [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
+    features = ops.concatenate(
+        (windowed_data[..., :-prediction_window, [0, 1]], windowed_data[..., prediction_window:, [0, 1]]),
+        axis=-1).reshape(-1, 4)  # state transitions
+    labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
+                        range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
+    return features, labels
+
+
 def main():
     pretrain = False
     incremental_updates = True
@@ -94,7 +106,7 @@ def main():
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
 
-    prediction_window = 10
+    prediction_window = 120
     adapter = keras.Sequential([
         layers.Dense(32, activation='softmax'),
         layers.Dense(32, activation='leaky_relu'),
@@ -110,13 +122,7 @@ def main():
 
     if pretrain:
         pretrain_data = np.load("./tmp/pretrain_data.npy")
-        pretrain_data = ops.array(pretrain_data)
-        print("\nPretraining model...")
-        features = ops.concatenate(
-            (pretrain_data[:-prediction_window, [0, 1]], pretrain_data[prediction_window:, [0, 1]]),
-            axis=1)  # state transitions
-        labels = ops.array([pretrain_data[i:i + prediction_window, 2:3].ravel() for i in
-                            range(len(pretrain_data) - prediction_window)])  # control actions as labels
+        features, labels = prep_data(pretrain_data, prediction_window, interval=20)
         dataset = TensorDataset(features, labels)
         dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
 
@@ -152,18 +158,19 @@ def main():
                 print("\nFitting model...")
                 adapter.optimizer.lr = 1.e-3
                 buffer = ops.array(buffer)
-                features = ops.concatenate((buffer[:-prediction_window, [0, 1]], buffer[prediction_window:, [0, 1]]),
-                                           axis=1)  # state transitions
-                labels = ops.array([buffer[i:i + prediction_window, 2:3].ravel() for i in
-                                    range(len(buffer) - prediction_window)])  # control actions as labels
+                features, labels = prep_data(buffer, prediction_window, interval=15)
+                # features = ops.concatenate((buffer[:-prediction_window, [0, 1]], buffer[prediction_window:, [0, 1]]),
+                #                            axis=1)  # state transitions
+                # labels = ops.array([buffer[i:i + prediction_window, 2:3].ravel() for i in
+                #                     range(len(buffer) - prediction_window)])  # control actions as labels
                 if incremental_updates:
                     dataset = TensorDataset(features, labels)
-                    dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=True)
+                    dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=False)
 
                     callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
                                                                mode='min',
-                                                               min_delta=1e-5,
-                                                               patience=10,
+                                                               min_delta=1e-4,
+                                                               patience=5,
                                                                restore_best_weights=True,
                                                                verbose=1),
                                  EpochLogger()]
