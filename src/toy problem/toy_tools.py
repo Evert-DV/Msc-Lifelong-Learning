@@ -121,15 +121,15 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     model.eval()
 
     # the errors of the past 15 sec, after the previous update
-    errors = torch.tensor((target - response).ravel(), requires_grad=True).float()
+    errors = (target - response).ravel()
+    errors.requires_grad = True
     errors.retain_grad()
 
     # the gains used during the past 15 sec
-    gains = model(torch.ones(1))
+    gains = model(ops.ones(1))[0]
     gains.retain_grad()
 
-    delta_pre_prev_update = torch.tensor(
-        old_adaptations.ravel())  # the adaptations from before the 15 sec, before the previous update
+    delta_pre_prev_update = old_adaptations.ravel()  # the adaptations before the past 15 sec, before the previous update
     delta_post_prev_update = old_errors * gains  # the adaptations of the past 15 sec, after the previous update
     delta_post_prev_update.retain_grad()
 
@@ -144,11 +144,11 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
         # From here, autograd should take care of the rest
         delta_post_prev_update.backward(dl_de * de_delta)
         optimizer.step()
-        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
-              f"Parameters have gradients: {model[-1].weight.grad is not None}")
+        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n")
+              # f"Parameters have gradients: {model.layers[0].weights is not None}")
 
     model.eval()
-    new_gains = model(torch.ones(1))
+    new_gains = model(torch.ones(1))[0]
     new_delta = new_gains * errors  # new adaptations for the coming 15 sec
 
-    return np.reshape(new_delta.detach().numpy(), (15 * 60, 2)), delta_post_prev_update, errors
+    return ops.reshape(new_delta, (15 * 60, 2)), delta_post_prev_update, errors

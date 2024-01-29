@@ -5,7 +5,7 @@ import numpy as np
 os.environ["KERAS_BACKEND"] = "torch"
 import matplotlib.pyplot as plt
 from keras.saving import load_model
-from keras import layers
+from keras import layers, optimizers
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
@@ -23,16 +23,23 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
-    ilc_model = nn.Sequential(
-        nn.Linear(1, 16),
-        nn.ReLU(),
-        nn.Linear(16, 2 * 60 * 15)
-    )
-    for layer in ilc_model:
-        if isinstance(layer, nn.Linear):
-            torch.nn.init.constant_(layer.weight, .1)
-            torch.nn.init.constant_(layer.bias, 0.)
-            # pass
+    ilc_model = keras.Sequential([
+        layers.Dense(16, activation='relu', input_shape=(1,)),
+        layers.Dense(2 * 60 * 15)
+    ])
+    # ilc_model = nn.Sequential(
+    #     nn.Linear(1, 16),
+    #     nn.ReLU(),
+    #     nn.Linear(16, 2 * 60 * 15)
+    # )
+    for layer in ilc_model.layers:
+        if isinstance(layer, layers.Dense):
+            layer.kernel_initializer = keras.initializers.Constant(value=.1)
+            layer.bias_initializer = keras.initializers.Constant(value=0.)
+        # if isinstance(layer, nn.Linear):
+        #     torch.nn.init.constant_(layer.weight, .1)
+        #     torch.nn.init.constant_(layer.bias, 0.)
+        #     pass
 
     ilc_optim = torch.optim.Adam(ilc_model.parameters(), lr=1.e-2)
 
@@ -49,10 +56,10 @@ def main():
     buffer = []
     x0_reference = x0
     delta_target = np.zeros((15 * 60, 2))
-    old_adaptations = delta_target
+    old_adaptations = ops.array(delta_target)
     # gain = .5
     # previous_error = 0.
-    old_loss = torch.zeros((15 * 60 * 2))
+    old_loss = ops.zeros((15 * 60 * 2))
     # ilc_gains = []
     i = 0
 
@@ -60,19 +67,19 @@ def main():
         # Reset the task every 15 seconds
         if ti % 15 == 0:
             x0 = [9.9, 0]
-            x0_naive = x0
+            x0_reference = x0
 
         if ti % 15 == 0 and ti != 0:
             i = 0
             print(f"\nt = {ti:.0f}\t\tFitting model...")
-            buffer = np.asarray(buffer)
+            buffer = ops.array(buffer)
             references = buffer[:, -2:]
             responses = buffer[:, 3:5]
 
             # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
             update_ilc = (ti > 15)
             if ti == 30:
-                old_adaptations = np.zeros((15 * 60, 2))
+                old_adaptations = ops.zeros((15 * 60, 2))
             delta_target, old_adaptations, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss,
                                                              old_adaptations, update_ilc)
 
@@ -82,7 +89,7 @@ def main():
             #     target = [np.random.rand() * 6 + 7, 0.]
 
         targets.append(target)
-        adapted_target = target + delta_target[i]
+        adapted_target = target + ops.convert_to_numpy(delta_target[i])
         control_action = controller.compute_control(x0, adapted_target, dt)
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
