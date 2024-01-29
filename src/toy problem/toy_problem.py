@@ -1,9 +1,12 @@
 import os
 
 os.environ["KERAS_BACKEND"] = "torch"
+import matplotlib.pyplot as plt
 from keras.saving import load_model
 import torch
-from torch import nn, optim
+from torch.utils.data import DataLoader
+from torch import layers
+from toy_tools import *
 
 
 def main():

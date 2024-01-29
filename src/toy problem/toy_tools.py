@@ -3,10 +3,9 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
 import keras
-from keras import ops, layers
-from torch.utils.data import DataLoader, TensorDataset, random_split
+from keras import ops
+from torch.utils.data import TensorDataset, random_split
 
 
 class System:
