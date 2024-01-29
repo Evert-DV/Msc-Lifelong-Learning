@@ -129,8 +129,8 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     gains = model(ops.ones(1))[0]
     gains.retain_grad()
 
-    delta_pre_prev_update = old_adaptations.ravel()  # the adaptations before the past 15 sec, before the previous update
-    delta_post_prev_update = old_errors * gains  # the adaptations of the past 15 sec, after the previous update
+    delta_pre_prev_update = old_adaptations.ravel()  # adaptations before the past 15 sec, before the previous update
+    delta_post_prev_update = old_errors * gains  # adaptations of the past 15 sec, after the previous update
     delta_post_prev_update.retain_grad()
 
     if update_ilc:
@@ -144,8 +144,8 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
         # From here, autograd should take care of the rest
         delta_post_prev_update.backward(dl_de * de_delta)
         optimizer.step()
-        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n")
-              # f"Parameters have gradients: {model.layers[0].weights is not None}")
+        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
+              f"Parameters have gradients: {not(ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
 
     model.eval()
     new_gains = model(torch.ones(1))[0]
