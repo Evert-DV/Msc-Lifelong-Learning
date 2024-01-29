@@ -11,8 +11,8 @@ from toy_tools import *
 
 
 def main():
-    # seed = np.random.randint(0, 1000)
-    seed = 131
+    seed = np.random.randint(0, 1000)
+    # seed = 131
     np.random.seed(seed)
     print(f"Seed: {seed}")
     torch.manual_seed(16)
@@ -23,12 +23,15 @@ def main():
 
     # ilc_model = keras.Sequential([
     #     layers.Input(shape=(1,)),
-    #     # layers.Dense(16, activation='relu', kernel_initializer=initializers.Constant(.2), bias_initializer='zeros'),
+    #     layers.Dense(16, activation='sigmoid', kernel_initializer=initializers.Constant(0.1)),
+    #     layers.Dropout(0.25),
+    #     layers.Dense(64, activation='relu', kernel_initializer=initializers.Constant(0.1)),
+    #     layers.Dropout(0.25),
     #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.Constant(.5), bias_initializer='zeros'),
     # ])
     ilc_model = load_model("./tmp/best_model.keras")
 
-    ilc_optim = optim.Adam(ilc_model.parameters(), lr=5.e-3)
+    ilc_optim = optim.Adam(ilc_model.parameters(), lr=1.e-4)
     ilc_model.compile()
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state

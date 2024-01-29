@@ -118,7 +118,7 @@ def adaptive_gain(error, previous_error, gain, max_gain=5.):
 
 
 def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, update_ilc=True):
-    model.eval()
+    model.train()
 
     # the errors of the past 15 sec, after the previous update
     errors = (response - target).ravel()
