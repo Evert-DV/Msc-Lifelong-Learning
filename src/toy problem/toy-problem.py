@@ -122,7 +122,7 @@ def main():
         layers.Dropout(0.25),
         layers.Dense(prediction_window)
     ])
-    model_location = './tmp/action_adapter.keras'
+    model_location = 'tmp/action_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)
 
@@ -131,7 +131,7 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
-        pretrain_data = np.load("./tmp/pretrain_data.npy")
+        pretrain_data = np.load("tmp/pretrain_data.npy")
         train_set, val_set = prep_data(pretrain_data, prediction_window, interval=20, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
@@ -248,9 +248,9 @@ def main():
         ax[1].legend()
 
         fig.tight_layout()
-        if not os.path.exists("./tmp"):
-            os.makedirs("./tmp")
-        fig.savefig("./tmp/plot.png", dpi=300)
+        if not os.path.exists("tmp"):
+            os.makedirs("tmp")
+        # fig.savefig("tmp/plot.png", dpi=300)
         plt.show()
 
 
