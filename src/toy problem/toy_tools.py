@@ -121,7 +121,7 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     model.eval()
 
     # the errors of the past 15 sec, after the previous update
-    errors = (target - response).ravel()
+    errors = (response - target).ravel()
     errors.requires_grad = True
     errors.retain_grad()
 
@@ -145,7 +145,7 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
         delta_post_prev_update.backward(dl_de * de_delta)
         optimizer.step()
         print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
-              f"Parameters have gradients: {not(ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
+              f"Parameters have gradients: {not (ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
 
     model.eval()
     new_gains = model(torch.ones(1))[0]

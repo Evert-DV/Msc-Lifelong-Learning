@@ -1,16 +1,18 @@
 import os
 
 os.environ["KERAS_BACKEND"] = "torch"
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import matplotlib.pyplot as plt
 from keras.saving import load_model
-from keras import layers, optimizers
+from keras import layers, optimizers, initializers
+import torch
 from torch import optim
 from toy_tools import *
 
 
 def main():
-    seed = np.random.randint(0, 1000)
-    # seed = 131
+    # seed = np.random.randint(0, 1000)
+    seed = 131
     np.random.seed(seed)
     print(f"Seed: {seed}")
     torch.manual_seed(16)
@@ -19,18 +21,15 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
-    ilc_model = keras.Sequential([
-        layers.Input(shape=(1,)),
-        layers.Dense(16, activation='relu'),
-        layers.Dense(2 * 60 * 15)
-    ])
-
-    for layer in ilc_model.layers:
-        if isinstance(layer, layers.Dense):
-            layer.kernel_initializer = keras.initializers.Constant(value=.1)
-            layer.bias_initializer = keras.initializers.Constant(value=0.)
+    # ilc_model = keras.Sequential([
+    #     layers.Input(shape=(1,)),
+    #     # layers.Dense(16, activation='relu', kernel_initializer=initializers.Constant(.2), bias_initializer='zeros'),
+    #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.Constant(.5), bias_initializer='zeros'),
+    # ])
+    ilc_model = load_model("./tmp/best_model.keras")
 
     ilc_optim = optim.Adam(ilc_model.parameters(), lr=5.e-3)
+    ilc_model.compile()
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     x0_reference = x0
@@ -43,6 +42,8 @@ def main():
     reference_controls = []
     adapted_controls = []
     buffer = []
+    losses = []
+    best_loss = torch.inf
 
     delta_target = np.zeros((15 * 60, 2))
     old_adaptations = ops.array(delta_target)
@@ -53,7 +54,7 @@ def main():
 
     i = 0
     dt = 1 / 60
-    t = np.arange(0, 1800, dt)
+    t = np.arange(0, 600, dt)
 
     for ti in t:
         # Reset the task every 15 seconds
@@ -74,6 +75,11 @@ def main():
                 old_adaptations = ops.zeros((15 * 60, 2))
             delta_target, old_adaptations, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss,
                                                              old_adaptations, update_ilc)
+            losses.append(ops.mean(old_loss ** 2))
+            if ops.mean(old_loss ** 2).item() < best_loss and update_ilc:
+                best_loss = ops.mean(old_loss ** 2)
+                ilc_model.save("./tmp/best_model.keras")
+                print("Saved best model")
 
             buffer = []
 
@@ -112,8 +118,9 @@ def main():
     ax[0].invert_yaxis()
     ax[0].legend()
 
-    ax[1].plot(t, adapted_controls, label="Adapted control actions")
-    ax[1].plot(t, reference_controls, label="Reference control actions")
+    # ax[1].plot(t, adapted_controls, label="Adapted control actions")
+    # ax[1].plot(t, reference_controls, label="Reference control actions")
+    ax[1].plot(t[::15 * 60][:-1], ops.convert_to_numpy(losses), label="Loss")
     ax[1].legend()
 
     ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
