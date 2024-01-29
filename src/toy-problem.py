@@ -9,7 +9,7 @@ from keras import ops, layers
 from keras.saving import load_model
 import torch
 from torch import nn, optim
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader, TensorDataset, random_split
 
 
 class System:
@@ -79,7 +79,7 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, interval=15):
+def prep_data(data, prediction_window, interval=15, val_split=None):
     # First sort by target
     windowed_data = ops.array(
         [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
@@ -88,7 +88,15 @@ def prep_data(data, prediction_window, interval=15):
         axis=-1).reshape(-1, 4)  # state transitions
     labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
                         range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
-    return features, labels
+
+    if val_split is not None:
+        dataset = TensorDataset(features, labels)
+        train_size = int((1 - val_split) * len(dataset))
+        val_size = len(dataset) - train_size
+        train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+        return train_dataset, val_dataset
+    else:
+        return features, labels
 
 
 def main():
@@ -106,43 +114,47 @@ def main():
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
 
-    prediction_window = 120
+    prediction_window = 10
     adapter = keras.Sequential([
-        layers.Dense(32, activation='softmax'),
+        layers.Dense(32, activation='sigmoid'),
+        layers.Dropout(0.25),
         layers.Dense(32, activation='leaky_relu'),
+        layers.Dropout(0.25),
         layers.Dense(prediction_window)
     ])
     model_location = './tmp/action_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)
 
-    optimizer = keras.optimizers.Adam(learning_rate=1.e-2)
+    optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
         pretrain_data = np.load("./tmp/pretrain_data.npy")
-        features, labels = prep_data(pretrain_data, prediction_window, interval=20)
-        dataset = TensorDataset(features, labels)
-        dataloader = DataLoader(dataset, batch_size=256, shuffle=True)
+        train_set, val_set = prep_data(pretrain_data, prediction_window, interval=20, val_split=0.2)
+        train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
+        val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
-        callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
+        callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                    mode='min',
-                                                   min_delta=1e-4,
-                                                   patience=7,
+                                                   min_delta=1e-5,
+                                                   patience=10,
                                                    restore_best_weights=True,
                                                    verbose=1),
                      ]
-        adapter.fit(dataloader,
+        adapter.fit(train_dataloader,
                     epochs=100,
-                    callbacks=callbacks)
+                    callbacks=callbacks,
+                    validation_data=val_dataloader,
+                    )
 
         adapter.save(model_location)
 
     dt = 1 / 60
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     signal = []
-    signal_naive = []
+    reference_signal = []
     targets = []
     reference_controls = []
     adapted_controls = []
@@ -155,30 +167,32 @@ def main():
     if not pretrain:
         for ti in t:
             if ti % 15 == 0 and ti != 0:
-                print("\nFitting model...")
+
                 adapter.optimizer.lr = 1.e-3
                 buffer = ops.array(buffer)
                 features, labels = prep_data(buffer, prediction_window, interval=15)
-                # features = ops.concatenate((buffer[:-prediction_window, [0, 1]], buffer[prediction_window:, [0, 1]]),
-                #                            axis=1)  # state transitions
-                # labels = ops.array([buffer[i:i + prediction_window, 2:3].ravel() for i in
-                #                     range(len(buffer) - prediction_window)])  # control actions as labels
                 if incremental_updates:
-                    dataset = TensorDataset(features, labels)
-                    dataloader = DataLoader(dataset, batch_size=len(dataset), shuffle=False)
+                    print("\nFitting model...")
+                    train_dataset, val_dataset = random_split(TensorDataset(features, labels),
+                                                              [int(0.8 * len(features)),
+                                                               len(features) - int(0.8 * len(features))])
+                    train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+                    val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
 
-                    callbacks = [keras.callbacks.EarlyStopping(monitor='loss',
+                    callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                                mode='min',
                                                                min_delta=1e-4,
                                                                patience=5,
                                                                restore_best_weights=True,
                                                                verbose=1),
-                                 EpochLogger()]
-
-                    adapter.fit(dataloader,
+                                 EpochLogger()
+                                 ]
+                    adapter.fit(train_dataloader,
                                 epochs=100,
                                 callbacks=callbacks,
-                                verbose=0)
+                                validation_data=val_dataloader,
+                                verbose=0,
+                                )
 
                 ref_prediction = adapter.predict(features, verbose=0)
                 predicted_controls += ref_prediction[:, 0].ravel().tolist()
@@ -200,13 +214,13 @@ def main():
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
 
-            x = system.response(x0, control_action, do_update=False)
+            x = system.response(x0, control_action, do_update=True)
             x_reference = system.response(x0_reference, reference_control, do_update=False)
 
             adapted_controls.append(control_action)
 
             signal.append(x)
-            signal_naive.append(x_reference)
+            reference_signal.append(x_reference)
             buffer.append([*x0, control_action, *x, *target])
 
             x0 = x
@@ -215,7 +229,7 @@ def main():
         # adapter.save(model_location)
 
         signal = np.asarray(signal)
-        signal_naive = np.asarray(signal_naive)
+        reference_signal = np.asarray(reference_signal)
         targets = np.asarray(targets)
         predicted_controls = np.asarray(predicted_controls).ravel()
         adapted_controls = np.asarray(adapted_controls)
@@ -223,7 +237,7 @@ def main():
         fig, ax = plt.subplots(2, 1, sharex=True)
 
         ax[0].plot(t, signal[:, 0], label="Adaptive controller")
-        ax[0].plot(t, signal_naive[:, 0], label="Default controller")
+        ax[0].plot(t, reference_signal[:, 0], label="Default controller")
         ax[0].plot(t, targets[:, 0], '--', label="Target position")
         ax[0].invert_yaxis()
         ax[0].legend()
