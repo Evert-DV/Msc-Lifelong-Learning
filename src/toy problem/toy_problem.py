@@ -3,9 +3,9 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 import matplotlib.pyplot as plt
 from keras.saving import load_model
+from keras import layers
 import torch
 from torch.utils.data import DataLoader
-from torch import layers
 from toy_tools import *
 
 
@@ -27,9 +27,9 @@ def main():
     prediction_window = 10
     adapter = keras.Sequential([
         layers.Dense(32, activation='sigmoid'),
-        layers.Dropout(0.25),
+        # layers.Dropout(0.05),
         layers.Dense(32, activation='leaky_relu'),
-        layers.Dropout(0.25),
+        # layers.Dropout(0.05),
         layers.Dense(prediction_window)
     ])
     model_location = 'tmp/action_adapter.keras'
@@ -42,14 +42,14 @@ def main():
 
     if pretrain:
         pretrain_data = np.load("tmp/pretrain_data.npy")
-        train_set, val_set = prep_data(pretrain_data, prediction_window, interval=20, val_split=0.2)
+        train_set, val_set = prep_data(pretrain_data, prediction_window, interval=10, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
         callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                    mode='min',
-                                                   min_delta=1e-5,
-                                                   patience=10,
+                                                   min_delta=1e-4,
+                                                   patience=5,
                                                    restore_best_weights=True,
                                                    verbose=1),
                      ]
@@ -69,7 +69,7 @@ def main():
     reference_controls = []
     adapted_controls = []
     predicted_controls = []
-    t = np.arange(0, 240, dt)
+    t = np.arange(0, 180, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_reference = [9.9, 0]
@@ -77,10 +77,13 @@ def main():
     if not pretrain:
         for ti in t:
             if ti % 15 == 0 and ti != 0:
-
                 adapter.optimizer.lr = 1.e-3
                 buffer = ops.array(buffer)
                 features, labels = prep_data(buffer, prediction_window, interval=15)
+                ref_prediction = adapter.predict(features, verbose=0)
+                predicted_controls += ref_prediction[:, 0].ravel().tolist()
+                predicted_controls += prediction_window * [float('nan')]
+
                 if incremental_updates:
                     print("\nFitting model...")
                     train_dataset, val_dataset = random_split(TensorDataset(features, labels),
@@ -104,10 +107,6 @@ def main():
                                 verbose=0,
                                 )
 
-                ref_prediction = adapter.predict(features, verbose=0)
-                predicted_controls += ref_prediction[:, 0].ravel().tolist()
-                predicted_controls += prediction_window * [float('nan')]
-
                 buffer = []
 
             if ti % 15 == 0:
@@ -124,7 +123,7 @@ def main():
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
 
-            x = system.response(x0, control_action, do_update=True)
+            x = system.response(x0, control_action, do_update=False)
             x_reference = system.response(x0_reference, reference_control, do_update=False)
 
             adapted_controls.append(control_action)
