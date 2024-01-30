@@ -103,12 +103,14 @@ def simple_ilc(response, target, previous_error, gain=.5):
     return adaptations, gain, np.linalg.norm(error)
 
 
-def predictive_ilc(response, target, previous_error, gain=.5, step=5):
+def predictive_ilc(response, target, previous_error, gain=.1, step=5):
     future_errors_sum = []
+    response = ops.convert_to_numpy(response)
+    target = ops.convert_to_numpy(target)
     for i in range(len(target)):
-        future_errors_sum.append(np.sum(target[i:i + step] - response[i:i + step], axis=0))
+        future_errors_sum.append(np.sum(np.abs(target[i:i + step] - response[i:i + step]), axis=0))
     gain = adaptive_gain(np.linalg.norm(future_errors_sum), previous_error, gain)
-    adaptations = gain * np.asarray(future_errors_sum)
+    adaptations = gain * np.asarray(future_errors_sum) * np.sign(target - response)
     return adaptations, gain, np.linalg.norm(future_errors_sum)
 
 

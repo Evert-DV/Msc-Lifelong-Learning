@@ -21,8 +21,8 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
-    classic_ilc = True
-    pred_ilc = False
+    classic_ilc = False
+    pred_ilc = True
     nn_ilc = False
     nn_target = False
 
@@ -54,11 +54,12 @@ def main():
             persistent_adaptations = np.load('./tmp/adaptations.npy')
             # persistent_adaptations = np.zeros((15 * 60, 2))
 
-    elif classic_ilc:
+    else:
         gain = .5
         previous_error = 0.
         ilc_gains = []
-        delta_target = np.zeros((15 * 60, 2))
+        # delta_target = np.zeros((15 * 60, 2))
+        delta_target = np.load('./tmp/adaptations.npy')
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     x0_reference = x0
@@ -94,7 +95,8 @@ def main():
                 delta_target += delta
 
             elif pred_ilc:
-                delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
+                delta, gain, previous_error = predictive_ilc(responses, references, previous_error)
+                delta_target += delta
 
             elif nn_target or nn_ilc:
                 update_ilc = (ti > 15)
