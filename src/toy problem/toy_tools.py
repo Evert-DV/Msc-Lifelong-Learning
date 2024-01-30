@@ -143,7 +143,6 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
         model.train()
         optimizer.zero_grad()
         # Loss is calculated as mse of errors. dLoss/dGain = dLoss/dErrors * dErrors/dDelta * dDelta/dGain
-        # loss = torch.mean(errors ** 2)
         loss = ilc_loss_fn(errors)
         loss.backward()
         dl_de = errors.grad
@@ -159,3 +158,28 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     new_delta = new_gains * errors  # new adaptations for the coming 15 sec
 
     return ops.reshape(new_delta, (15 * 60, 2)), delta_post_prev_update, errors
+
+
+def train_iterative(model, optimizer, loss_fn, target, response, old_output, old_errors):
+    model.train()
+
+    # the errors of the past iteration, after the previous update
+    errors = (response - target).ravel()
+    errors.requires_grad = True
+    errors.retain_grad()
+
+    model_output = model(ops.ones(1)[None])[0]
+    model_output.retain_grad()
+
+    # The train step
+    optimizer.zero_grad()
+    loss = loss_fn(errors)
+    loss.backward()
+    d_errors_d_output = (errors - old_errors.ravel()) / (model_output - old_output + 1e-32)
+    model_output.backward(d_errors_d_output * errors.grad)
+    optimizer.step()
+
+    print(f"Loss: {ilc_loss_fn(errors).item():.3f}\n"
+          f"Parameters have gradients: {not (ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
+
+    return model_output, errors
