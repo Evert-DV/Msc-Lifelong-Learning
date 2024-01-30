@@ -97,7 +97,7 @@ def prep_data(data, prediction_window, interval=15, val_split=None):
 
 
 def simple_ilc(response, target, previous_error, gain=.5):
-    error = target - response
+    error = ops.convert_to_numpy(target - response)
     gain = adaptive_gain(np.linalg.norm(error), previous_error, gain)
     adaptations = gain * error
     return adaptations, gain, np.linalg.norm(error)
@@ -113,7 +113,7 @@ def predictive_ilc(response, target, previous_error, gain=.5, step=5):
 
 
 def adaptive_gain(error, previous_error, gain, max_gain=5.):
-    gain *= 1.1 if error < previous_error else 0.95
+    gain *= 1.1 if error < previous_error else 0.9
     return min(gain, max_gain)
 
 

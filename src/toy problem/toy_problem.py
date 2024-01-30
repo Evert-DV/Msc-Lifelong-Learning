@@ -21,22 +21,44 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
-    model_location = "./tmp/target_adapter.keras"
-    # model = keras.Sequential([
-    #     layers.Input(shape=(1,)),
-    #     layers.Dense(64, activation='sigmoid', kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
-    #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
-    #     layers.Dropout(0.1),
-    #     layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
-    #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
-    #     layers.Dropout(0.1),
-    #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
-    #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
-    # ])
-    model = load_model(model_location)
+    classic_ilc = True
+    pred_ilc = False
+    nn_ilc = False
+    nn_target = False
 
-    optimizer = optim.Adam(model.parameters(), lr=1.e-2)
-    model.compile()
+    if nn_ilc or nn_target:
+        model_location = "./tmp/best_model.keras" if nn_ilc else "./tmp/target_adapter.keras"
+        # model = keras.Sequential([
+        #     layers.Input(shape=(1,)),
+        #     layers.Dense(64, activation='sigmoid', kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
+        #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
+        #     layers.Dropout(0.1),
+        #     layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
+        #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
+        #     layers.Dropout(0.1),
+        #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
+        #                  bias_initializer=initializers.RandomUniform(-.1, .1)),
+        # ])
+        model = load_model(model_location)
+        optimizer = optim.Adam(model.parameters(), lr=1.e-3)
+        model.compile()
+
+        losses = []
+        best_loss = torch.inf
+
+        delta_target = np.zeros((15 * 60, 2))
+        old_delta = ops.array(delta_target).ravel()
+        old_errors = ops.zeros((15 * 60 * 2))
+
+        if nn_ilc:
+            persistent_adaptations = np.load('./tmp/adaptations.npy')
+            # persistent_adaptations = np.zeros((15 * 60, 2))
+
+    elif classic_ilc:
+        gain = .5
+        previous_error = 0.
+        ilc_gains = []
+        delta_target = np.zeros((15 * 60, 2))
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     x0_reference = x0
@@ -49,21 +71,10 @@ def main():
     reference_controls = []
     adapted_controls = []
     buffer = []
-    losses = []
-    best_loss = torch.inf
 
-    delta_target = np.zeros((15 * 60, 2))
-    old_delta = ops.array(delta_target).ravel()
-    # persistent_adaptations = np.load('./tmp/adaptations.npy')
-    # persistent_adaptations = np.zeros((15 * 60, 2))
-    # gain = .5
-    # previous_error = 0.
-    old_errors = ops.zeros((15 * 60 * 2))
-    # ilc_gains = []
-
-    i = 0
     dt = 1 / 60
-    t = np.arange(0, 3600, dt)
+    t = np.arange(0, 600, dt)
+    i = 0
 
     for ti in t:
         # Reset the task every 15 seconds
@@ -78,47 +89,57 @@ def main():
             references = buffer[:, -2:]  # the target
             responses = buffer[:, 3:5]  # the (result) state
 
-            # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
-            update_ilc = (ti > 15)
-            if ti == 30:
-                old_delta = ops.zeros((15 * 60 * 2))
-            # delta_target, old_delta, old_errors = ilc_nn(responses, references, model, optimizer, old_errors,
-            #                                              old_delta, update_ilc)
-            # persistent_adaptations += ops.convert_to_numpy(delta_target)
-            old_delta, old_errors = train_iterative(model, optimizer, ilc_loss_fn, references, responses,
-                                                    old_delta, old_errors)
+            if classic_ilc:
+                delta, gain, previous_error = simple_ilc(responses, references, previous_error, gain=gain)
+                delta_target += delta
 
-            delta_target = model.predict(ops.ones(1)[None], verbose=0)[0]
-            delta_target = ops.convert_to_numpy(delta_target).reshape(-1, 2)
+            elif pred_ilc:
+                delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
 
-            losses.append(ilc_loss_fn(old_errors))
-            if ilc_loss_fn(old_errors).item() < best_loss and update_ilc:
-                best_loss = ilc_loss_fn(old_errors)
-                model.save(model_location)
-                # np.save("./tmp/adaptations.npy", persistent_adaptations)
-                print("Saved best model")
+            elif nn_target or nn_ilc:
+                update_ilc = (ti > 15)
+                if ti == 30:
+                    old_delta = ops.zeros((15 * 60 * 2))
+
+                if nn_ilc:
+                    delta_target, old_delta, old_errors = ilc_nn(responses, references, model, optimizer, old_errors,
+                                                                 old_delta, update_ilc)
+                    persistent_adaptations += ops.convert_to_numpy(delta_target)
+                    delta_target = persistent_adaptations
+
+                elif nn_target:
+                    old_delta, old_errors = train_iterative(model, optimizer, ilc_loss_fn, references, responses,
+                                                            old_delta, old_errors)
+
+                    delta_target = model.predict(ops.ones(1)[None], verbose=0)[0]
+                    delta_target = ops.convert_to_numpy(delta_target).reshape(-1, 2)
+
+                losses.append(ilc_loss_fn(old_errors))
+                if ilc_loss_fn(old_errors).item() < best_loss and update_ilc:
+                    best_loss = ilc_loss_fn(old_errors)
+                    model.save(model_location)
+                    # np.save("./tmp/adaptations.npy", persistent_adaptations)
+                    print("Saved best model")
 
             buffer = []
 
         targets.append(target)
         adapted_target = target + delta_target[i]
+        adapted_targets.append(adapted_target)
         control_action = controller.compute_control(x0, adapted_target, dt)
+        adapted_controls.append(control_action)
+        x = system.response(x0, control_action, do_update=False)
+        signal.append(x)
+        x0 = x
+
+        # reference loop
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
-        adapted_controls.append(control_action)
-
-        x = system.response(x0, control_action, do_update=False)
         x_reference = system.response(x0_reference, reference_control, do_update=False)
-
-        adapted_targets.append(adapted_target)
-
-        signal.append(x)
         reference_signal.append(x_reference)
-        buffer.append([*x0, control_action, *x, *target])
-
-        x0 = x
         x0_reference = x_reference
 
+        buffer.append([*x0, control_action, *x, *target])
         i += 1
 
     signal = np.asarray(signal)
@@ -135,14 +156,12 @@ def main():
     ax[0].invert_yaxis()
     ax[0].legend()
 
-    # ax[1].plot(t, adapted_controls, label="Adapted control actions")
-    # ax[1].plot(t, reference_controls, label="Reference control actions")
-    ax[1].plot(t[::15 * 60][:-1], ops.convert_to_numpy(losses), label="Loss")
+    ax[1].plot(t, adapted_controls, label="Adapted control actions")
+    ax[1].plot(t, reference_controls, label="Reference control actions")
     ax[1].legend()
 
     ax[2].plot(t, targets[:, 0], '--', label="Target position")
     ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
-    # ax[2].plot(t, ilc_gains, label="ILC gain")
     ax[2].invert_yaxis()
     ax[2].legend()
 
