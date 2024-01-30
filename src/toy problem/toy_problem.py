@@ -12,26 +12,29 @@ from toy_tools import *
 
 def main():
     seed = np.random.randint(0, 1000)
-    # seed = 131
+    # seed = 42
     np.random.seed(seed)
     print(f"Seed: {seed}")
-    torch.manual_seed(16)
+    torch.manual_seed(42)
 
     system = System(5, 10, 3, 5)
     reference_controller = PIDController(350, 107.5, 1257)
     controller = PIDController(350, 107.5, 1257)
 
     # ilc_model = keras.Sequential([
-    #     layers.Input(shape=(1,)),
-    #     layers.Dense(16, activation='sigmoid', kernel_initializer=initializers.Constant(0.1)),
-    #     layers.Dropout(0.25),
-    #     layers.Dense(64, activation='relu', kernel_initializer=initializers.Constant(0.1)),
-    #     layers.Dropout(0.25),
-    #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.Constant(.5), bias_initializer='zeros'),
+    #     layers.Input(shape=(2 * 60 * 15,)),
+    #     layers.Dense(64, activation='sigmoid', kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
+    #                  bias_initializer=initializers.Constant(0.1)),
+    #     layers.Dropout(0.1),
+    #     layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
+    #                  bias_initializer=initializers.Constant(0.1)),
+    #     layers.Dropout(0.1),
+    #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
+    #                  bias_initializer=initializers.Constant(0.1)),
     # ])
     ilc_model = load_model("./tmp/best_model.keras")
 
-    ilc_optim = optim.Adam(ilc_model.parameters(), lr=1.e-4)
+    ilc_optim = optim.Adam(ilc_model.parameters(), lr=1.e-3)
     ilc_model.compile()
 
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -78,9 +81,9 @@ def main():
                 old_adaptations = ops.zeros((15 * 60, 2))
             delta_target, old_adaptations, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss,
                                                              old_adaptations, update_ilc)
-            losses.append(ops.mean(old_loss ** 2))
-            if ops.mean(old_loss ** 2).item() < best_loss and update_ilc:
-                best_loss = ops.mean(old_loss ** 2)
+            losses.append(ilc_loss_fn(old_loss))
+            if ilc_loss_fn(old_loss).item() < best_loss and update_ilc:
+                best_loss = ilc_loss_fn(old_loss)
                 ilc_model.save("./tmp/best_model.keras")
                 print("Saved best model")
 

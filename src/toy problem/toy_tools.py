@@ -117,6 +117,12 @@ def adaptive_gain(error, previous_error, gain, max_gain=5.):
     return min(gain, max_gain)
 
 
+def ilc_loss_fn(errors):
+    pos_loss = torch.mean(torch.abs(errors[::2]))
+    vel_loss = torch.mean(torch.abs(errors[1::2]))
+    return 0.67 * pos_loss + 0.33 * vel_loss
+
+
 def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, update_ilc=True):
     model.train()
 
@@ -126,7 +132,7 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     errors.retain_grad()
 
     # the gains used during the past 15 sec
-    gains = model(ops.ones(1))[0]
+    gains = model(old_errors[None])[0]
     gains.retain_grad()
 
     delta_pre_prev_update = old_adaptations.ravel()  # adaptations before the past 15 sec, before the previous update
@@ -137,18 +143,19 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
         model.train()
         optimizer.zero_grad()
         # Loss is calculated as mse of errors. dLoss/dGain = dLoss/dErrors * dErrors/dDelta * dDelta/dGain
-        loss = torch.mean(errors ** 2)
+        # loss = torch.mean(errors ** 2)
+        loss = ilc_loss_fn(errors)
         loss.backward()
         dl_de = errors.grad
-        de_delta = (errors - old_errors) / (delta_post_prev_update - delta_pre_prev_update)
+        de_delta = (errors - old_errors) / (delta_post_prev_update - delta_pre_prev_update + 1e-32)
         # From here, autograd should take care of the rest
         delta_post_prev_update.backward(dl_de * de_delta)
         optimizer.step()
-        print(f"Loss: {torch.mean(errors ** 2).item():.3f}\n"
+        print(f"Loss: {ilc_loss_fn(errors).item():.3f}\n"
               f"Parameters have gradients: {not (ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
 
     model.eval()
-    new_gains = model(torch.ones(1))[0]
+    new_gains = model(errors[None])[0]
     new_delta = new_gains * errors  # new adaptations for the coming 15 sec
 
     return ops.reshape(new_delta, (15 * 60, 2)), delta_post_prev_update, errors
