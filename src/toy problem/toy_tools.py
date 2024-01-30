@@ -32,8 +32,8 @@ class System:
         return s[-1]
 
     def update(self):
-        self.k *= 0.995
-        self.c *= 0.995
+        self.k *= 0.8
+        self.c *= 0.8
         self.l0 += 1 / self.l0
         self.u = self.m * self.g + self.k * self.l0
 

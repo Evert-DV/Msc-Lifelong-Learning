@@ -24,7 +24,7 @@ def main():
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
 
-    prediction_window = 10
+    prediction_window = 15
     adapter = keras.Sequential([
         layers.Dense(32, activation='sigmoid'),
         # layers.Dropout(0.05),
@@ -70,7 +70,7 @@ def main():
     reference_controls = []
     adapted_controls = []
     predicted_controls = []
-    t = np.arange(0, 180, dt)
+    t = np.arange(0, 120, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_reference = [9.9, 0]
@@ -129,7 +129,7 @@ def main():
             reference_signal.append(x_reference)
             x0_reference = x_reference
 
-            buffer.append([*x0, control_action, *x, *target])
+            buffer.append([*x0, control_action, *x, *predicted_target])
 
         # adapter.save(model_location)
 
