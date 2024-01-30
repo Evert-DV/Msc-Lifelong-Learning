@@ -22,15 +22,15 @@ def main():
     controller = PIDController(350, 107.5, 1257)
 
     # ilc_model = keras.Sequential([
-    #     layers.Input(shape=(2 * 60 * 15,)),
+    #     layers.Input(shape=(1,)),
     #     layers.Dense(64, activation='sigmoid', kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
-    #                  bias_initializer=initializers.Constant(0.1)),
+    #                  bias_initializer=initializers.Constant(-0.1)),
     #     layers.Dropout(0.1),
     #     layers.Dense(64, activation='relu', kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
-    #                  bias_initializer=initializers.Constant(0.1)),
+    #                  bias_initializer=initializers.Constant(-0.1)),
     #     layers.Dropout(0.1),
     #     layers.Dense(2 * 60 * 15, kernel_initializer=initializers.RandomUniform(-0.01, 0.01),
-    #                  bias_initializer=initializers.Constant(0.1)),
+    #                  bias_initializer=initializers.Constant(-0.1)),
     # ])
     ilc_model = load_model("./tmp/best_model.keras")
 
@@ -52,10 +52,12 @@ def main():
     best_loss = torch.inf
 
     delta_target = np.zeros((15 * 60, 2))
-    old_adaptations = ops.array(delta_target)
+    old_delta = ops.array(delta_target)
+    # persistent_adaptations = np.load('./tmp/adaptations.npy')
+    persistent_adaptations = np.zeros((15 * 60, 2))
     # gain = .5
     # previous_error = 0.
-    old_loss = ops.zeros((15 * 60 * 2))
+    old_errors = ops.zeros((15 * 60 * 2))
     # ilc_gains = []
 
     i = 0
@@ -76,21 +78,23 @@ def main():
             responses = buffer[:, 3:5]  # the (result) state
 
             # delta_target, gain, previous_error = predictive_ilc(responses, references, previous_error, gain=gain)
-            update_ilc = (ti > 15)
+            update_ilc = False #(ti > 15)
             if ti == 30:
-                old_adaptations = ops.zeros((15 * 60, 2))
-            delta_target, old_adaptations, old_loss = ilc_nn(responses, references, ilc_model, ilc_optim, old_loss,
-                                                             old_adaptations, update_ilc)
-            losses.append(ilc_loss_fn(old_loss))
-            if ilc_loss_fn(old_loss).item() < best_loss and update_ilc:
-                best_loss = ilc_loss_fn(old_loss)
+                old_delta = ops.zeros((15 * 60, 2))
+            delta_target, old_delta, old_errors = ilc_nn(responses, references, ilc_model, ilc_optim, old_errors,
+                                                         old_delta, update_ilc)
+            persistent_adaptations += ops.convert_to_numpy(delta_target)
+            losses.append(ilc_loss_fn(old_errors))
+            if ilc_loss_fn(old_errors).item() < best_loss and update_ilc:
+                best_loss = ilc_loss_fn(old_errors)
                 ilc_model.save("./tmp/best_model.keras")
+                np.save("./tmp/adaptations.npy", persistent_adaptations)
                 print("Saved best model")
 
             buffer = []
 
         targets.append(target)
-        adapted_target = target + ops.convert_to_numpy(delta_target[i])
+        adapted_target = target + persistent_adaptations[i]
         control_action = controller.compute_control(x0, adapted_target, dt)
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
@@ -118,8 +122,8 @@ def main():
 
     fig, ax = plt.subplots(3, 1, sharex=True)
 
-    ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, reference_signal[:, 0], label="Default controller")
+    ax[0].plot(t, signal[:, 0], label="Adaptive controller")
     ax[0].plot(t, targets[:, 0], '--', label="Target position")
     ax[0].invert_yaxis()
     ax[0].legend()
@@ -129,8 +133,8 @@ def main():
     ax[1].plot(t[::15 * 60][:-1], ops.convert_to_numpy(losses), label="Loss")
     ax[1].legend()
 
-    ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     ax[2].plot(t, targets[:, 0], '--', label="Target position")
+    ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
     # ax[2].plot(t, ilc_gains, label="ILC gain")
     ax[2].invert_yaxis()
     ax[2].legend()

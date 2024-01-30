@@ -120,7 +120,7 @@ def adaptive_gain(error, previous_error, gain, max_gain=5.):
 def ilc_loss_fn(errors):
     pos_loss = torch.mean(torch.abs(errors[::2]))
     vel_loss = torch.mean(torch.abs(errors[1::2]))
-    return 0.67 * pos_loss + 0.33 * vel_loss
+    return 1. * pos_loss + 1. * vel_loss
 
 
 def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, update_ilc=True):
@@ -132,7 +132,7 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
     errors.retain_grad()
 
     # the gains used during the past 15 sec
-    gains = model(old_errors[None])[0]
+    gains = model(ops.ones(1)[None])[0]
     gains.retain_grad()
 
     delta_pre_prev_update = old_adaptations.ravel()  # adaptations before the past 15 sec, before the previous update
@@ -155,7 +155,7 @@ def ilc_nn(response, target, model, optimizer, old_errors, old_adaptations, upda
               f"Parameters have gradients: {not (ops.isnan(model.trainable_weights[0].value.grad).any()).item()}")
 
     model.eval()
-    new_gains = model(errors[None])[0]
+    new_gains = model(ops.ones(1)[None])[0]
     new_delta = new_gains * errors  # new adaptations for the coming 15 sec
 
     return ops.reshape(new_delta, (15 * 60, 2)), delta_post_prev_update, errors
