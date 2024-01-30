@@ -11,7 +11,7 @@ from toy_tools import *
 
 def main():
     pretrain = False
-    incremental_updates = True
+    incremental_updates = False
     use_adaptation = True
 
     seed = np.random.randint(0, 1000)
@@ -24,15 +24,15 @@ def main():
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
 
-    prediction_window = 60
+    prediction_window = 10
     adapter = keras.Sequential([
         layers.Dense(32, activation='sigmoid'),
         # layers.Dropout(0.05),
         layers.Dense(32, activation='leaky_relu'),
         # layers.Dropout(0.05),
-        layers.Dense(prediction_window)
+        layers.Dense(2)
     ])
-    model_location = 'tmp/action_adapter.keras'
+    model_location = 'tmp/target_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)
 
@@ -66,6 +66,7 @@ def main():
     signal = []
     reference_signal = []
     targets = []
+    adapted_targets = []
     reference_controls = []
     adapted_controls = []
     predicted_controls = []
@@ -81,7 +82,7 @@ def main():
                 buffer = ops.array(buffer)
                 features, labels = prep_data(buffer, prediction_window, interval=15)
                 ref_prediction = adapter.predict(features, verbose=0)
-                predicted_controls += ref_prediction[:, 0].ravel().tolist()
+                predicted_controls += ref_prediction[:, 0].ravel().tolist()  # predicted controls is here predicted targets
                 predicted_controls += prediction_window * [float('nan')]
 
                 if incremental_updates:
@@ -113,37 +114,33 @@ def main():
                 target = [np.random.rand() * 6 + 7, 0.]
 
             targets.append(target)
-            control_action = controller.compute_control(x0, target, dt)
 
-            predicted_action = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
-            adjustment = predicted_action[0] - control_action
-
-            control_action += adjustment * use_adaptation
+            predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+            adapted_targets.append(predicted_target)
+            control_action = controller.compute_control(x0, predicted_target, dt)
+            adapted_controls.append(control_action)
+            x = system.response(x0, control_action, do_update=True)
+            signal.append(x)
+            x0 = x
 
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
-
-            x = system.response(x0, control_action, do_update=True)
             x_reference = system.response(x0_reference, reference_control, do_update=False)
-
-            adapted_controls.append(control_action)
-
-            signal.append(x)
             reference_signal.append(x_reference)
-            buffer.append([*x0, control_action, *x, *target])
-
-            x0 = x
             x0_reference = x_reference
+
+            buffer.append([*x0, control_action, *x, *target])
 
         # adapter.save(model_location)
 
         signal = np.asarray(signal)
         reference_signal = np.asarray(reference_signal)
         targets = np.asarray(targets)
+        adapted_targets = np.asarray(adapted_targets)
         predicted_controls = np.asarray(predicted_controls).ravel()
         adapted_controls = np.asarray(adapted_controls)
 
-        fig, ax = plt.subplots(2, 1, sharex=True)
+        fig, ax = plt.subplots(3, 1, sharex=True)
 
         ax[0].plot(t, signal[:, 0], label="Adaptive controller")
         ax[0].plot(t, reference_signal[:, 0], label="Default controller")
@@ -153,8 +150,14 @@ def main():
 
         ax[1].plot(t, adapted_controls, '-', label="Adapted control actions")
         ax[1].plot(t, reference_controls, label="Reference control actions")
-        ax[1].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted control actions")
+        # ax[1].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted control actions")
         ax[1].legend()
+
+        ax[2].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted targets")
+        ax[2].plot(t, adapted_targets[:, 0], '-', label="Adapted targets")
+        ax[2].plot(t, targets[:, 0], '--', label="Target position")
+        ax[2].invert_yaxis()
+        ax[2].legend()
 
         fig.tight_layout()
         if not os.path.exists("tmp"):

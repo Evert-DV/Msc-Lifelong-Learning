@@ -82,8 +82,10 @@ def prep_data(data, prediction_window, interval=15, val_split=None):
     features = ops.concatenate(
         (windowed_data[..., :-prediction_window, [0, 1]], windowed_data[..., prediction_window:, [0, 1]]),
         axis=-1).reshape(-1, 4)  # state transitions
-    labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
-                        range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
+    # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
+    #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
+    labels = ops.array([windowed_data[j, i + prediction_window, -2:] for j in range(windowed_data.shape[0]) for i in
+                        range(windowed_data.shape[1] - prediction_window)])  # target states as labels
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
