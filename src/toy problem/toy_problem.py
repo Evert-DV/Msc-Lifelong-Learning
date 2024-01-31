@@ -15,8 +15,10 @@ def main():
     use_adaptation = True
 
     seed = np.random.randint(0, 1000)
+    seed = 63
     print(f"Seed: {seed}")
     np.random.seed(seed)
+    torch.manual_seed(seed)
     if pretrain:
         torch.manual_seed(16)
 
@@ -114,26 +116,22 @@ def main():
 
             targets.append(target)
             control_action = controller.compute_control(x0, target, dt)
-
             predicted_action = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
             adjustment = predicted_action[0] - control_action
-
             control_action += adjustment * use_adaptation
+            adapted_controls.append(control_action)
+            x = system.response(x0, control_action, do_update=True)
+            signal.append(x)
+            x0 = x
 
+            # Reference control loop
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
-
-            x = system.response(x0, control_action, do_update=True)
             x_reference = system.response(x0_reference, reference_control, do_update=False)
-
-            adapted_controls.append(control_action)
-
-            signal.append(x)
             reference_signal.append(x_reference)
-            buffer.append([*x0, control_action, *x, *target])
-
-            x0 = x
             x0_reference = x_reference
+
+            buffer.append([*x0, control_action, *x, *target])
 
         # adapter.save(model_location)
 
@@ -145,21 +143,22 @@ def main():
 
         fig, ax = plt.subplots(2, 1, sharex=True)
 
-        ax[0].plot(t, signal[:, 0], label="Adaptive controller")
-        ax[0].plot(t, reference_signal[:, 0], label="Default controller")
-        ax[0].plot(t, targets[:, 0], '--', label="Target position")
+        ax[0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
+        ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+        ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+        ax[0].set_xlim(10, 80)
         ax[0].invert_yaxis()
-        ax[0].legend()
+        ax[0].legend(fontsize=8, loc='upper left')
 
-        ax[1].plot(t, adapted_controls, '-', label="Adapted control actions")
-        ax[1].plot(t, reference_controls, label="Reference control actions")
-        ax[1].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted control actions")
-        ax[1].legend()
+        ax[1].plot(t, reference_controls, color='lightgrey', label="Reference control actions")
+        ax[1].plot(t, adapted_controls, color='tab:blue', label="Adapted control actions")
+        ax[1].plot(t[:-15 * 60], predicted_controls, ':', color='tab:orange', label="Predicted control actions")
+        ax[1].legend(fontsize=8, loc='upper left')
 
         fig.tight_layout()
         if not os.path.exists("tmp"):
             os.makedirs("tmp")
-        # fig.savefig("tmp/plot.png", dpi=300)
+        fig.savefig("tmp/plot.png", dpi=300)
         plt.show()
 
 
