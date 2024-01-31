@@ -12,7 +12,7 @@ from toy_tools import *
 
 def main():
     seed = np.random.randint(0, 1000)
-    # seed = 42
+    seed = 63
     np.random.seed(seed)
     print(f"Seed: {seed}")
     torch.manual_seed(42)
@@ -27,7 +27,7 @@ def main():
     nn_target = False
 
     if nn_ilc or nn_target:
-        model_location = "./tmp/best_model.keras" if nn_ilc else "./tmp/target_adapter.keras"
+        model_location = "./tmp/best_model.keras" if nn_ilc else "./tmp/nn_target.keras"
         # model = keras.Sequential([
         #     layers.Input(shape=(1,)),
         #     layers.Dense(64, activation='sigmoid', kernel_initializer=initializers.RandomUniform(-0.1, 0.1),
@@ -51,8 +51,8 @@ def main():
         old_errors = ops.zeros((15 * 60 * 2))
 
         if nn_ilc:
-            persistent_adaptations = np.load('./tmp/adaptations.npy')
-            # persistent_adaptations = np.zeros((15 * 60, 2))
+            # persistent_adaptations = np.load('./tmp/adaptations.npy')
+            persistent_adaptations = np.zeros((15 * 60, 2))
 
     else:
         gain = .5
@@ -152,20 +152,22 @@ def main():
 
     fig, ax = plt.subplots(3, 1, sharex=True)
 
-    ax[0].plot(t, reference_signal[:, 0], label="Default controller")
-    ax[0].plot(t, signal[:, 0], label="Adaptive controller")
-    ax[0].plot(t, targets[:, 0], '--', label="Target position")
+    ax[0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
+    ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+    # ax[0].set_xlim(10, 80)
     ax[0].invert_yaxis()
-    ax[0].legend()
+    ax[0].legend(fontsize=8, loc='upper left')
 
-    ax[1].plot(t, adapted_controls, label="Adapted control actions")
-    ax[1].plot(t, reference_controls, label="Reference control actions")
-    ax[1].legend()
+    ax[1].plot(t, reference_controls, color='lightgrey', label="Reference control actions")
+    ax[1].plot(t, adapted_controls, color='tab:blue', label="Adapted control actions")
+    # ax[1].plot(t[:-15 * 60], predicted_controls, ':', color='tab:orange', label="Predicted control actions")
+    ax[1].legend(fontsize=8, loc='upper left')
 
-    ax[2].plot(t, targets[:, 0], '--', label="Target position")
-    ax[2].plot(t, adapted_targets[:, 0], '--', label="Adapted target position")
+    ax[2].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[2].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted target position")
     ax[2].invert_yaxis()
-    ax[2].legend()
+    ax[2].legend(fontsize=8, loc='upper left')
 
     fig.tight_layout()
     if not os.path.exists("./tmp"):
