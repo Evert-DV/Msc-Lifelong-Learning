@@ -15,7 +15,7 @@ def main():
     use_adaptation = True
 
     seed = np.random.randint(0, 1000)
-    seed = 63
+    # seed = 63
     print(f"Seed: {seed}")
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -25,8 +25,9 @@ def main():
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
+    # reference_controller = FuzzyLogicController()
 
-    prediction_window = 15
+    prediction_window = 10
     adapter = keras.Sequential([
         layers.Dense(32, activation='sigmoid'),
         # layers.Dropout(0.05),
@@ -71,7 +72,7 @@ def main():
     adapted_targets = []
     reference_controls = []
     adapted_controls = []
-    predicted_controls = []
+    predicted_targets = []
     t = np.arange(0, 120, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -84,9 +85,8 @@ def main():
                 buffer = ops.array(buffer)
                 features, labels = prep_data(buffer, prediction_window, interval=15)
                 ref_prediction = adapter.predict(features, verbose=0)
-                predicted_controls += ref_prediction[:,
-                                      0].ravel().tolist()  # predicted controls is here predicted targets
-                predicted_controls += prediction_window * [float('nan')]
+                predicted_targets += ref_prediction[:, 0].ravel().tolist()
+                predicted_targets += prediction_window * [float('nan')]
 
                 if incremental_updates:
                     print("\nFitting model...")
@@ -141,7 +141,7 @@ def main():
         reference_signal = np.asarray(reference_signal)
         targets = np.asarray(targets)
         adapted_targets = np.asarray(adapted_targets)
-        predicted_controls = np.asarray(predicted_controls).ravel()
+        predicted_targets = np.asarray(predicted_targets).ravel()
         adapted_controls = np.asarray(adapted_controls)
 
         fig, ax = plt.subplots(3, 1, sharex=True)
@@ -155,19 +155,18 @@ def main():
 
         ax[1].plot(t, reference_controls, color='lightgrey', label="Reference control actions")
         ax[1].plot(t, adapted_controls, color='tab:blue', label="Adapted control actions")
-        # ax[1].plot(t[:-15 * 60], predicted_controls, ':', label="Predicted control actions")
         ax[1].legend(fontsize=8, loc='upper left')
 
         ax[2].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
         ax[2].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
-        ax[2].plot(t[:-15 * 60], predicted_controls, ':', color='tab:orange', label="Predicted targets")
+        ax[2].plot(t[:-15 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
         ax[2].invert_yaxis()
         ax[2].legend(fontsize=8, loc='upper left')
 
         fig.tight_layout()
         if not os.path.exists("tmp"):
             os.makedirs("tmp")
-        fig.savefig("tmp/plot.png", dpi=300)
+        # fig.savefig("tmp/plot.png", dpi=300)
         plt.show()
 
 
