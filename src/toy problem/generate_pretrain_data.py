@@ -24,14 +24,14 @@ for ti in t:
 
     targets.append(target)
     control_action = controller.compute_control(x0, target, dt)
-    x = system.response(x0, control_action, do_update=False)
+    x = system.response(x0, control_action, do_update=True)
     signal.append(x)
     data.append([*x0, control_action, *x, *target])
 
     x0 = x
 
 data = np.asarray(data)
-np.save("tmp/pretrain_data.npy", data)
+np.save("tmp/pretrain_data_w_changes.npy", data)
 
 signal = np.asarray(signal)
 targets = np.asarray(targets)

@@ -32,8 +32,8 @@ class System:
         return s[-1]
 
     def update(self):
-        self.k *= 0.8
-        self.c *= 0.8
+        self.k *= 0.995
+        self.c *= 0.995
         self.l0 += 1 / self.l0
         self.u = self.m * self.g + self.k * self.l0
 
@@ -57,6 +57,56 @@ class PIDController:
         self.integral_error += position_error * dt
 
         control_action = self.kp * position_error + self.kd * velocity_error + self.ki * self.integral_error
+
+        return control_action
+
+
+class FuzzyLogicController:
+    def __init__(self):
+        # Define fuzzy sets for the state variables and control action
+        # For simplicity, using triangular membership functions
+        self.fuzzy_sets = {
+            'Low': lambda x: max(min((0.5 - x) / 0.5, 1), 0),
+            'Medium': lambda x: max(min((x / 0.5, (1.0 - x) / 0.5)), 0),
+            'High': lambda x: max(min((x - 0.5) / 0.5, 1), 0)
+        }
+
+    def fuzzify(self, value, fuzzy_set):
+        # Calculate the degree of membership for a value in a fuzzy set
+        return self.fuzzy_sets[fuzzy_set](value)
+
+    @staticmethod
+    def apply_rules(fuzzified_state, fuzzified_target):
+        # Example fuzzy rules implementation
+        control_action_fuzzy = np.zeros(3)  # Assuming three fuzzy sets for control action
+
+        # Rule 1: If the current state is 'High', the control action is 'Low'
+        control_action_fuzzy[0] += fuzzified_state[2]
+
+        # Rule 2: If the current state is 'Low', the control action is 'High'
+        control_action_fuzzy[2] += fuzzified_state[0]
+
+        # More rules can be added based on system requirements
+
+        return control_action_fuzzy
+
+    @staticmethod
+    def defuzzify(fuzzy_output):
+        # Defuzzify using the centroid method
+        # Assuming control action ranges from 0 to 1
+        levels = np.array([0.25, 0.5, 0.75])  # Mid-points of 'Low', 'Medium', and 'High'
+        return np.dot(fuzzy_output, levels) / sum(fuzzy_output) if sum(fuzzy_output) != 0 else 0
+
+    def compute_control_action(self, current_state, target_state):
+        # Fuzzify the current and target states
+        fuzzified_current_state = np.array([self.fuzzify(current_state[0], fs) for fs in self.fuzzy_sets])
+        fuzzified_target_state = np.array([self.fuzzify(target_state[0], fs) for fs in self.fuzzy_sets])
+
+        # Apply fuzzy logic rules
+        fuzzy_output = self.apply_rules(fuzzified_current_state, fuzzified_target_state)
+
+        # Defuzzify to get the control action
+        control_action = self.defuzzify(fuzzy_output)
 
         return control_action
 
