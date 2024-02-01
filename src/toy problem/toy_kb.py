@@ -17,7 +17,7 @@ def main():
 
     model_location = 'tmp/autoencoder.keras'
 
-    pretrain = False
+    pretrain = True
     if pretrain:
         encoder = keras.Sequential([
             layers.Input(shape=(5,)),
@@ -47,7 +47,7 @@ def main():
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
-    data = np.load("tmp/pretrain_data_w_changes.npy")
+    data = np.load("tmp/train data/pretrain_data_m5.npy")
     interval = 10
     windowed_data = ops.array(
         [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
@@ -81,7 +81,6 @@ def main():
     # for i in range(len(labels))[::15*60]:
     #     losses.append(loss_fn(labels[i:i+15*60], autoencoder.predict(features[i:i+15*60], verbose=0)).item())
     # TODO: check linear independence test embeddings
-
 
 
 if __name__ == '__main__':
