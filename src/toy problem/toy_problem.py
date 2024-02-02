@@ -44,7 +44,7 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
-        pretrain_data = np.load("tmp/train data/pretrain_data.npy")
+        pretrain_data = np.load("tmp/pretrain_data.npy")
         train_set, val_set = prep_data(pretrain_data, prediction_window, interval=10, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)

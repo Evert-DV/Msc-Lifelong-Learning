@@ -2,29 +2,27 @@ import os
 
 os.environ["KERAS_BACKEND"] = "torch"
 import numpy as np
+from matplotlib import pyplot as plt
 import torch
 from torch.utils.data import TensorDataset, DataLoader, random_split
+from torch.distributions import MultivariateNormal
 import keras
 from keras import layers, optimizers, losses, ops
 
 
-def representation(x, encoder):
+def get_distribution(x, encoder):
     embeddings = encoder(x)
     mean = ops.mean(embeddings, axis=0)
-    std = ops.std(embeddings, axis=0)
-    return mean, std
+    cov = torch.cov(embeddings.T)
+    distribution = MultivariateNormal(mean, cov)
 
-
-def z_score(means, stds, sizes):
-    z = (means[0] - means[1])/ops.sqrt(stds[0]**2/sizes[0] + stds[1]**2/sizes[1])
-
-    return z
+    return embeddings, distribution
 
 
 def train():
     model_location = 'tmp/autoencoder.keras'
 
-    pretrain = False
+    pretrain = True
     if pretrain:
         encoder = keras.Sequential([
             layers.Input(shape=(5,)),
@@ -53,7 +51,7 @@ def train():
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
-    data = np.load(f"tmp/train data/pretrain_data_w_update_m5k10c3_seed934.npy")
+    data = np.load(f"tmp/train data/pretrain_data_m5k10c3_seed913.npy")
     interval = 10
     windowed_data = ops.array(
         [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
@@ -89,33 +87,51 @@ def compare():
     autoencoder = keras.models.load_model(model_location)
     encoder = autoencoder.layers[0]
 
-    means = []
-    stds = []
+    latent_features = []
+    distributions = []
     for file in os.listdir("tmp/train data"):
         if file.endswith(".npy"):
+            print(file.title())
             data = np.load(f"tmp/train data/{file}")
             interval = 10
-            windowed_data = ops.array(
+            windowed_data = np.array(
                 [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
 
-            features = windowed_data[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+            features = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
-            mean, std = representation(features, encoder)
-            print(f"File: {file}\n"
-                  f"Mean: {mean.tolist()}")  #\tStd: {std.tolist()}\n")
-            # TODO: check statistical tests for comparison of distributions
-            means.append(mean)
-            stds.append(std)
+            embeddings, dist = get_distribution(features, encoder)
+            latent_features.append(embeddings)
+            distributions.append(dist)
 
-    print(f"Means: {means}")
+    scores = ops.empty((len(latent_features), len(latent_features)))
+    for i, dist in enumerate(distributions):
+        for j, data in enumerate(latent_features):
+            total_log_likelihood = ops.sum(dist.log_prob(data))
+            scores[i, j] = total_log_likelihood
+
+    scores_np = ops.convert_to_numpy(scores)
+    plt.figure(figsize=(10, 8))
+    cax = plt.imshow(scores_np, cmap='viridis', aspect='auto')
+    plt.colorbar(cax, label='Log-Likelihood')
+
+    # Optional: Annotate the heatmap with exact log-likelihood values
+    for i in range(scores_np.shape[0]):
+        for j in range(scores_np.shape[1]):
+            plt.text(j, i, f'{scores_np[i, j]*1e-5:.2f}e5', ha='center', va='center', color='white')
+
+    plt.title('Log-Likelihood of Datasets Under Different Distributions')
+    plt.xlabel('Distribution')
+    plt.ylabel('Dataset')
+    plt.xticks(np.arange(scores_np.shape[1]), labels=[f'P{i + 1}' for i in range(scores_np.shape[1])])
+    plt.yticks(np.arange(scores_np.shape[0]), labels=[f'D{i + 1}' for i in range(scores_np.shape[0])])
+    plt.show()
 
 
 def main():
     seed = np.random.randint(0, 1000)
     seed = 42
     print(f"Seed: {seed}")
-    np.random.seed(seed)
-    torch.manual_seed(seed)
+    keras.utils.set_random_seed(seed)
 
     # train()
     compare()
@@ -123,6 +139,7 @@ def main():
 
 if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
+    os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
     if torch.cuda.is_available():
         print("Using CUDA")
         with torch.cuda.device(0):
