@@ -22,31 +22,32 @@ def main():
     c = 3
     # default values: m = 5, k = 10, c = 3, l0 = 5
     system = System(m, k, c, 5)
+    system_updates = False
 
     dt = 1 / 60
     t = np.arange(0, 600, dt)
 
     for ti in t:
         if ti % 10 == 0:
-            target = [np.random.randint(8, 13), 0.]
+            target = [np.random.uniform(8, 13), 0.]
 
         targets.append(target)
         control_action = controller.compute_control(x0, target, dt)
-        x = system.response(x0, control_action, do_update=False)
+        x = system.response(x0, control_action, do_update=system_updates)
         signal.append(x)
         data.append([*x0, control_action, *x, *target])
 
         x0 = x
 
     data = np.asarray(data)
-    np.save(f"tmp/train data/pretrain_data_m{m}k{k}c{c}_seed{seed}.npy", data)
+    np.save(f"tmp/train data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy", data)
 
     signal = np.asarray(signal)
     targets = np.asarray(targets)
 
     plt.plot(t, signal[:, 0], label="signal")
     plt.plot(t, targets[:, 0], '--', label="target")
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':

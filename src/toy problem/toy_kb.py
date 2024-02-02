@@ -44,20 +44,18 @@ def train():
         ])
     else:
         autoencoder = keras.models.load_model(model_location)
-        encoder = autoencoder.layers[0]
-        decoder = autoencoder.layers[-1]
 
     optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
-    data = np.load(f"tmp/train data/pretrain_data_m5k10c3_seed913.npy")
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     interval = 10
-    windowed_data = ops.array(
+    windowed_data = np.array(
         [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
 
-    features = windowed_data[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
-    labels = windowed_data[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+    features = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+    labels = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
     dataset = TensorDataset(features, labels)
     train_size = int(0.7 * len(dataset))
@@ -89,6 +87,7 @@ def compare():
 
     latent_features = []
     distributions = []
+    filenames = []
     for file in os.listdir("tmp/train data"):
         if file.endswith(".npy"):
             print(file.title())
@@ -102,6 +101,7 @@ def compare():
             embeddings, dist = get_distribution(features, encoder)
             latent_features.append(embeddings)
             distributions.append(dist)
+            filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
     for i, dist in enumerate(distributions):
@@ -117,14 +117,19 @@ def compare():
     # Optional: Annotate the heatmap with exact log-likelihood values
     for i in range(scores_np.shape[0]):
         for j in range(scores_np.shape[1]):
-            plt.text(j, i, f'{scores_np[i, j]*1e-5:.2f}e5', ha='center', va='center', color='white')
+            plt.text(j, i, f'{scores_np[i, j]*1e-5:.1f}e5', ha='center', va='center', color='white')
 
     plt.title('Log-Likelihood of Datasets Under Different Distributions')
-    plt.xlabel('Distribution')
-    plt.ylabel('Dataset')
-    plt.xticks(np.arange(scores_np.shape[1]), labels=[f'P{i + 1}' for i in range(scores_np.shape[1])])
-    plt.yticks(np.arange(scores_np.shape[0]), labels=[f'D{i + 1}' for i in range(scores_np.shape[0])])
+    plt.xlabel('Distributions')
+    plt.ylabel('Embeddings')
+    plt.xticks(np.arange(scores_np.shape[1]), labels=filenames, fontsize=8, rotation=45)
+    plt.yticks(np.arange(scores_np.shape[0]), labels=filenames, fontsize=8)
+    plt.tight_layout()
     plt.show()
+
+
+def implement():
+    pass
 
 
 def main():
