@@ -51,11 +51,11 @@ def train():
 
     data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     interval = 10
-    windowed_data = np.array(
-        [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
+    # windowed_data = np.array(
+    #     [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
 
-    features = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
-    labels = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+    features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
+    labels = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
 
     dataset = TensorDataset(features, labels)
     train_size = int(0.7 * len(dataset))
@@ -92,11 +92,11 @@ def compare():
         if file.endswith(".npy"):
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
-            interval = 10
-            windowed_data = np.array(
-                [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
+            # interval = 10
+            # windowed_data = np.array(
+            #     [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
 
-            features = ops.array(windowed_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+            features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
 
             embeddings, dist = get_distribution(features, encoder)
             latent_features.append(embeddings)
@@ -117,7 +117,7 @@ def compare():
     # Optional: Annotate the heatmap with exact log-likelihood values
     for i in range(scores_np.shape[0]):
         for j in range(scores_np.shape[1]):
-            plt.text(j, i, f'{scores_np[i, j]*1e-5:.1f}e5', ha='center', va='center', color='white')
+            plt.text(j, i, f'{scores_np[i, j] * 1e-5:.1f}e5', ha='center', va='center', color='white')
 
     plt.title('Log-Likelihood of Datasets Under Different Distributions')
     plt.xlabel('Distributions')
@@ -129,7 +129,49 @@ def compare():
 
 
 def implement():
-    pass
+    autoencoder = keras.models.load_model('tmp/autoencoder.keras')
+    encoder = autoencoder.layers[0]
+    prior_data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    x = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+    _, prior = get_distribution(x, encoder)
+    baseline = prior.log_prob(encoder(x)).mean()
+
+    data = np.load(f"tmp/train data/m5k10c3_w-update_seed314.npy")
+    t = np.arange(0, len(data) / 60, 1 / 60)
+    loss = []
+    likelihoods = []
+    reconstructed = []
+    rho = 0.9
+    step = 60
+    for i in np.arange(1, len(data), step):
+        x = ops.array(data[i:i + step, [0, 1, 2, 3, 4]])
+        y = autoencoder(x)
+        reconstructed.append(y)
+        likelihood = prior.log_prob(encoder(ops.array(data[i:i + step, [0, 1, 2, 3, 4]]))).mean()
+
+        if i < step:
+            ewma = likelihood.item()
+        else:
+            ewma = rho * ewma + (1 - rho) * likelihood.item()
+
+        loss.append(ewma)
+        likelihoods.append(likelihood.item())
+
+    reconstructed = ops.convert_to_numpy(ops.concatenate(reconstructed, axis=0))
+
+    fig, ax = plt.subplots(2, 1, sharex=True)
+
+    ax[0].plot(t, data[:, 0], label="signal")
+    ax[0].plot(t, data[:, -2], label="target")
+    ax[0].plot(t[:-1], reconstructed[:, 0], label="reconstructed signal")
+
+    ax[1].plot(t[::step], loss, label="loss")
+    ax[1].plot(t[::step], likelihoods, '.', markersize=1., label="likelihood")
+    ax[1].axhline(baseline.item(), color='r', linestyle='--', label="baseline")
+    ax[1].legend()
+
+    fig.tight_layout()
+    plt.show()
 
 
 def main():
@@ -139,7 +181,8 @@ def main():
     keras.utils.set_random_seed(seed)
 
     # train()
-    compare()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':

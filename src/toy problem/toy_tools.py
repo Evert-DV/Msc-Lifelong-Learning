@@ -127,7 +127,7 @@ class EpochLogger(keras.callbacks.Callback):
 
 def prep_data(data, prediction_window, interval=15, val_split=None):
     # First sort by target
-    windowed_data = ops.array(
+    windowed_data = np.array(
         [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
     features = ops.concatenate(
         (windowed_data[..., :-prediction_window, [0, 1]], windowed_data[..., prediction_window:, [0, 1]]),
