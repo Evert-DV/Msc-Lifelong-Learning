@@ -2,6 +2,7 @@ import os
 
 os.environ["KERAS_BACKEND"] = "torch"
 from torch.utils.data import TensorDataset, DataLoader, random_split
+from torch.distributions.kl import kl_divergence
 import keras
 from keras import layers, optimizers, losses
 from kb_tools import *
@@ -81,34 +82,29 @@ def compare():
         if file.endswith(".npy"):
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
-            # interval = 10
-            # windowed_data = np.array(
-            #     [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
-
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
+            embeddings, dist = get_distribution(features, encoder, bandwidth=1.)
 
-            embeddings, dist = get_distribution(features, encoder)
             latent_features.append(embeddings)
             distributions.append(dist)
             filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
     for i, dist in enumerate(distributions):
-        for j, data in enumerate(latent_features):
-            total_log_likelihood = ops.sum(dist.log_prob(data))
-            scores[i, j] = total_log_likelihood
+        for j, dist2 in enumerate(distributions):
+            scores[i, j] = kl_divergence(dist, dist2).item()
 
     scores_np = ops.convert_to_numpy(scores)
     plt.figure(figsize=(10, 8))
     cax = plt.imshow(scores_np, cmap='viridis', aspect='auto')
-    plt.colorbar(cax, label='Log-Likelihood')
+    plt.colorbar(cax, label='KL-Divergence')
 
     # Optional: Annotate the heatmap with exact log-likelihood values
     for i in range(scores_np.shape[0]):
         for j in range(scores_np.shape[1]):
-            plt.text(j, i, f'{scores_np[i, j] * 1e-5:.1f}e5', ha='center', va='center', color='white')
+            plt.text(j, i, f'{scores_np[i, j]:.2f}', ha='center', va='center', color='white')
 
-    plt.title('Log-Likelihood of Datasets Under Different Distributions')
+    plt.title('KL-Divergence of Datasets Under Different Distributions')
     plt.xlabel('Distributions')
     plt.ylabel('Embeddings')
     plt.xticks(np.arange(scores_np.shape[1]), labels=filenames, fontsize=8, rotation=45)
@@ -120,23 +116,23 @@ def compare():
 def implement():
     autoencoder = keras.models.load_model('tmp/autoencoder.keras')
     encoder = autoencoder.layers[0]
-    prior_data = np.load(f"tmp/train data/m5k10c3_w-update_seed314.npy")
+    prior_data = np.load(f"tmp/train data/m4k9c2_seed24.npy")
     x = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
-    emb, prior = get_distribution(x, encoder)
-    baseline = prior.log_prob(encoder(x)).mean()
+    bw = 1.
+    emb, prior = get_distribution(x, encoder, bandwidth=bw)
 
-    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
+    data = np.load(f"tmp/train data/m6k11c4_seed219.npy")
     t = np.arange(0, len(data) / 60, 1 / 60)
     loss = []
-    likelihoods = []
+    # likelihoods = []
     reconstructed = []
-    rho = 0.9
     step = 60
     for i in np.arange(1, len(data), step):
         x = ops.array(data[i:i + step, [0, 1, 2, 3, 4]])
         y = autoencoder(x)
         reconstructed.append(y)
-        likelihood = prior.log_prob(encoder(ops.array(data[0:i + step, [0, 1, 2, 3, 4]]))).mean()
+        embeddings = encoder(ops.array(data[0:i + step, [0, 1, 2, 3, 4]]))
+        likelihood = prior.log_prob(embeddings).mean()
 
         # if i < step:
         #     ewma = likelihood.item()
@@ -146,6 +142,8 @@ def implement():
         #
         # loss.append(ewma)
         likelihoods.append(likelihood.item())
+
+    print(f'Bandwidth: {bw}\t mean error: {baseline.item() - np.mean(likelihoods):.2f}')
 
     reconstructed = ops.convert_to_numpy(ops.concatenate(reconstructed, axis=0))
 

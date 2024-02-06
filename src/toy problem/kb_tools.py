@@ -3,10 +3,11 @@ from matplotlib import pyplot as plt
 from keras import ops
 import torch
 from torch.distributions import MultivariateNormal, Distribution, MixtureSameFamily, Categorical
+from torch.distributions.kl import register_kl
 
 
 class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x, bandwidth=10, n_points=100):
+    def __init__(self, x, bandwidth=10., n_points=100):
         step = x.shape[0] // n_points
         furthest = ops.max(torch.linalg.norm(x, axis=-1), axis=0)
         sort_idx = ops.argsort(torch.linalg.norm(x - furthest, axis=-1), axis=0)
@@ -19,15 +20,25 @@ class GaussianDensityEstimation(MixtureSameFamily):
         super(GaussianDensityEstimation, self).__init__(mix, components)
 
 
-def get_distribution(x, encoder):
+def get_distribution(x, encoder, bandwidth=1., n_points=100):
     embeddings = encoder(x)
-    # mean = ops.mean(embeddings, axis=0)
-    # cov = torch.cov(embeddings.T)
-    # distribution = MultivariateNormal(mean, cov)
-    # distribution = TorchKDEWrapper(embeddings, bandwidth=0.2)
-    distribution = GaussianDensityEstimation(embeddings)
+    distribution = GaussianDensityEstimation(embeddings, bandwidth, n_points)
 
     return embeddings, distribution
+
+
+@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
+def kl_divergence(p, q, n_samples=1000):
+    samples = p.sample((n_samples,))
+
+    log_probs_p = p.log_prob(samples)
+    log_probs_q = q.log_prob(samples)
+
+    probs_p = ops.exp(log_probs_p)
+
+    kl_div = ops.sum(probs_p * (log_probs_p - log_probs_q)) / ops.sum(probs_p)
+
+    return kl_div
 
 
 def visualize_distribution(embeddings, distribution, dim='3d'):
@@ -40,7 +51,7 @@ def visualize_distribution(embeddings, distribution, dim='3d'):
         ax = fig.add_subplot(111, projection='3d')
 
         # Scatter plot for the data points
-        ax.scatter(data[:, 0], data[:, 1], data[:, 2], alpha=0.2, depthshade=True)
+        ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', c='tab:red', alpha=0.2, depthshade=True)
 
         samples = distribution.sample((1000,))
         probs = ops.convert_to_numpy(ops.exp(distribution.log_prob(samples)))
@@ -49,7 +60,7 @@ def visualize_distribution(embeddings, distribution, dim='3d'):
         # Normalize probabilities for color mapping
         min_prob, max_prob = probs.min(), probs.max()
         normalized_probs = (probs - min_prob) / (max_prob - min_prob)
-        alpha_values = normalized_probs * .5 + .25
+        alpha_values = normalized_probs * 0.5 + 0.1
 
         # Scatter plot with color gradient
         scatter = ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], c=normalized_probs, cmap='viridis',
@@ -92,10 +103,10 @@ def visualize_distribution(embeddings, distribution, dim='3d'):
             pos = ops.array(pos.reshape(-1, 3))
             prob = distribution.log_prob(pos).reshape(100, 100)
             z = ops.convert_to_numpy(ops.exp(prob))
-            ax.contour(x, y, z, levels=5, colors='r')
+            ax.contour(x, y, z, levels=10, colors='r')
 
             ax.set_xlabel(f'Dim {i}')
             ax.set_ylabel(f'Dim {j}')
 
-    plt.tight_layout()
+    fig.tight_layout()
     plt.show()
