@@ -1,6 +1,7 @@
 import os
 
 os.environ["KERAS_BACKEND"] = "torch"
+import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, random_split
 from torch.distributions.kl import kl_divergence
 import keras
@@ -116,46 +117,63 @@ def compare():
 def implement():
     autoencoder = keras.models.load_model('tmp/autoencoder.keras')
     encoder = autoencoder.layers[0]
+
     prior_data = np.load(f"tmp/train data/m4k9c2_seed24.npy")
-    x = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+    x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
     bw = 1.
-    emb, prior = get_distribution(x, encoder, bandwidth=bw)
+    _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
+    _, updated_prior = get_distribution(x_prior, encoder, bandwidth=bw)
 
     data = np.load(f"tmp/train data/m6k11c4_seed219.npy")
+    data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
-    loss = []
-    # likelihoods = []
-    reconstructed = []
-    step = 60
-    for i in np.arange(1, len(data), step):
-        x = ops.array(data[i:i + step, [0, 1, 2, 3, 4]])
-        y = autoencoder(x)
-        reconstructed.append(y)
-        embeddings = encoder(ops.array(data[0:i + step, [0, 1, 2, 3, 4]]))
-        likelihood = prior.log_prob(embeddings).mean()
+    kl_loss = []
+    likelihoods = [[], [], [], []]
+    step = 300
+    for i in np.arange(0, len(data), step):
+        print(f"\rt =  {t[i]:.0f}", end="")
+        x = data[i:i + step, [0, 1, 2, 3, 4]]
+        embeddings = encoder(x)
+        embeddings_prior = encoder(x_prior[i:i + step])
 
-        # if i < step:
-        #     ewma = likelihood.item()
-        # else:
-        #     ewma = rho * ewma + (1 - rho) * likelihood.item()
-        #     # ewma = (likelihood.item() + (i - step / 2) * ewma) / i
-        #
-        # loss.append(ewma)
-        likelihoods.append(likelihood.item())
+        # Get distributions
+        _, running_prior = get_distribution(x_prior[0:i + step], encoder, bandwidth=bw)
+        _, dist = get_distribution(data[0:i + step, [0, 1, 2, 3, 4]], encoder, bandwidth=bw)
 
-    print(f'Bandwidth: {bw}\t mean error: {baseline.item() - np.mean(likelihoods):.2f}')
+        # Likelihoods
+        likelihoods[0].append(prior.log_prob(embeddings)[::30])
+        likelihoods[1].append(updated_prior.log_prob(embeddings)[::30])
+        likelihoods[2].append(prior.log_prob(embeddings_prior)[::30])
+        likelihoods[3].append(updated_prior.log_prob(embeddings_prior)[::30])
 
-    reconstructed = ops.convert_to_numpy(ops.concatenate(reconstructed, axis=0))
+        # KL losses
+        kl_prior_dist = kl_divergence(prior, dist)
+        kl_updated_dist = kl_divergence(updated_prior, dist)
+        kl_prior_rprior = kl_divergence(prior, running_prior)
+        kl_updated_rprior = kl_divergence(updated_prior, running_prior)
+        kl_loss.append([kl_prior_dist.item(), kl_updated_dist.item(), kl_prior_rprior.item(), kl_updated_rprior.item()])
+
+        # Update prior
+        if i % (300 * 12) == 0 and i != 0:
+            recorded_data = data[i - 3600:i, [0, 1, 2, 3, 4]]
+            embeddings = encoder(recorded_data)
+            updated_prior.update(embeddings, weight=0.25)
+            print(f"\nUpdated prior with {len(recorded_data)} samples")
+
+    print(f'\nBandwidth: {bw}\t')
+    for i, p in enumerate(likelihoods):
+        likelihoods[i] = ops.convert_to_numpy(ops.concatenate(p, axis=-1))
 
     fig, ax = plt.subplots(2, 1, sharex=True)
 
-    ax[0].plot(t, data[:, 0], label="signal")
-    ax[0].plot(t, data[:, -2], label="target")
-    ax[0].plot(t[:-1], reconstructed[:, 0], label="reconstructed signal")
+    ax[0].plot(t[::30], np.array(likelihoods).T, linestyle='-.', marker='x',
+               label=["data|prior", "data|updated-prior", "running-prior|prior", "running-prior|updated-prior"])
+    ax[0].legend()
 
-    # ax[1].plot(t[::step], loss, label="loss")
-    ax[1].plot(t[::step], likelihoods, '.', markersize=1., label="likelihood")
-    ax[1].axhline(baseline.item(), color='r', linestyle='--', label="baseline")
+    ax[1].vlines(t[::3600], 0, 5, colors='tab:gray', linestyles=':')
+    ax[1].plot(t[::step], kl_loss,
+               label=["prior|data", "updated-prior|data", "prior|running-prior", "updated-prior|running-prior"])
+    ax[1].axhline(0., color='k', linestyle='--')
     ax[1].legend()
 
     fig.tight_layout()
@@ -163,14 +181,14 @@ def implement():
 
 
 def main():
-    seed = np.random.randint(0, 1000)
+    # seed = np.random.randint(0, 1000)
     seed = 42
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
     # train()
-    compare()
-    # implement()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':
