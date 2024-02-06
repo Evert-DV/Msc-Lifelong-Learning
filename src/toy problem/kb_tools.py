@@ -3,7 +3,6 @@ from matplotlib import pyplot as plt
 from keras import ops
 import torch
 from torch.distributions import MultivariateNormal, Distribution, MixtureSameFamily, Categorical
-from sklearn.neighbors import KernelDensity
 
 
 class GaussianDensityEstimation(MixtureSameFamily):
@@ -18,21 +17,6 @@ class GaussianDensityEstimation(MixtureSameFamily):
         components = MultivariateNormal(used_points, covs)
         mix = Categorical(ops.ones(used_points.shape[0]) / len(used_points))
         super(GaussianDensityEstimation, self).__init__(mix, components)
-
-
-class TorchKDEWrapper(Distribution):
-    def __init__(self, x, kernel='gaussian', bandwidth=0.1):
-        super(TorchKDEWrapper, self).__init__(validate_args=False)
-        self.kde = KernelDensity(kernel=kernel, bandwidth=bandwidth)
-        self.kde.fit(ops.convert_to_numpy(x))
-
-    def log_prob(self, x):
-        x = ops.convert_to_numpy(x)
-        return ops.array(self.kde.score_samples(x))
-
-    def sample(self, sample_shape=torch.Size()):
-        samples = self.kde.sample(sample_shape[0]).astype(np.float32)
-        return ops.array(samples)
 
 
 def get_distribution(x, encoder):
