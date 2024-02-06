@@ -7,9 +7,6 @@ from keras import layers, optimizers, losses
 from kb_tools import *
 
 
-
-
-
 def train():
     model_location = 'tmp/autoencoder.keras'
 
@@ -74,6 +71,7 @@ def train():
 def compare():
     model_location = 'tmp/autoencoder.keras'
     autoencoder = keras.models.load_model(model_location)
+    autoencoder.eval()
     encoder = autoencoder.layers[0]
 
     latent_features = []
