@@ -1,6 +1,3 @@
-import os
-
-os.environ["KERAS_BACKEND"] = "torch"
 import numpy as np
 import scipy as sp
 import keras
