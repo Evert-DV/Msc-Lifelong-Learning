@@ -6,19 +6,24 @@ from torch.distributions.kl import register_kl
 
 
 class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x, bandwidth=1., n_points=100):
-        if n_points > x.shape[0]:
-            n_points = x.shape[0]
-        step = x.shape[0] // (n_points // 2)
-        furthest = ops.max(torch.linalg.norm(x, axis=-1), axis=0)
-        sort_idx = ops.argsort(torch.linalg.norm(x - furthest, axis=-1), axis=0)
-        x = x[sort_idx]
-        used_points = ops.stack([ops.mean(x[i:i + step], axis=0) for i in range(0, x.shape[0] - 1, step // 2)])
-        covs = ops.stack([torch.cov(x[i:i + step].T) for i in range(0, x.shape[0] - 1, step // 2)])
-        covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
-        components = MultivariateNormal(used_points, covs)
-        mix = Categorical(ops.ones(used_points.shape[0]) / len(used_points))
-        super(GaussianDensityEstimation, self).__init__(mix, components)
+    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100):
+        if components is not None and mix is not None:
+            # Initialize using precomputed components and mix
+            super(GaussianDensityEstimation, self).__init__(mix, components)
+        else:
+            assert x is not None, "Either x, or components and mix must be provided"
+            if n_points > x.shape[0]:
+                n_points = x.shape[0]
+            step = x.shape[0] // (n_points // 2)
+            furthest = ops.max(torch.linalg.norm(x, axis=-1), axis=0)
+            sort_idx = ops.argsort(torch.linalg.norm(x - furthest, axis=-1), axis=0)
+            x = x[sort_idx]
+            used_points = ops.stack([ops.mean(x[i:i + step], axis=0) for i in range(0, x.shape[0] - 1, step // 2)])
+            covs = ops.stack([torch.cov(x[i:i + step].T) for i in range(0, x.shape[0] - 1, step // 2)])
+            covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
+            components = MultivariateNormal(used_points, covs)
+            mix = Categorical(ops.ones(used_points.shape[0]) / len(used_points))
+            super(GaussianDensityEstimation, self).__init__(mix, components)
 
         self.bw = bandwidth
         self.n_points = n_points
@@ -28,12 +33,20 @@ class GaussianDensityEstimation(MixtureSameFamily):
         n_samples = factor * len(new_data)
         sampled_data = self.sample(torch.Size((n_samples,)))
         combined_data = ops.concatenate([new_data, sampled_data], axis=0)
-        self.__init__(combined_data, self.bw, self.n_points)
+        self.__init__(combined_data, bandwidth=self.bw, n_points=self.n_points)
+
+    def copy(self):
+        components = self.component_distribution
+        mix = self.mixture_distribution
+        new_instance = GaussianDensityEstimation(mix=mix, components=components, bandwidth=self.bw,
+                                                 n_points=self.n_points)
+
+        return new_instance
 
 
 def get_distribution(x, encoder, bandwidth=1., n_points=100):
     embeddings = encoder(x)
-    distribution = GaussianDensityEstimation(embeddings, bandwidth, n_points)
+    distribution = GaussianDensityEstimation(embeddings, bandwidth=bandwidth, n_points=n_points)
 
     return embeddings, distribution
 
@@ -52,7 +65,7 @@ def kl_divergence(p, q, n_samples=1000):
     return kl_div
 
 
-def visualize_distribution(embeddings, distribution):
+def visualize_distribution(distribution, embeddings=None):
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -84,3 +97,7 @@ def visualize_distribution(embeddings, distribution):
 
     fig.tight_layout()
     plt.show()
+
+
+def ewma(data, prev_avg, rho=0.8):
+    return rho * prev_avg + (1 - rho) * ops.mean(data)
