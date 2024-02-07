@@ -1,6 +1,7 @@
 import os
 
 os.environ["KERAS_BACKEND"] = "torch"
+import pickle
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, random_split
 from torch.distributions.kl import kl_divergence
@@ -111,15 +112,23 @@ def compare():
 def implement():
     autoencoder = keras.models.load_model(model_location)
     encoder = autoencoder.layers[0]
-
-    prior_data = np.load(f"tmp/train data/m4k9c2_seed24.npy")
-    x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
     bw = 0.1
-    _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
-    # _, updated_prior = get_distribution(x_prior, encoder, bandwidth=bw)
-    updated_prior = prior.copy()
+    use_kb = True
 
-    data = np.load(f"tmp/train data/m6k11c4_seed219.npy")
+    if not use_kb:
+        prior_data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+        x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+
+        _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
+        kb = [prior]
+    else:
+        with open('tmp/kb.pkl', 'rb') as f:
+            kb = pickle.load(f)
+    initial_kb_len = len(kb)
+    print(f"{len(kb)} entries in the KB\n")
+
+    # Simulate a realtime implementation
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -130,86 +139,104 @@ def implement():
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
-        x = data[i:i + step, [0, 1, 2, 3, 4]]
-        embeddings = encoder(x)
-        embeddings_prior = encoder(x_prior[i:i + step])
+        x = data[0:i + step, [0, 1, 2, 3, 4]]
 
-        # Get distributions
-        _, running_prior = get_distribution(x_prior[0:i + step], encoder, bandwidth=bw)
-        _, dist = get_distribution(data[0:i + step, [0, 1, 2, 3, 4]], encoder, bandwidth=bw)
+        # Get embeddings & distribution
+        embeddings, running_distribution = get_distribution(x, encoder, bandwidth=bw)
 
-        # # Likelihoods
-        # p_y_dist = ops.exp(dist.log_prob(embeddings))
-        # p_y_prior = ops.exp(prior.log_prob(embeddings))
-        # p_y_updated_prior = ops.exp(updated_prior.log_prob(embeddings))
-        # p_any = 1 / 3
-        # p_y = p_any * (p_y_dist + p_y_prior + p_y_updated_prior)
-        # p_dist_y = p_y_dist * p_any / p_y
-        # p_prior_y = p_y_prior * p_any / p_y
-        # p_updated_prior_y = p_y_updated_prior * p_any / p_y
-        # if i < step:
-        #     ewma_p_dist_y = p_dist_y.mean()
-        #     ewma_p_prior_y = p_prior_y.mean()
-        #     ewma_p_updated_prior_y = p_updated_prior_y.mean()
-        # else:
-        #     ewma_p_dist_y = ewma(p_dist_y, ewma_p_dist_y)
-        #     ewma_p_prior_y = ewma(p_prior_y, ewma_p_prior_y)
-        #     ewma_p_updated_prior_y = ewma(p_updated_prior_y, ewma_p_updated_prior_y)
-        # posteriors.append([ewma_p_dist_y.item(), ewma_p_prior_y.item(), ewma_p_updated_prior_y.item()])
+        if i < 60 * 60:
+            # Likelihoods and relative posteriors
+            p_dist = 1 / len(kb)
+            posterior = []
+            for dist_idx, dist in enumerate(kb):
+                p_emb_dist = ops.exp(dist.log_prob(embeddings))
+                # p_y = p_any * (p_y_dist + p_y_prior + p_y_updated_prior)
+                p_dist_emb = p_emb_dist * p_dist
+
+                if i == 0:
+                    ewma_p_dist_emb = p_dist_emb.mean()
+                else:
+                    ewma_p_dist_emb = ewma(p_dist_emb, ewma_p_dist_emb, rho=0.5)
+
+                posterior.append(ewma_p_dist_emb.item())
+            posteriors.append(posterior)
+            kb_idx = np.argmax(posterior)  # rho can really influence the result
+            prior = kb[kb_idx]
+            updated_prior = prior.copy()
+            backup_updated_prior = prior.copy()
+            continue
 
         # KL losses
-        kl_updated_dist = kl_divergence(updated_prior, dist)
+        kl_updated_dist = kl_divergence(updated_prior, running_distribution)
         kl_prior_updated = kl_divergence(prior, updated_prior)
-        kl_prior_dist = kl_divergence(prior, dist)
-        # kl_prior_rprior = kl_divergence(prior, running_prior)
-        # kl_updated_rprior = kl_divergence(updated_prior, running_prior)
+        kl_prior_dist = kl_divergence(prior, running_distribution)  # sanity check
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
-                        # kl_prior_rprior.item(), kl_updated_rprior.item()])
 
-        if (kl_updated_dist > thres or kl_prior_updated > thres) and i > 2 * 60 * 60:
+        if (kl_updated_dist > thres or kl_prior_updated > thres) and i >= 2 * 60 * 60:
             print("\nUPDATE KB ENTRY RELATED TO PRIOR")
-            print("<<placeholder: set entry's prior to updated_prior>>")
-            print("INITIATE NEW KB ENTRY WITH CURRENT DISTRIBUTION")
-            prior = dist.copy()
-            updated_prior = dist.copy()
-            trespassing.append(i)
+            kb[kb_idx] = backup_updated_prior.copy()
+            print("CHECK KB FOR BETTER MATCH")
+            new_entry = True
+            for idx, dist in enumerate(kb):
+                kl_prior_dist = kl_divergence(dist, running_distribution)
+                if kl_prior_dist < thres and idx != kb_idx:  # TODO: dont just pick first match, but pick best match
+                    print(f"SET PRIOR TO KB ENTRY {idx}")
+                    prior = dist
+                    updated_prior = dist.copy()
+                    backup_updated_prior = dist.copy()
+                    kb_idx = idx
+                    new_entry = False
+                    break
+
+            if new_entry:
+                print("NO MATCH FOUND\nINITIATE NEW KB ENTRY WITH CURRENT DISTRIBUTION")
+                prior = running_distribution.copy()
+                updated_prior = running_distribution.copy()
+                trespassing.append(i)
+                kb.append(prior)
+                kb_idx = len(kb) - 1
 
         # Update prior
         update_dist = (i % (60 * 60) == 0 and i > 60 * 60)
         if update_dist:
+            backup_updated_prior = updated_prior.copy()
             updates.append(i)
             recorded_data = data[i - 3600:i, [0, 1, 2, 3, 4]]
             embeddings = encoder(recorded_data)
             updated_prior.update(embeddings, weight=0.25)
             print(f"\nUpdated prior with {len(recorded_data)} samples")
 
-    print(f'\nBandwidth: {bw}\t')
+    # Save the last updated prior
+    kb[-1] = backup_updated_prior
+    print(f"\n\n{len(kb)} entries in the KB")
 
-    fig, ax = plt.subplots(1, 1, sharex=True)
+    fig, ax = plt.subplots(2, 1, sharex=True)
 
-    # ax[0].plot(t[::step], posteriors, linestyle='-.', marker='x',
-    #            label=["P(dist|data)", "P(prior|data)", "P(updated-prior|data)"])
-    # ax[0].legend()
+    ax[0].plot(t[:60 * 60][::step], posteriors, linestyle='-.', marker='x',
+               label=[f"P(dist_{i}|emb)" for i in range(initial_kb_len)])
+    ax[0].legend()
 
-    ax.vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
-    ax.vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
-    ax.plot(t[::step], kl_loss, lw=1., alpha=0.7,
-               label=["updated-prior vs. dist", "prior vs. updated-prior", "prior vs. dist (sanity check)"])  # ,
-                      # "prior vs. running-prior (sanity check)",
-                      # "updated-prior vs. running-prior (sanity check)"])
-    ax.hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
-    ax.set_ylim(-.5, 2)
-    ax.set_xlim(100, 260)
-    ax.legend()
+    ax[1].vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
+    ax[1].vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
+    ax[1].plot(t[60 * 60:][::step], kl_loss, lw=1., alpha=0.7,
+               label=["updated-prior vs. dist", "prior vs. updated-prior", "prior vs. dist (sanity check)"])
+    ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
+    ax[1].set_ylim(-.5, 10.)
+    # ax.set_xlim(100, 260)
+    ax[1].legend()
 
     fig.tight_layout()
     plt.show()
+
+    with open('tmp/kb.pkl', 'wb') as f:
+        pickle.dump(kb, f)
+    print("KB saved")
 
 
 def main():
     seed = np.random.randint(0, 1000)
     # seed = 42
-    print(f"Seed: {seed}")
+    print(f"Seed: {seed}\n")
     keras.utils.set_random_seed(seed)
 
     # train()
