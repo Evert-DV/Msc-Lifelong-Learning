@@ -11,18 +11,20 @@ from kb_tools import *
 
 
 def train():
-    pretrain = False
+    pretrain = True
     if pretrain:
         encoder = keras.Sequential([
             layers.Input(shape=(5,)),
-            layers.Normalization(),
             layers.Dense(32, activation='leaky_relu'),
-            layers.Dropout(0.25),
-            layers.Dense(3),
+            layers.Dropout(0.1),
+            layers.Dense(32, activation='softsign'),
+            layers.Dropout(0.1),
+            layers.Dense(2),
         ])
 
         decoder = keras.Sequential([
-            layers.Input(shape=(3,)),
+            layers.Input(shape=(2,)),
+            layers.Dense(32, activation='softsign'),
             layers.Dense(32, activation='leaky_relu'),
             layers.Dense(5),
         ])
@@ -34,7 +36,7 @@ def train():
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-5)
+    optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -53,7 +55,7 @@ def train():
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
-                                               patience=5,
+                                               patience=10,
                                                restore_best_weights=True,
                                                verbose=1),
                  ]
@@ -79,7 +81,9 @@ def compare():
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
-            embeddings, dist = get_distribution(features, encoder, bandwidth=0.1)
+            embeddings, dist = get_distribution(features, encoder, bandwidth=.1)
+
+            visualize_distribution(dist, embeddings[::30])
 
             latent_features.append(embeddings)
             distributions.append(dist)
@@ -112,9 +116,10 @@ def compare():
 def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior
     autoencoder = keras.models.load_model(model_location)
+    autoencoder.eval()
     encoder = autoencoder.layers[0]
     bw = 0.1
-    use_kb = True
+    use_kb = False
 
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
@@ -129,7 +134,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k10c3_w-update_seed314.npy")
+    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -137,7 +142,7 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 1.5
+    thres = 1.8
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
@@ -171,7 +176,7 @@ def implement():
         kl_prior_dist = kl_divergence(prior, running_distribution)  # sanity check
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
 
-        if (kl_updated_dist > thres or kl_prior_updated > thres) and i >= 2 * 60 * 60:
+        if (kl_updated_dist > thres or kl_prior_updated > 0.9 * thres) and i >= 2 * 60 * 60:
             print("\nRESTORE KB ENTRY RELATED TO PRIOR")
             trespassing.append(i)
             # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
@@ -180,7 +185,7 @@ def implement():
             best_idx = ops.argmax(post_probs)
             if best_idx != kb_idx:
                 kl_prior_dist = kl_divergence(kb[0][best_idx], running_distribution)
-                if kl_prior_dist < thres:
+                if kl_prior_dist < 0.9 * thres:
                     print(f"SET PRIOR TO KB ENTRY {best_idx}")
                     prior = kb[0][best_idx]
                     updated_prior = prior.copy()
@@ -202,7 +207,7 @@ def implement():
             updates.append(i)
             recorded_data = data[i - 3600:i, [0, 1, 2, 3, 4]]
             embeddings = encoder(recorded_data)
-            updated_prior.update(embeddings, weight=0.25)
+            updated_prior.update(embeddings, weight=0.1)
             print(f"\nUpdated prior with {len(recorded_data)} samples")
 
     # Save the last updated prior
@@ -231,21 +236,20 @@ def implement():
 
 
 def main():
-    seed = np.random.randint(0, 1000)
-    # seed = 42
-    print(f"Seed: {seed}\n")
-    keras.utils.set_random_seed(seed)
-
     # train()
-    # compare()
-    implement()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/autoencoder_leakyrelu.keras'
+    model_location = 'tmp/autoencoder_large.keras'
+    # seed = np.random.randint(0, 1000)
+    seed = 267
+    print(f"Seed: {seed}\n")
+    keras.utils.set_random_seed(seed)
 
     if torch.cuda.is_available():
         print("Using CUDA")

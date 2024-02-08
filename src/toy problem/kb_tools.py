@@ -5,8 +5,21 @@ from torch.distributions import MultivariateNormal, MixtureSameFamily, Categoric
 from torch.distributions.kl import register_kl
 
 
+class PCA:
+    def __init__(self, data, n_components=2):
+        mean = ops.mean(data, axis=0)
+        std = ops.std(data, axis=0)
+        standardized_data = (data - mean) / std
+        cov = torch.cov(standardized_data.T)
+        eig_vals, eig_vecs = torch.linalg.eigh(cov)
+        idx = torch.argsort(eig_vals, descending=True)
+        eig_vecs = eig_vecs[:, idx]
+        self.components = eig_vecs[:, :n_components]
+        self.pca_data = torch.matmul(standardized_data, self.components)
+
+
 class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100):
+    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100, use_entropy_weights=True):
         if components is not None and mix is not None:
             # Initialize using precomputed components and mix
             super(GaussianDensityEstimation, self).__init__(mix, components)
@@ -14,15 +27,24 @@ class GaussianDensityEstimation(MixtureSameFamily):
             assert x is not None, "Either x, or components and mix must be provided"
             if n_points > x.shape[0]:
                 n_points = x.shape[0]
-            step = x.shape[0] // (n_points // 2)
-            furthest = ops.max(torch.linalg.norm(x, axis=-1), axis=0)
-            sort_idx = ops.argsort(torch.linalg.norm(x - furthest, axis=-1), axis=0)
-            x = x[sort_idx]
-            used_points = ops.stack([ops.mean(x[i:i + step], axis=0) for i in range(0, x.shape[0] - 1, step // 2)])
-            covs = ops.stack([torch.cov(x[i:i + step].T) for i in range(0, x.shape[0] - 1, step // 2)])
+            # spread the point selection
+            used_points, labels = k_means_cluster(x, n_points, 10)
+            covs = ops.stack([torch.cov(x[labels == idx].T) for idx in range(n_points)])
             covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
+
+            # pca = PCA(x, n_components=2)
+            # proj = ops.matmul(x, pca.components)
+            # sort_idx = ops.argsort(proj[:, 0])
+            # x = x[sort_idx]
+            # used_points = ops.stack([ops.mean(x[i:i + step], axis=0) for i in range(0, x.shape[0] - 1, step // 2)])
+            # covs = ops.stack([torch.cov(x[i:i + step].T) for i in range(0, x.shape[0] - 1, step // 2)])
+            # covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
+
             components = MultivariateNormal(used_points, covs)
-            mix = Categorical(ops.ones(used_points.shape[0]) / len(used_points))
+            weights = components.entropy() ** 2
+            if not use_entropy_weights:
+                weights = ops.ones(len(used_points))
+            mix = Categorical(weights)
             super(GaussianDensityEstimation, self).__init__(mix, components)
 
         self.bw = bandwidth
@@ -51,6 +73,19 @@ def get_distribution(x, encoder, bandwidth=1., n_points=100):
     return embeddings, distribution
 
 
+def k_means_cluster(x, k, iters=100):
+    pca_x = PCA(x, n_components=2).pca_data
+    weights = torch.linalg.norm(pca_x, dim=-1)
+    indices = torch.multinomial(weights, k, replacement=False)
+    centroids = x[indices]
+    for _ in range(iters):
+        distances = torch.cdist(x, centroids)
+        closest = ops.argmin(distances, axis=-1)
+        centroids = torch.stack([x[closest == i].mean(dim=0) for i in range(k)])
+
+    return centroids, closest
+
+
 @register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
 def kl_divergence(p, q, n_samples=1000):
     samples = p.sample((n_samples,))
@@ -70,10 +105,13 @@ def visualize_distribution(distribution, embeddings=None):
     ax = fig.add_subplot(111, projection='3d')
 
     if embeddings is not None:
-        embeddings = embeddings[::30]
+        # embeddings = embeddings[::30]
         data = ops.convert_to_numpy(embeddings)
         # Scatter plot for the data points
-        ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', c='tab:red', alpha=0.2, depthshade=True)
+        ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', c='tab:red', alpha=0.5, depthshade=True)
+
+    used_points = ops.convert_to_numpy(distribution.component_distribution.loc)
+    ax.scatter(used_points[:, 0], used_points[:, 1], used_points[:, 2], marker='x', c='cyan', alpha=0.7, s=100)
 
     samples = distribution.sample((1000,))
     probs = ops.convert_to_numpy(ops.exp(distribution.log_prob(samples)))
@@ -86,7 +124,7 @@ def visualize_distribution(distribution, embeddings=None):
 
     # Scatter plot with color gradient
     scatter = ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], c=normalized_probs, cmap='viridis',
-                         alpha=alpha_values, depthshade=True)
+                         alpha=alpha_values)
 
     # Colorbar to show the mapping from color to probability
     fig.colorbar(scatter, ax=ax)
