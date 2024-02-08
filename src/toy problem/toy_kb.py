@@ -110,6 +110,7 @@ def compare():
 
 
 def implement():
+    global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior
     autoencoder = keras.models.load_model(model_location)
     encoder = autoencoder.layers[0]
     bw = 0.1
@@ -120,21 +121,22 @@ def implement():
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
         _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
-        kb = [prior]
+        kb = [[prior], [1.]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
             kb = pickle.load(f)
-    initial_kb_len = len(kb)
-    print(f"{len(kb)} entries in the KB\n")
+    initial_kb_len = len(kb[0])
+    print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    data = np.load(f"tmp/train data/m5k10c3_w-update_seed314.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
     posteriors = []
     updates = []
     trespassing = []
+    posterior_selection_idx = []
     thres = 1.5
     step = 300
     for i in np.arange(0, len(data), step):
@@ -145,23 +147,20 @@ def implement():
         embeddings, running_distribution = get_distribution(x, encoder, bandwidth=bw)
 
         if i < 60 * 60:
+            posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
-            p_dist = 1 / len(kb)
-            posterior = []
-            for dist_idx, dist in enumerate(kb):
-                p_emb_dist = ops.exp(dist.log_prob(embeddings))
-                # p_y = p_any * (p_y_dist + p_y_prior + p_y_updated_prior)
-                p_dist_emb = p_emb_dist * p_dist
-
+            post_probs = get_posteriors(embeddings, kb[0], kb[1])
+            posterior_ewma = []
+            for idx, post_prob in enumerate(post_probs):
                 if i == 0:
-                    ewma_p_dist_emb = p_dist_emb.mean()
+                    ewma_post_prob = post_prob.mean(axis=-1)
                 else:
-                    ewma_p_dist_emb = ewma(p_dist_emb, ewma_p_dist_emb, rho=0.5)
-
-                posterior.append(ewma_p_dist_emb.item())
-            posteriors.append(posterior)
-            kb_idx = np.argmax(posterior)  # rho can really influence the result
-            prior = kb[kb_idx]
+                    ewma_post_prob = ewma(post_prob, ewma_post_prob, rho=0.1, axis=-1)
+                posterior_ewma.append(ewma_post_prob.item())
+                kb[1][idx] = ewma_post_prob.item()  # update P(dist) in kb
+            posteriors.append(posterior_ewma)
+            kb_idx = np.argmax(posterior_ewma)  # rho can really influence the result
+            prior = kb[0][kb_idx]
             updated_prior = prior.copy()
             backup_updated_prior = prior.copy()
             continue
@@ -173,28 +172,28 @@ def implement():
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
 
         if (kl_updated_dist > thres or kl_prior_updated > thres) and i >= 2 * 60 * 60:
-            print("\nUPDATE KB ENTRY RELATED TO PRIOR")
-            kb[kb_idx] = backup_updated_prior.copy()
+            print("\nRESTORE KB ENTRY RELATED TO PRIOR")
+            trespassing.append(i)
+            # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
             print("CHECK KB FOR BETTER MATCH")
-            new_entry = True
-            for idx, dist in enumerate(kb):
-                kl_prior_dist = kl_divergence(dist, running_distribution)
-                if kl_prior_dist < thres and idx != kb_idx:  # TODO: dont just pick first match, but pick best match
-                    print(f"SET PRIOR TO KB ENTRY {idx}")
-                    prior = dist
-                    updated_prior = dist.copy()
-                    backup_updated_prior = dist.copy()
-                    kb_idx = idx
-                    new_entry = False
-                    break
+            post_probs = get_posteriors(embeddings, kb[0], kb[1]).mean(axis=-1)
+            best_idx = ops.argmax(post_probs)
+            if best_idx != kb_idx:
+                kl_prior_dist = kl_divergence(kb[0][best_idx], running_distribution)
+                if kl_prior_dist < thres:
+                    print(f"SET PRIOR TO KB ENTRY {best_idx}")
+                    prior = kb[0][best_idx]
+                    updated_prior = prior.copy()
+                    backup_updated_prior = prior.copy()
+                    kb_idx = best_idx
+                    continue
 
-            if new_entry:
-                print("NO MATCH FOUND\nINITIATE NEW KB ENTRY WITH CURRENT DISTRIBUTION")
-                prior = running_distribution.copy()
-                updated_prior = running_distribution.copy()
-                trespassing.append(i)
-                kb.append(prior)
-                kb_idx = len(kb) - 1
+            print("NO MATCH FOUND\nINITIATE NEW KB ENTRY WITH CURRENT DISTRIBUTION")
+            prior = running_distribution.copy()
+            updated_prior = prior.copy()
+            kb[0].append(prior)
+            kb[1] = expand_prior_probs(kb[1])
+            kb_idx = len(kb) - 1
 
         # Update prior
         update_dist = (i % (60 * 60) == 0 and i > 60 * 60)
@@ -207,12 +206,15 @@ def implement():
             print(f"\nUpdated prior with {len(recorded_data)} samples")
 
     # Save the last updated prior
-    kb[-1] = backup_updated_prior
-    print(f"\n\n{len(kb)} entries in the KB")
+    kb[0][-1] = backup_updated_prior
+    print(f"\n\n{len(kb[0])} entries in the KB")
+    with open('tmp/kb.pkl', 'wb') as f:
+        pickle.dump(kb, f)
+    print("KB saved")
 
     fig, ax = plt.subplots(2, 1, sharex=True)
 
-    ax[0].plot(t[:60 * 60][::step], posteriors, linestyle='-.', marker='x',
+    ax[0].plot(t[posterior_selection_idx], posteriors, linestyle='-.', marker='x', lw=1., alpha=.5,
                label=[f"P(dist_{i}|emb)" for i in range(initial_kb_len)])
     ax[0].legend()
 
@@ -222,15 +224,10 @@ def implement():
                label=["updated-prior vs. dist", "prior vs. updated-prior", "prior vs. dist (sanity check)"])
     ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
     ax[1].set_ylim(-.5, 10.)
-    # ax.set_xlim(100, 260)
     ax[1].legend()
 
     fig.tight_layout()
     plt.show()
-
-    with open('tmp/kb.pkl', 'wb') as f:
-        pickle.dump(kb, f)
-    print("KB saved")
 
 
 def main():

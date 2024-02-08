@@ -99,5 +99,23 @@ def visualize_distribution(distribution, embeddings=None):
     plt.show()
 
 
-def ewma(data, prev_avg, rho=0.8):
-    return rho * prev_avg + (1 - rho) * ops.mean(data)
+def ewma(data, prev_avg, rho=0.8, axis=0):
+    return rho * prev_avg + (1 - rho) * ops.mean(data, axis=axis)
+
+
+def get_posteriors(data, distributions, p_dist):
+    p_dist = ops.array(p_dist)
+    p_data_dist = ops.exp([dist.log_prob(data) for dist in distributions])
+    p_dist_data = p_data_dist * p_dist[None].T
+    p_dist_data /= ops.sum(p_dist_data, axis=0)
+
+    return p_dist_data
+
+
+def expand_prior_probs(prior_probs):
+    prob_new_element = 1 / (len(prior_probs) + 1)
+    remaining_prob = 1 - prob_new_element
+    prior_probs = [prob * remaining_prob for prob in prior_probs]
+    prior_probs.append(prob_new_element)
+
+    return prior_probs
