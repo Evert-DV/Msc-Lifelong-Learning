@@ -41,14 +41,6 @@ class GaussianDensityEstimation(MixtureSameFamily):
                               for idx in range(used_points.shape[0])])
             covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
 
-            # pca = PCA(x, n_components=2)
-            # proj = ops.matmul(x, pca.components)
-            # sort_idx = ops.argsort(proj[:, 0])
-            # x = x[sort_idx]
-            # used_points = ops.stack([ops.mean(x[i:i + step], axis=0) for i in range(0, x.shape[0] - 1, step // 2)])
-            # covs = ops.stack([torch.cov(x[i:i + step].T) for i in range(0, x.shape[0] - 1, step // 2)])
-            # covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
-
             components = MultivariateNormal(used_points, covs)
             pca_x = PCA(used_points, n_components=2).pca_data
             weights = torch.linalg.norm(pca_x, dim=-1)
@@ -180,3 +172,13 @@ def expand_prior_probs(prior_probs):
     prior_probs.append(prob_new_element)
 
     return prior_probs
+
+
+def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
+    post_probs = get_posteriors(x, dists, prior_probs).mean(axis=-1)
+    best_idx = ops.argmax(post_probs)
+    if best_idx != current_idx:
+        kl_prior_dist = kl_divergence(dists[best_idx], current_dist)
+        if kl_prior_dist < .9 * thres:
+            return best_idx
+    return None

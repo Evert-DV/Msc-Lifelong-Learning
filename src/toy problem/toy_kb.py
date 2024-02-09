@@ -87,7 +87,7 @@ def compare():
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             embeddings = encoder(features)
-            dist = GaussianDensityEstimation(embeddings, bandwidth=.1, n_points=100)
+            dist = GaussianDensityEstimation(embeddings, bandwidth=15, n_points=100)
 
             # visualize_distribution(dist, embeddings[::10])
 
@@ -124,8 +124,8 @@ def implement():
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
     encoder = autoencoder.layers[0]
-    bw = 5.
-    use_kb = False
+    bw = 15.
+    use_kb = True
 
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
@@ -140,7 +140,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -148,7 +148,7 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 3.
+    thres = 2.5
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
@@ -174,14 +174,15 @@ def implement():
             backup_updated_prior = prior.copy()
             continue
 
+        # Get embeddings
+        embeddings = encoder(x)
+
         if i < 120 * 60:
             if i == 60 * 60:
-                print(f"\nSELECTED KB ENTRY {kb_idx} AS PRIOR")
+                print(f"\nSelected {kb_idx} as reference")
+            if i == 120 * 60 - step:
+                running_distribution = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
             continue
-
-        # Get embeddings & distribution
-        embeddings = encoder(x)
-        running_distribution = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
 
         # KL losses
         kl_updated_dist = kl_divergence(updated_prior, running_distribution)
@@ -190,44 +191,53 @@ def implement():
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
 
         if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and i >= 2 * 60 * 60:
-            print("\nRESTORE KB ENTRY RELATED TO PRIOR")
+            print("\nSHIFT DETECTED\nRestore KB entry reference")
             trespassing.append(i)
             # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
-            print("CHECK KB FOR BETTER MATCH")
-            post_probs = get_posteriors(embeddings, kb[0], kb[1]).mean(axis=-1)
-            best_idx = ops.argmax(post_probs)
-            if best_idx != kb_idx:
-                kl_prior_dist = kl_divergence(kb[0][best_idx], running_distribution)
-                if kl_prior_dist < .9 * thres:
-                    print(f"SET PRIOR TO KB ENTRY {best_idx}")
-                    prior = kb[0][best_idx]
-                    updated_prior = prior.copy()
-                    backup_updated_prior = prior.copy()
-                    kb_idx = best_idx
-                    continue
+            print("Check KB for better match")
+            best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
+            if best_idx is not None:
+                print(f"Use KB entry {best_idx} as reference")
+                prior = kb[0][best_idx]
+                updated_prior = prior.copy()
+                backup_updated_prior = prior.copy()
+                kb_idx = best_idx
+                continue
 
-            print("NO MATCH FOUND\nINITIATE NEW KB ENTRY WITH CURRENT DISTRIBUTION")
+            print("No match found\nInitiate new KB entry")
             prior = running_distribution.copy()
             updated_prior = prior.copy()
             kb[0].append(prior)
             kb[1] = expand_prior_probs(kb[1])
             kb_idx = len(kb) - 1
 
-        # Update prior
-        # TODO: before updating, also check kb for a better match
-        update_dist = (i % (60 * 60) == 0 and i > 60 * 60)
-        if update_dist:
-            backup_updated_prior = updated_prior.copy()
+        if i % (60 * 60) == 0:
+            print('\nUPDATE STEP')
+            torch.cuda.empty_cache()
             updates.append(i)
-            recorded_data = data[i-3600:i, [0, 1, 2, 3, 4]]  # why not all data?
-            embeddings = encoder(recorded_data)
-            updated_prior.update(embeddings, weight=0.1)
+            # Update running distribution
+            running_distribution.update(embeddings[i - 3600:i], weight=0.3)
+            print("Check KB for better match")
+            best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
+            if best_idx is not None:
+                print(f"Use KB entry {best_idx} as reference")
+                prior = kb[0][best_idx]
+                updated_prior = prior.copy()
+                backup_updated_prior = prior.copy()
+                kb_idx = best_idx
+                continue
+
+            # Update prior
+            print("No match found")
+            backup_updated_prior = updated_prior.copy()
+            updated_prior.update(embeddings[i - 3600:i], weight=0.1)
             # If storing all recorded data is not a problem (i.e.: data[0:i, ...]), consider updating by:
             # updated_prior = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
-            print(f"\nUpdated prior with {len(recorded_data)} samples")
+            print(f"Updated prior with {3600} samples")
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
+    kb[1] = len(kb[1]) * [1 / len(kb[1])]
     print(f"\n\n{len(kb[0])} entries in the KB")
     with open('tmp/kb.pkl', 'wb') as f:
         pickle.dump(kb, f)
@@ -262,8 +272,8 @@ if __name__ == '__main__':
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     model_location = 'tmp/autoencoder_relu.keras'
-    # seed = np.random.randint(0, 1000)
-    seed = 267
+    seed = np.random.randint(0, 1000)
+    # seed = 267
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
