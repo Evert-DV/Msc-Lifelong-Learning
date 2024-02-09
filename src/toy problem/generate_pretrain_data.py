@@ -25,10 +25,10 @@ def main():
     system_updates = False
 
     dt = 1 / 60
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 1800, dt)
 
     for ti in t:
-        if ti % 10 == 0:
+        if ti % np.random.choice([7, 8, 9, 10], 1) == 0:
             target = [np.random.uniform(8, 13), 0.]
 
         targets.append(target)
@@ -41,13 +41,14 @@ def main():
 
     data = np.asarray(data)
     np.save(f"tmp/train data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy", data)
+    print(f"Data saved in tmp/train data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy")
 
     signal = np.asarray(signal)
     targets = np.asarray(targets)
 
     plt.plot(t, signal[:, 0], label="signal")
     plt.plot(t, targets[:, 0], '--', label="target")
-    # plt.show()
+    plt.show()
 
 
 if __name__ == '__main__':
