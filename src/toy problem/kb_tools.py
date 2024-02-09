@@ -25,11 +25,12 @@ class GaussianDensityEstimation(MixtureSameFamily):
             super(GaussianDensityEstimation, self).__init__(mix, components)
         else:
             assert x is not None, "Either x, or components and mix must be provided"
-            if n_points > x.shape[0]:
-                n_points = x.shape[0]
+            if x.shape[0] < n_points * 10:
+                n_points = x.shape[0] // 10
             # spread the point selection
-            used_points, labels = k_means_cluster(x, n_points, 10)
-            covs = ops.stack([torch.cov(x[labels == idx].T) for idx in range(n_points)])
+            used_points, labels = k_means_cluster(x, n_points, 5, use_clusters_from_x=True)
+            covs = ops.stack([torch.cov(x[labels == idx].T) if x[labels == idx].shape[0] > 1 else ops.eye(3) * 0.1
+                              for idx in range(used_points.shape[0])])
             covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
 
             # pca = PCA(x, n_components=2)
@@ -42,6 +43,7 @@ class GaussianDensityEstimation(MixtureSameFamily):
 
             components = MultivariateNormal(used_points, covs)
             weights = components.entropy() ** 2
+            # weights = ops.sqrt(weights) + ops.mean(weights)
             if not use_entropy_weights:
                 weights = ops.ones(len(used_points))
             mix = Categorical(weights)
@@ -73,17 +75,30 @@ def get_distribution(x, encoder, bandwidth=1., n_points=100):
     return embeddings, distribution
 
 
-def k_means_cluster(x, k, iters=100):
+def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
     pca_x = PCA(x, n_components=2).pca_data
     weights = torch.linalg.norm(pca_x, dim=-1)
+    # weights = ops.sqrt(weights) + ops.mean(weights)
+    # weights = ops.ones(k)
     indices = torch.multinomial(weights, k, replacement=False)
     centroids = x[indices]
     for _ in range(iters):
         distances = torch.cdist(x, centroids)
-        closest = ops.argmin(distances, axis=-1)
-        centroids = torch.stack([x[closest == i].mean(dim=0) for i in range(k)])
-
-    return centroids, closest
+        cluster_labels = ops.argmin(distances, axis=-1)
+        unique_clusters = torch.unique(cluster_labels)
+        if len(unique_clusters) < k:
+            centroids = centroids[unique_clusters]
+            k -= 1
+        if use_clusters_from_x:
+            for i in range(k):
+                cluster_members_idx = (cluster_labels == i).nonzero(as_tuple=False)[0]
+                member_distances = distances[cluster_members_idx, i]
+                closest_member = ops.argmin(member_distances)
+                centroids[i] = x[cluster_members_idx[closest_member]]
+            continue
+        centroids = torch.stack([x[cluster_labels == i].mean(dim=0) for i in unique_clusters])
+    print(k)
+    return centroids, cluster_labels
 
 
 @register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
@@ -120,11 +135,11 @@ def visualize_distribution(distribution, embeddings=None):
     # Normalize probabilities for color mapping
     min_prob, max_prob = probs.min(), probs.max()
     normalized_probs = (probs - min_prob) / (max_prob - min_prob)
-    alpha_values = normalized_probs * 0.5 + 0.1
+    # alpha_values = normalized_probs * 0.5 + 0.1
 
     # Scatter plot with color gradient
     scatter = ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], c=normalized_probs, cmap='viridis',
-                         alpha=alpha_values)
+                         alpha=0.3)
 
     # Colorbar to show the mapping from color to probability
     fig.colorbar(scatter, ax=ax)

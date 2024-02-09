@@ -11,23 +11,33 @@ from kb_tools import *
 
 
 def train():
-    pretrain = True
+    pretrain = False
+    data = np.load(f"tmp/train data/m5k10c3_seed388.npy")
+    features = ops.array(data)[..., [0, 1, 2, 3, 4]]
+    labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
+
     if pretrain:
         encoder = keras.Sequential([
             layers.Input(shape=(5,)),
-            layers.Dense(32, activation='leaky_relu'),
+            # layers.Normalization(),
+            # layers.Dense(32, activation='relu'),
+            # layers.Dropout(0.1),
+            layers.Dense(32, activation='relu'),
             layers.Dropout(0.1),
-            layers.Dense(32, activation='softsign'),
-            layers.Dropout(0.1),
-            layers.Dense(2),
+            layers.Dense(3),
         ])
 
         decoder = keras.Sequential([
-            layers.Input(shape=(2,)),
-            layers.Dense(32, activation='softsign'),
-            layers.Dense(32, activation='leaky_relu'),
+            layers.Input(shape=(3,)),
+            # layers.Dense(32, activation='relu'),
+            layers.Dense(32, activation='relu'),
             layers.Dense(5),
+            # layers.Normalization(invert=True),
         ])
+
+        # normalization
+        # encoder.layers[0].adapt(features)
+        # decoder.layers[-1].adapt(features)
 
         autoencoder = keras.Sequential([
             encoder,
@@ -40,11 +50,6 @@ def train():
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
-
-    features = ops.array(data)[..., [0, 1, 2, 3, 4]]
-    labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
-
     dataset = TensorDataset(features, labels)
     train_size = int(0.7 * len(dataset))
     val_size = len(dataset) - train_size
@@ -55,7 +60,7 @@ def train():
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
-                                               patience=10,
+                                               patience=7,
                                                restore_best_weights=True,
                                                verbose=1),
                  ]
@@ -83,7 +88,7 @@ def compare():
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             embeddings, dist = get_distribution(features, encoder, bandwidth=.1)
 
-            visualize_distribution(dist, embeddings[::30])
+            # visualize_distribution(dist, embeddings[::10])
 
             latent_features.append(embeddings)
             distributions.append(dist)
@@ -118,11 +123,11 @@ def implement():
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
     encoder = autoencoder.layers[0]
-    bw = 0.1
+    bw = 0.01
     use_kb = False
 
     if not use_kb:
-        prior_data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+        prior_data = np.load(f"tmp/train data/m5k10c3_seed322.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
         _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
@@ -142,16 +147,14 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 1.8
+    thres = 2.
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
         x = data[0:i + step, [0, 1, 2, 3, 4]]
 
-        # Get embeddings & distribution
-        embeddings, running_distribution = get_distribution(x, encoder, bandwidth=bw)
-
         if i < 60 * 60:
+            embeddings = encoder(x)
             posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
             post_probs = get_posteriors(embeddings, kb[0], kb[1])
@@ -170,13 +173,16 @@ def implement():
             backup_updated_prior = prior.copy()
             continue
 
+        # Get embeddings & distribution
+        embeddings, running_distribution = get_distribution(x, encoder, bandwidth=bw)
+
         # KL losses
         kl_updated_dist = kl_divergence(updated_prior, running_distribution)
         kl_prior_updated = kl_divergence(prior, updated_prior)
         kl_prior_dist = kl_divergence(prior, running_distribution)  # sanity check
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
 
-        if (kl_updated_dist > thres or kl_prior_updated > 0.9 * thres) and i >= 2 * 60 * 60:
+        if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and i >= 2 * 60 * 60:
             print("\nRESTORE KB ENTRY RELATED TO PRIOR")
             trespassing.append(i)
             # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
@@ -185,7 +191,7 @@ def implement():
             best_idx = ops.argmax(post_probs)
             if best_idx != kb_idx:
                 kl_prior_dist = kl_divergence(kb[0][best_idx], running_distribution)
-                if kl_prior_dist < 0.9 * thres:
+                if kl_prior_dist < .9 * thres:
                     print(f"SET PRIOR TO KB ENTRY {best_idx}")
                     prior = kb[0][best_idx]
                     updated_prior = prior.copy()
@@ -207,7 +213,7 @@ def implement():
             updates.append(i)
             recorded_data = data[i - 3600:i, [0, 1, 2, 3, 4]]
             embeddings = encoder(recorded_data)
-            updated_prior.update(embeddings, weight=0.1)
+            updated_prior.update(embeddings, weight=0.33)
             print(f"\nUpdated prior with {len(recorded_data)} samples")
 
     # Save the last updated prior
@@ -245,10 +251,10 @@ if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/autoencoder_large.keras'
+    model_location = 'tmp/autoencoder_relu.keras'
     # seed = np.random.randint(0, 1000)
     seed = 267
-    print(f"Seed: {seed}\n")
+    print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
     if torch.cuda.is_available():
