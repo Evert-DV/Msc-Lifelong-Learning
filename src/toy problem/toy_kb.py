@@ -86,7 +86,8 @@ def compare():
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
-            embeddings, dist = get_distribution(features, encoder, bandwidth=.1)
+            embeddings = encoder(features)
+            dist = GaussianDensityEstimation(embeddings, bandwidth=.1, n_points=100)
 
             # visualize_distribution(dist, embeddings[::10])
 
@@ -119,18 +120,18 @@ def compare():
 
 
 def implement():
-    global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior
+    global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
     encoder = autoencoder.layers[0]
-    bw = 0.01
+    bw = 5.
     use_kb = False
 
     if not use_kb:
-        prior_data = np.load(f"tmp/train data/m5k10c3_seed322.npy")
+        prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
-        _, prior = get_distribution(x_prior, encoder, bandwidth=bw)
+        prior = GaussianDensityEstimation(encoder(x_prior), encoder, bandwidth=bw)
         kb = [[prior], [1.]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
@@ -139,7 +140,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -147,7 +148,7 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 2.
+    thres = 3.
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
@@ -173,8 +174,14 @@ def implement():
             backup_updated_prior = prior.copy()
             continue
 
+        if i < 120 * 60:
+            if i == 60 * 60:
+                print(f"\nSELECTED KB ENTRY {kb_idx} AS PRIOR")
+            continue
+
         # Get embeddings & distribution
-        embeddings, running_distribution = get_distribution(x, encoder, bandwidth=bw)
+        embeddings = encoder(x)
+        running_distribution = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
 
         # KL losses
         kl_updated_dist = kl_divergence(updated_prior, running_distribution)
@@ -207,13 +214,16 @@ def implement():
             kb_idx = len(kb) - 1
 
         # Update prior
+        # TODO: before updating, also check kb for a better match
         update_dist = (i % (60 * 60) == 0 and i > 60 * 60)
         if update_dist:
             backup_updated_prior = updated_prior.copy()
             updates.append(i)
-            recorded_data = data[i - 3600:i, [0, 1, 2, 3, 4]]
+            recorded_data = data[i-3600:i, [0, 1, 2, 3, 4]]  # why not all data?
             embeddings = encoder(recorded_data)
-            updated_prior.update(embeddings, weight=0.33)
+            updated_prior.update(embeddings, weight=0.1)
+            # If storing all recorded data is not a problem (i.e.: data[0:i, ...]), consider updating by:
+            # updated_prior = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
             print(f"\nUpdated prior with {len(recorded_data)} samples")
 
     # Save the last updated prior
@@ -231,7 +241,7 @@ def implement():
 
     ax[1].vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
     ax[1].vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
-    ax[1].plot(t[60 * 60:][::step], kl_loss, lw=1., alpha=0.7,
+    ax[1].plot(t[120 * 60:][::step], kl_loss, lw=1., alpha=0.7,
                label=["updated-prior vs. dist", "prior vs. updated-prior", "prior vs. dist (sanity check)"])
     ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
     ax[1].set_ylim(-.5, 10.)
@@ -243,8 +253,8 @@ def implement():
 
 def main():
     # train()
-    compare()
-    # implement()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':

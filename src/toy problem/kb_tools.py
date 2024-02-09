@@ -19,9 +19,17 @@ class PCA:
 
 
 class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100, use_entropy_weights=True):
+    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100, use_pca_weights=True):
         if components is not None and mix is not None:
             # Initialize using precomputed components and mix
+            if components.loc.shape[0] > n_points:
+                weights = mix.probs
+                top_n_points = torch.argsort(weights, descending=True)[:n_points]
+                loc = components.loc[top_n_points]
+                covariance_matrix = components.covariance_matrix[top_n_points]
+                components = MultivariateNormal(loc, covariance_matrix)
+                probs = mix.probs[top_n_points]
+                mix = Categorical(probs)
             super(GaussianDensityEstimation, self).__init__(mix, components)
         else:
             assert x is not None, "Either x, or components and mix must be provided"
@@ -42,9 +50,9 @@ class GaussianDensityEstimation(MixtureSameFamily):
             # covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
 
             components = MultivariateNormal(used_points, covs)
-            weights = components.entropy() ** 2
-            # weights = ops.sqrt(weights) + ops.mean(weights)
-            if not use_entropy_weights:
+            pca_x = PCA(used_points, n_components=2).pca_data
+            weights = torch.linalg.norm(pca_x, dim=-1)
+            if not use_pca_weights:
                 weights = ops.ones(len(used_points))
             mix = Categorical(weights)
             super(GaussianDensityEstimation, self).__init__(mix, components)
@@ -53,11 +61,20 @@ class GaussianDensityEstimation(MixtureSameFamily):
         self.n_points = n_points
 
     def update(self, new_data, weight=0.1):
-        factor = int(1 / weight - 1)
-        n_samples = factor * len(new_data)
-        sampled_data = self.sample(torch.Size((n_samples,)))
-        combined_data = ops.concatenate([new_data, sampled_data], axis=0)
-        self.__init__(combined_data, bandwidth=self.bw, n_points=self.n_points)
+        assert 0. <= weight <= 1., "Weight must be between 0 and 1"
+        new_mix = GaussianDensityEstimation(new_data, bandwidth=self.bw, n_points=self.n_points,
+                                            use_pca_weights=True)
+        mix_locs = new_mix.component_distribution.loc
+        mix_covs = new_mix.component_distribution.covariance_matrix
+        mix_weights = new_mix.mixture_distribution.probs
+        loc = ops.concatenate([self.component_distribution.loc, mix_locs], axis=0)
+        covariance_matrix = ops.concatenate(
+            [self.component_distribution.covariance_matrix, mix_covs], axis=0)
+        probs = ops.concatenate(
+            [(1 - weight) * self.mixture_distribution.probs, weight * mix_weights], axis=0)
+
+        self.__init__(mix=Categorical(probs), components=MultivariateNormal(loc, covariance_matrix), bandwidth=self.bw,
+                      n_points=self.n_points)
 
     def copy(self):
         components = self.component_distribution
@@ -68,17 +85,10 @@ class GaussianDensityEstimation(MixtureSameFamily):
         return new_instance
 
 
-def get_distribution(x, encoder, bandwidth=1., n_points=100):
-    embeddings = encoder(x)
-    distribution = GaussianDensityEstimation(embeddings, bandwidth=bandwidth, n_points=n_points)
-
-    return embeddings, distribution
-
-
 def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
     pca_x = PCA(x, n_components=2).pca_data
     weights = torch.linalg.norm(pca_x, dim=-1)
-    # weights = ops.sqrt(weights) + ops.mean(weights)
+    weights = ops.sqrt(weights) + ops.mean(weights)
     # weights = ops.ones(k)
     indices = torch.multinomial(weights, k, replacement=False)
     centroids = x[indices]
@@ -88,16 +98,14 @@ def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
         unique_clusters = torch.unique(cluster_labels)
         if len(unique_clusters) < k:
             centroids = centroids[unique_clusters]
-            k -= 1
         if use_clusters_from_x:
-            for i in range(k):
-                cluster_members_idx = (cluster_labels == i).nonzero(as_tuple=False)[0]
-                member_distances = distances[cluster_members_idx, i]
+            for i, c in enumerate(unique_clusters):
+                cluster_members_idx = (cluster_labels == c).nonzero(as_tuple=False)[0]
+                member_distances = distances[cluster_members_idx, c]
                 closest_member = ops.argmin(member_distances)
                 centroids[i] = x[cluster_members_idx[closest_member]]
             continue
-        centroids = torch.stack([x[cluster_labels == i].mean(dim=0) for i in unique_clusters])
-    print(k)
+        centroids = torch.stack([x[cluster_labels == c].mean(dim=0) for c in unique_clusters])
     return centroids, cluster_labels
 
 
