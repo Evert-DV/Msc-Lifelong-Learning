@@ -101,9 +101,9 @@ def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
     return centroids, cluster_labels
 
 
-@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
-def kl_divergence(p, q, n_samples=1000):
-    samples = p.sample((n_samples,))
+def kl_div(p, q, n_samples=1000, samples=None):
+    if samples is None:
+        samples = ops.concatenate((p.sample((n_samples,)), q.sample((n_samples,))), axis=0)
 
     log_probs_p = p.log_prob(samples)
     log_probs_q = q.log_prob(samples)
@@ -112,7 +112,15 @@ def kl_divergence(p, q, n_samples=1000):
 
     kl_div = ops.sum(probs_p * (log_probs_p - log_probs_q)) / ops.sum(probs_p)
 
-    return kl_div
+    return kl_div, samples
+
+
+@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
+def kl_symmetric(p, q, n_samples=1000):
+    kl_p_q, samples = kl_div(p, q, n_samples)
+    kl_q_p, _ = kl_div(q, p, samples=samples)
+
+    return (kl_p_q + kl_q_p) / 2
 
 
 def visualize_distribution(distribution, embeddings=None):
