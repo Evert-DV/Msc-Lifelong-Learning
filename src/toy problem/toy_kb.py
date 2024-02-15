@@ -1,48 +1,19 @@
-import os
-
-os.environ["KERAS_BACKEND"] = "torch"
+from kb_tools import *
 import pickle
 import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, random_split
-from torch.distributions.kl import kl_divergence
-import keras
-from keras import layers, optimizers, losses
-from kb_tools import *
+from keras import optimizers, losses
 
 
 def train():
-    pretrain = False
-    data = np.load(f"tmp/train data/m5k10c3_seed388.npy")
+    pretrain = True
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
     if pretrain:
-        encoder = keras.Sequential([
-            layers.Input(shape=(5,)),
-            # layers.Normalization(),
-            # layers.Dense(32, activation='relu'),
-            # layers.Dropout(0.1),
-            layers.Dense(32, activation='relu'),
-            layers.Dropout(0.1),
-            layers.Dense(3),
-        ])
-
-        decoder = keras.Sequential([
-            layers.Input(shape=(3,)),
-            # layers.Dense(32, activation='relu'),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(5),
-            # layers.Normalization(invert=True),
-        ])
-
-        # normalization
-        # encoder.layers[0].adapt(features)
-        # decoder.layers[-1].adapt(features)
-
-        autoencoder = keras.Sequential([
-            encoder,
-            decoder
-        ])
+        autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
+        # autoencoder.layers[1].layers[0].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
@@ -60,23 +31,25 @@ def train():
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
-                                               patience=7,
+                                               patience=5,
                                                restore_best_weights=True,
                                                verbose=1),
                  ]
     autoencoder.fit(train_dataloader,
-                    epochs=1000,
+                    epochs=50,
                     callbacks=callbacks,
                     validation_data=val_dataloader,
                     )
 
-    autoencoder.save(model_location)
+    keras.saving.save_model(autoencoder, model_location, overwrite=True)
+
+    print("model saved")
 
 
 def compare():
-    autoencoder = keras.models.load_model(model_location)
+    autoencoder = keras.saving.load_model(model_location, custom_objects={'AutoEncoder': AutoEncoder})
     autoencoder.eval()
-    encoder = autoencoder.layers[0]
+    encoder = autoencoder.layers[1]
 
     latent_features = []
     distributions = []
@@ -87,9 +60,9 @@ def compare():
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             embeddings = encoder(features)
-            dist = GaussianDensityEstimation(embeddings, bandwidth=15, n_points=100)
+            dist = GaussianDensityEstimation(embeddings, bandwidth=.1, n_points=100)
 
-            # visualize_distribution(dist, embeddings[::10])
+            visualize_distribution(dist, embeddings[::10])
 
             latent_features.append(embeddings)
             distributions.append(dist)
@@ -117,13 +90,14 @@ def compare():
     plt.yticks(np.arange(scores_np.shape[0]), labels=filenames, fontsize=8)
     plt.tight_layout()
     plt.show()
+    plt.savefig('tmp/kb_compare.png', dpi=250)
 
 
 def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    encoder = autoencoder.layers[0]
+    encoder = autoencoder.layers[1]
     bw = 15.
     use_kb = True
 
@@ -140,7 +114,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
+    data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -148,7 +122,7 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 2.5
+    thres = 2.
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
@@ -209,14 +183,14 @@ def implement():
             updated_prior = prior.copy()
             kb[0].append(prior)
             kb[1] = expand_prior_probs(kb[1])
-            kb_idx = len(kb) - 1
+            kb_idx = len(kb[0]) - 1
 
         if i % (60 * 60) == 0:
             print('\nUPDATE STEP')
             torch.cuda.empty_cache()
             updates.append(i)
             # Update running distribution
-            running_distribution.update(embeddings[i - 3600:i], weight=0.3)
+            running_distribution.update(embeddings[i - 3600:i], weight=0.1)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
@@ -252,30 +226,33 @@ def implement():
     ax[1].vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
     ax[1].vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
     ax[1].plot(t[120 * 60:][::step], kl_loss, lw=1., alpha=0.7,
-               label=["updated-prior vs. dist", "prior vs. updated-prior", "prior vs. dist (sanity check)"])
+               label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist",
+                      "kb-dist vs. running dist (sanity check)"])
     ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
     ax[1].set_ylim(-.5, 10.)
     ax[1].legend()
 
     fig.tight_layout()
     plt.show()
+    plt.savefig('tmp/kb.png', dpi=250)
 
 
 def main():
-    # train()
-    # compare()
-    implement()
+    train()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/autoencoder_relu.keras'
+    model_location = 'tmp/autoencoder.keras'
     seed = np.random.randint(0, 1000)
     # seed = 267
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
+    keras.config.enable_unsafe_deserialization()
 
     if torch.cuda.is_available():
         print("Using CUDA")

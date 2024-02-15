@@ -1,9 +1,51 @@
+import os
+
+os.environ["KERAS_BACKEND"] = "torch"
 from matplotlib import pyplot as plt
-from keras import ops
+import keras
+from keras import ops, layers
 import torch
 from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical
-from torch.distributions.kl import register_kl
+from torch.distributions.kl import register_kl, kl_divergence
 
+
+class VariationalAutoEncoder(keras.Model):
+    def __init__(self, input_shape, latent_dim=3, **kwargs):
+        super(VariationalAutoEncoder, self).__init__(**kwargs)
+        self.encoder = keras.Sequential([
+            layers.Input(shape=(input_shape,)),
+            layers.Normalization(),
+            layers.Dense(32, activation='relu'),
+            layers.Dropout(0.1),
+            layers.Dense(latent_dim),
+        ])
+        self.decoder = keras.Sequential([
+            layers.Input(shape=(latent_dim,)),
+            layers.Dense(32, activation='relu'),
+            layers.Dense(input_shape),
+        ])
+
+    def call(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+
+        # decoded = layers.concatenate([x[..., :-2], decoded[..., -2:]], axis=-1)
+
+        return decoded
+
+
+# self.encoder = keras.Sequential([
+#     layers.Input(shape=(input_shape,)),
+#     layers.Normalization(),
+#     layers.Dense(32, activation='relu'),
+#     layers.Dropout(0.1),
+#     layers.Dense(latent_dim),
+# ])
+# self.decoder = keras.Sequential([
+#     layers.Input(shape=(latent_dim,)),
+#     layers.Dense(32, activation='relu'),
+#     layers.Dense(input_shape),
+# ])
 
 class PCA:
     def __init__(self, data, n_components=2):
@@ -190,3 +232,28 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
         if kl_prior_dist < .9 * thres:
             return best_idx
     return None
+
+
+def get_autoencoder(input_shape, latent_dim=3, skip_connections=False):
+    inputs = layers.Input(shape=(input_shape,))
+    encoder = keras.Sequential([
+        # layers.Normalization(),
+        layers.Dense(32, activation='relu'),
+        layers.Dropout(0.1),
+        layers.Dense(latent_dim),
+    ])
+    decoder = keras.Sequential([
+        layers.Input(shape=(latent_dim,)),
+        layers.Dense(32, activation='relu'),
+        layers.Dense(input_shape),
+    ])
+    encoding = encoder(inputs)
+    decoding = decoder(encoding)
+    if skip_connections:
+        in_slice = layers.Lambda(lambda x: x[..., :-2])(inputs)
+        out_slice = layers.Lambda(lambda x: x[..., -2:])(decoding)
+        decoding = layers.concatenate([in_slice, out_slice], axis=-1)
+
+    autoencoder = keras.Model(inputs, decoding)
+
+    return autoencoder
