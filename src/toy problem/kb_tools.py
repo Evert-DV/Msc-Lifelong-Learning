@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 os.environ["KERAS_BACKEND"] = "torch"
 from matplotlib import pyplot as plt
 import keras
@@ -10,42 +12,54 @@ from torch.distributions.kl import register_kl, kl_divergence
 
 
 class VariationalAutoEncoder(keras.Model):
-    def __init__(self, input_shape, latent_dim=3, **kwargs):
-        super(VariationalAutoEncoder, self).__init__(**kwargs)
-        self.encoder = keras.Sequential([
-            layers.Input(shape=(input_shape,)),
-            layers.Normalization(),
-            layers.Dense(32, activation='relu'),
-            layers.Dropout(0.1),
-            layers.Dense(latent_dim),
-        ])
-        self.decoder = keras.Sequential([
-            layers.Input(shape=(latent_dim,)),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(input_shape),
-        ])
+    def __init__(self, input_shape):
+        super(VariationalAutoEncoder, self).__init__()
+        # define encoder
+        inputs = layers.Input(shape=(input_shape,))
+        x = layers.Dense(32, activation='softplus')(inputs)
+        x = layers.Dense(16, activation='softsign')(x)
+        encoded = layers.Dense(9)(x)
+        z_mean = layers.Lambda(lambda z: z[..., :3])(encoded)
+        z_log_var = layers.Lambda(lambda z: z[..., 3:])(encoded)
+        self.encoder = keras.Model(inputs, [z_mean, z_log_var])
 
-    def call(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
+        # define decoder
+        latent_inputs = layers.Input(shape=(3,))
+        x = layers.Dense(16, activation='softsign')(latent_inputs)
+        x = layers.Dense(32, activation='softplus')(x)
+        outputs = layers.Dense(input_shape)(x)
+        self.decoder = keras.Model(latent_inputs, outputs)
 
-        # decoded = layers.concatenate([x[..., :-2], decoded[..., -2:]], axis=-1)
+    def sample(self, z_mean, z_log_var):
+        batch = ops.shape(z_mean)[0]
+        dim = ops.shape(z_mean)[1]
+        epsilon = keras.random.normal((batch, dim))
 
-        return decoded
+        # ensure positive variance
+        z_var = ops.exp(z_log_var)
 
+        # Cholesky decomposition
+        cholesky = ops.zeros((batch, dim, dim))
+        indices = torch.tril_indices(dim, dim)
+        cholesky[:, indices[0], indices[1]] = z_var
 
-# self.encoder = keras.Sequential([
-#     layers.Input(shape=(input_shape,)),
-#     layers.Normalization(),
-#     layers.Dense(32, activation='relu'),
-#     layers.Dropout(0.1),
-#     layers.Dense(latent_dim),
-# ])
-# self.decoder = keras.Sequential([
-#     layers.Input(shape=(latent_dim,)),
-#     layers.Dense(32, activation='relu'),
-#     layers.Dense(input_shape),
-# ])
+        # Reparameterization trick
+        sample = z_mean + ops.matmul(cholesky, epsilon[..., None])[..., 0]
+
+        return sample, ops.matmul(cholesky, ops.transpose(cholesky, axes=(0, 2, 1)))
+
+    def call(self, inputs):
+        z_mean, z_log_var = self.encoder(inputs)
+        z, covariance = self.sample(z_mean, z_log_var)
+        reconstructed = self.decoder(z)
+
+        # Add KL divergence regularization loss.
+        kl_loss = -0.5 * (ops.trace(covariance, axis1=-2, axis2=-1) + ops.sum(z_mean ** 2, axis=-1) - 3 - ops.log(
+            torch.linalg.det(covariance)))
+        self.add_loss(ops.mean(kl_loss))
+
+        return reconstructed
+
 
 class PCA:
     def __init__(self, data, n_components=2):
@@ -237,7 +251,7 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
 def get_autoencoder(input_shape, latent_dim=3, skip_connections=False):
     inputs = layers.Input(shape=(input_shape,))
     encoder = keras.Sequential([
-        # layers.Normalization(),
+        layers.Normalization(),
         layers.Dense(32, activation='relu'),
         layers.Dropout(0.1),
         layers.Dense(latent_dim),

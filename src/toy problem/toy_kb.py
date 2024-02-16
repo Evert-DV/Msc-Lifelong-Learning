@@ -13,7 +13,7 @@ def train():
 
     if pretrain:
         autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
-        # autoencoder.layers[1].layers[0].adapt(features)
+        autoencoder.layers[1].layers[0].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
@@ -36,7 +36,7 @@ def train():
                                                verbose=1),
                  ]
     autoencoder.fit(train_dataloader,
-                    epochs=50,
+                    epochs=1000,
                     callbacks=callbacks,
                     validation_data=val_dataloader,
                     )
@@ -47,7 +47,7 @@ def train():
 
 
 def compare():
-    autoencoder = keras.saving.load_model(model_location, custom_objects={'AutoEncoder': AutoEncoder})
+    autoencoder = keras.saving.load_model(model_location)
     autoencoder.eval()
     encoder = autoencoder.layers[1]
 
