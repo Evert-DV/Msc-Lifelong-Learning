@@ -6,18 +6,19 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = True
+    pretrain = False
     data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
     if pretrain:
-        autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
-        autoencoder.layers[1].layers[0].adapt(features)
+        autoencoder = VariationalAutoEncoder(input_shape=5)
+        # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
+        # autoencoder.layers[1].layers[0].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-4)
+    optimizer = optimizers.Adam(learning_rate=1.e-3)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -41,7 +42,7 @@ def train():
                     validation_data=val_dataloader,
                     )
 
-    keras.saving.save_model(autoencoder, model_location, overwrite=True)
+    keras.saving.save_model(autoencoder, model_location)
 
     print("model saved")
 
@@ -49,7 +50,7 @@ def train():
 def compare():
     autoencoder = keras.saving.load_model(model_location)
     autoencoder.eval()
-    encoder = autoencoder.layers[1]
+    encoder = autoencoder.encoder
 
     latent_features = []
     distributions = []
@@ -59,10 +60,12 @@ def compare():
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
-            embeddings = encoder(features)
-            dist = GaussianDensityEstimation(embeddings, bandwidth=.1, n_points=100)
+            z_mean, z_log_var = encoder(features)
+            embeddings, cov = sample(z_mean, z_log_var)
+            # dist = GaussianDensityEstimation(embeddings, bandwidth=.0, n_points=10)
+            dist = MixtureSameFamily(Categorical(ops.ones(embeddings.shape[0])), MultivariateNormal(z_mean, cov))
 
-            visualize_distribution(dist, embeddings[::10])
+            visualize_distribution(dist, embeddings[::30])
 
             latent_features.append(embeddings)
             distributions.append(dist)
@@ -238,7 +241,7 @@ def implement():
 
 
 def main():
-    train()
+    # train()
     compare()
     # implement()
 
@@ -247,7 +250,7 @@ if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/autoencoder.keras'
+    model_location = 'tmp/varautoencoder.keras'
     seed = np.random.randint(0, 1000)
     # seed = 267
     print(f"Seed: {seed}")
