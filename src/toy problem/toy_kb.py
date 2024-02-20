@@ -7,18 +7,18 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    data = np.load(f"tmp/train data/m5k10c0_seed678.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
     if pretrain:
         autoencoder = VariationalAutoEncoder(input_shape=5)
         # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
-        # autoencoder.layers[1].layers[0].adapt(features)
+        autoencoder.encoder.layers[1].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-3)
+    optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -32,7 +32,7 @@ def train():
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
-                                               patience=5,
+                                               patience=7,
                                                restore_best_weights=True,
                                                verbose=1),
                  ]
@@ -63,9 +63,12 @@ def compare():
             z_mean, z_log_var = encoder(features)
             embeddings, cov = sample(z_mean, z_log_var)
             # dist = GaussianDensityEstimation(embeddings, bandwidth=.0, n_points=10)
-            dist = MixtureSameFamily(Categorical(ops.ones(embeddings.shape[0])), MultivariateNormal(z_mean, cov))
+            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(embeddings.shape[0])),
+                                             components=MultivariateNormal(
+                                                 ops.full_like(z_mean, ops.mean(z_mean, axis=0)), cov), bandwidth=0.,
+                                             n_points=1)
 
-            visualize_distribution(dist, embeddings[::30])
+            # visualize_distribution(dist, embeddings[::30])
 
             latent_features.append(embeddings)
             distributions.append(dist)
@@ -255,7 +258,6 @@ if __name__ == '__main__':
     # seed = 267
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
-    keras.config.enable_unsafe_deserialization()
 
     if torch.cuda.is_available():
         print("Using CUDA")

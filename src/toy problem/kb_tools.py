@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 
 os.environ["KERAS_BACKEND"] = "torch"
@@ -16,18 +15,24 @@ def sample(z_mean, z_log_var):
     dim = ops.shape(z_mean)[1]
     epsilon = keras.random.normal((batch, dim))
 
+    z_mean = ops.full_like(z_mean, ops.mean(z_mean, axis=0))
+
     # ensure positive variance
     z_var = ops.exp(z_log_var)
+    z_var = ops.full_like(z_var, ops.mean(z_var, axis=0))
 
     # Cholesky decomposition
     cholesky = ops.zeros((batch, dim, dim))
     indices = torch.tril_indices(dim, dim)
     cholesky[:, indices[0], indices[1]] = z_var
+    # cholesky = torch.diag_embed(z_var)
+
+    cov = ops.matmul(cholesky, ops.transpose(cholesky, axes=(0, 2, 1)))
 
     # Reparameterization trick
     sample = z_mean + ops.matmul(cholesky, epsilon[..., None])[..., 0]
 
-    return sample, ops.matmul(cholesky, ops.transpose(cholesky, axes=(0, 2, 1)))
+    return sample, cov
 
 
 class VariationalAutoEncoder(keras.Model):
@@ -36,7 +41,8 @@ class VariationalAutoEncoder(keras.Model):
         # define encoder
         self.input_shape = input_shape
         inputs = layers.Input(shape=(input_shape,))
-        x = layers.Dense(32, activation='softplus')(inputs)
+        x = layers.Normalization()(inputs)
+        x = layers.Dense(32, activation='softplus')(x)
         x = layers.Dense(16, activation='softsign')(x)
         encoded = layers.Dense(9)(x)
         z_mean = layers.Lambda(lambda z: z[..., :3])(encoded)
@@ -54,6 +60,11 @@ class VariationalAutoEncoder(keras.Model):
         z_mean, z_log_var = self.encoder(inputs)
         z, covariance = sample(z_mean, z_log_var)
         reconstructed = self.decoder(z)
+
+        #   -- Skip connection
+        in_slice = layers.concatenate(
+            [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
+        reconstructed = layers.add([in_slice, reconstructed])
 
         # Add KL divergence regularization loss.
         kl_loss = 0.5 * (ops.trace(covariance, axis1=-2, axis2=-1) + ops.sum(z_mean ** 2, axis=-1) - 3 - ops.log(
@@ -85,11 +96,12 @@ class GaussianDensityEstimation(MixtureSameFamily):
             # Initialize using precomputed components and mix
             if components.loc.shape[0] > n_points:
                 weights = mix.probs
-                top_n_points = torch.argsort(weights, descending=True)[:n_points]
-                loc = components.loc[top_n_points]
-                covariance_matrix = components.covariance_matrix[top_n_points]
+                indices = torch.multinomial(weights, n_points, replacement=False)
+                # top_n_points = torch.argsort(weights, descending=True)[:n_points]
+                loc = components.loc[indices]
+                covariance_matrix = components.covariance_matrix[indices]
                 components = MultivariateNormal(loc, covariance_matrix)
-                probs = mix.probs[top_n_points]
+                probs = mix.probs[indices]
                 mix = Categorical(probs)
             super(GaussianDensityEstimation, self).__init__(mix, components)
         else:
@@ -141,7 +153,7 @@ class GaussianDensityEstimation(MixtureSameFamily):
 def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
     pca_x = PCA(x, n_components=2).pca_data
     weights = torch.linalg.norm(pca_x, dim=-1)
-    weights = ops.sqrt(weights) + ops.mean(weights)
+    # weights = ops.sqrt(weights) + ops.mean(weights)
     # weights = ops.ones(k)
     indices = torch.multinomial(weights, k, replacement=False)
     centroids = x[indices]
@@ -176,7 +188,7 @@ def kl_div(p, q, n_samples=1000, samples=None):
     return kl_div, samples
 
 
-@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
+@register_kl(torch.distributions.Distribution, torch.distributions.Distribution)
 def kl_symmetric(p, q, n_samples=1000):
     kl_p_q, samples = kl_div(p, q, n_samples)
     kl_q_p, _ = kl_div(q, p, samples=samples)
@@ -184,7 +196,7 @@ def kl_symmetric(p, q, n_samples=1000):
     return (kl_p_q + kl_q_p) / 2
 
 
-def visualize_distribution(distribution, embeddings=None):
+def visualize_distribution(distribution, embeddings=None, use_samples=False):
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -192,25 +204,31 @@ def visualize_distribution(distribution, embeddings=None):
         # embeddings = embeddings[::30]
         data = ops.convert_to_numpy(embeddings)
         # Scatter plot for the data points
-        ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', c='tab:red', alpha=0.5, depthshade=True)
+        ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', alpha=0.25, c='tab:red', lw=1.,
+                   depthshade=True)
 
     used_points = ops.convert_to_numpy(distribution.component_distribution.loc)
-    ax.scatter(used_points[:, 0], used_points[:, 1], used_points[:, 2], marker='x', c='cyan', alpha=0.7, s=100)
+    cov = ops.convert_to_numpy(distribution.component_distribution.covariance_matrix)
+    cov_norms = np.linalg.norm(cov, axis=(1, 2))
+    scatter = ax.scatter(used_points[:, 0], used_points[:, 1], used_points[:, 2], marker='x', c=cov_norms,
+                         cmap='viridis',
+                         alpha=0.7, s=100)
 
-    samples = distribution.sample((1000,))
-    probs = ops.convert_to_numpy(ops.exp(distribution.log_prob(samples)))
-    samples = ops.convert_to_numpy(samples)
+    if use_samples:
+        samples = distribution.sample((1000,))
+        probs = ops.convert_to_numpy(ops.exp(distribution.log_prob(samples)))
+        samples = ops.convert_to_numpy(samples)
 
-    # Normalize probabilities for color mapping
-    min_prob, max_prob = probs.min(), probs.max()
-    normalized_probs = (probs - min_prob) / (max_prob - min_prob)
-    # alpha_values = normalized_probs * 0.5 + 0.1
+        # Normalize probabilities for color mapping
+        min_prob, max_prob = probs.min(), probs.max()
+        normalized_probs = (probs - min_prob) / (max_prob - min_prob)
+        # alpha_values = normalized_probs * 0.5 + 0.1
 
-    # Scatter plot with color gradient
-    scatter = ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], c=normalized_probs, cmap='viridis',
-                         alpha=0.3)
+        # Scatter plot with color gradient
+        scatter = ax.scatter(samples[:, 0], samples[:, 1], samples[:, 2], c=normalized_probs, cmap='viridis',
+                             alpha=0.3)
 
-    # Colorbar to show the mapping from color to probability
+        # Colorbar to show the mapping from color to probability
     fig.colorbar(scatter, ax=ax)
 
     ax.set_xlabel('X axis')
