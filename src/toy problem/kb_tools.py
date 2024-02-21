@@ -8,6 +8,7 @@ from keras import ops, layers
 import torch
 from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical
 from torch.distributions.kl import register_kl, kl_divergence
+from torch.nn import KLDivLoss
 
 
 def sample(z_mean, z_log_var):
@@ -15,11 +16,11 @@ def sample(z_mean, z_log_var):
     dim = ops.shape(z_mean)[1]
     epsilon = keras.random.normal((batch, dim))
 
-    z_mean = ops.full_like(z_mean, ops.mean(z_mean, axis=0))
+    # z_mean = ops.full_like(z_mean, ops.mean(z_mean, axis=0))
 
     # ensure positive variance
     z_var = ops.exp(z_log_var)
-    z_var = ops.full_like(z_var, ops.mean(z_var, axis=0))
+    #     z_var = ops.full_like(z_var, ops.mean(z_var, axis=0))
 
     # Cholesky decomposition
     cholesky = ops.zeros((batch, dim, dim))
@@ -41,8 +42,8 @@ class VariationalAutoEncoder(keras.Model):
         # define encoder
         self.input_shape = input_shape
         inputs = layers.Input(shape=(input_shape,))
-        x = layers.Normalization()(inputs)
-        x = layers.Dense(32, activation='softplus')(x)
+        # x = layers.Normalization()(inputs)
+        x = layers.Dense(32, activation='softplus')(inputs)
         x = layers.Dense(16, activation='softsign')(x)
         encoded = layers.Dense(9)(x)
         z_mean = layers.Lambda(lambda z: z[..., :3])(encoded)
@@ -61,10 +62,10 @@ class VariationalAutoEncoder(keras.Model):
         z, covariance = sample(z_mean, z_log_var)
         reconstructed = self.decoder(z)
 
-        #   -- Skip connection
-        in_slice = layers.concatenate(
-            [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
-        reconstructed = layers.add([in_slice, reconstructed])
+        # #   -- Skip connection
+        # in_slice = layers.concatenate(
+        #     [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
+        # reconstructed = layers.add([in_slice, reconstructed])
 
         # Add KL divergence regularization loss.
         kl_loss = 0.5 * (ops.trace(covariance, axis1=-2, axis2=-1) + ops.sum(z_mean ** 2, axis=-1) - 3 - ops.log(
@@ -122,7 +123,7 @@ class GaussianDensityEstimation(MixtureSameFamily):
             mix = Categorical(weights)
             super(GaussianDensityEstimation, self).__init__(mix, components)
 
-        self.bw = bandwidth
+        self.bw = bandwidth + 1e-6
         self.n_points = n_points
 
     def update(self, new_data, weight=0.1):
@@ -174,26 +175,23 @@ def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
     return centroids, cluster_labels
 
 
-def kl_div(p, q, n_samples=1000, samples=None):
+kl_div = KLDivLoss(reduction='batchmean', log_target=True)
+
+
+@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
+def js_divergence(p, q, samples=None, n_samples=1000):
     if samples is None:
         samples = ops.concatenate((p.sample((n_samples,)), q.sample((n_samples,))), axis=0)
 
-    log_probs_p = p.log_prob(samples)
-    log_probs_q = q.log_prob(samples)
+    log_probs_p = ops.log_softmax(p.log_prob(samples))
+    log_probs_q = ops.log_softmax(q.log_prob(samples))
 
-    probs_p = ops.exp(log_probs_p)
+    a = torch.max(log_probs_p, log_probs_q)  # for numerical stability
+    log_probs_m = -ops.log(2) + a + ops.log(ops.exp(log_probs_p - a) + ops.exp(log_probs_q - a))
 
-    kl_div = ops.sum(probs_p * (log_probs_p - log_probs_q)) / ops.sum(probs_p)
+    js_div = 0.5 * (kl_div(log_probs_m[None], log_probs_p[None]) + kl_div(log_probs_m[None], log_probs_q[None]))
 
-    return kl_div, samples
-
-
-@register_kl(torch.distributions.Distribution, torch.distributions.Distribution)
-def kl_symmetric(p, q, n_samples=1000):
-    kl_p_q, samples = kl_div(p, q, n_samples)
-    kl_q_p, _ = kl_div(q, p, samples=samples)
-
-    return (kl_p_q + kl_q_p) / 2
+    return js_div
 
 
 def visualize_distribution(distribution, embeddings=None, use_samples=False):
@@ -265,7 +263,7 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
     post_probs = get_posteriors(x, dists, prior_probs).mean(axis=-1)
     best_idx = ops.argmax(post_probs)
     if best_idx != current_idx:
-        kl_prior_dist = kl_divergence(dists[best_idx], current_dist)
+        kl_prior_dist = js_divergence(dists[best_idx], current_dist)
         if kl_prior_dist < .9 * thres:
             return best_idx
     return None

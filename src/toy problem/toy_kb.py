@@ -6,15 +6,15 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = False
-    data = np.load(f"tmp/train data/m5k10c0_seed678.npy")
+    pretrain = True
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
     if pretrain:
         autoencoder = VariationalAutoEncoder(input_shape=5)
         # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
-        autoencoder.encoder.layers[1].adapt(features)
+        # autoencoder.encoder.layers[1].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
@@ -62,29 +62,28 @@ def compare():
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             z_mean, z_log_var = encoder(features)
             embeddings, cov = sample(z_mean, z_log_var)
-            # dist = GaussianDensityEstimation(embeddings, bandwidth=.0, n_points=10)
-            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(embeddings.shape[0])),
+            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
                                              components=MultivariateNormal(
-                                                 ops.full_like(z_mean, ops.mean(z_mean, axis=0)), cov), bandwidth=0.,
-                                             n_points=1)
+                                                 z_mean, cov), bandwidth=0.,
+                                             n_points=1000)
 
-            # visualize_distribution(dist, embeddings[::30])
+            # visualize_distribution(dist, embeddings[::30], use_samples=True)
 
             latent_features.append(embeddings)
             distributions.append(dist)
             filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
+    samples = ops.concatenate(latent_features, axis=0)[::30]
     for i, dist in enumerate(distributions):
         for j, dist2 in enumerate(distributions):
-            scores[i, j] = kl_divergence(dist, dist2).item()
+            scores[i, j] = js_divergence(dist, dist2, samples=samples).item()
 
     scores_np = ops.convert_to_numpy(scores)
     plt.figure(figsize=(10, 8))
     cax = plt.imshow(scores_np, cmap='viridis', aspect='auto')
     plt.colorbar(cax, label='KL-Divergence')
 
-    # Optional: Annotate the heatmap with exact log-likelihood values
     for i in range(scores_np.shape[0]):
         for j in range(scores_np.shape[1]):
             plt.text(j, i, f'{scores_np[i, j]:.2f}', ha='center', va='center', color='white')
@@ -103,15 +102,21 @@ def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    encoder = autoencoder.layers[1]
-    bw = 15.
-    use_kb = True
+    encoder = autoencoder.encoder
+    bw = 0.
+    use_kb = False
 
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
-        prior = GaussianDensityEstimation(encoder(x_prior), encoder, bandwidth=bw)
+        # prior = GaussianDensityEstimation(encoder(x_prior), encoder, bandwidth=bw)
+        z_mean, z_log_var = encoder(x_prior)
+        embeddings, cov = sample(z_mean, z_log_var)
+        prior = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
+                                          components=MultivariateNormal(
+                                              z_mean, cov), bandwidth=0.,
+                                          n_points=100)
         kb = [[prior], [1.]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
@@ -120,7 +125,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
+    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -128,14 +133,15 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = 2.
+    thres = np.log(2) * 0.2
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
         x = data[0:i + step, [0, 1, 2, 3, 4]]
 
         if i < 60 * 60:
-            embeddings = encoder(x)
+            z_mean, z_log_var = encoder(x)
+            embeddings, cov = sample(z_mean, z_log_var)
             posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
             post_probs = get_posteriors(embeddings, kb[0], kb[1])
@@ -155,20 +161,24 @@ def implement():
             continue
 
         # Get embeddings
-        embeddings = encoder(x)
+        # embeddings = encoder(x)
+        z_mean, z_log_var = encoder(x)
+        embeddings, cov = sample(z_mean, z_log_var)
 
         if i < 120 * 60:
             if i == 60 * 60:
                 print(f"\nSelected {kb_idx} as reference")
             if i == 120 * 60 - step:
-                running_distribution = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
+                running_distribution = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
+                                                                 components=MultivariateNormal(
+                                                                     z_mean, cov), bandwidth=0.,
+                                                                 n_points=100)
             continue
 
         # KL losses
-        kl_updated_dist = kl_divergence(updated_prior, running_distribution)
-        kl_prior_updated = kl_divergence(prior, updated_prior)
-        kl_prior_dist = kl_divergence(prior, running_distribution)  # sanity check
-        kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item(), kl_prior_dist.item()])  # ,
+        kl_updated_dist = js_divergence(updated_prior, running_distribution, samples=embeddings)
+        kl_prior_updated = js_divergence(prior, updated_prior, samples=embeddings)
+        kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
 
         if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and i >= 2 * 60 * 60:
             print("\nSHIFT DETECTED\nRestore KB entry reference")
@@ -232,10 +242,9 @@ def implement():
     ax[1].vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
     ax[1].vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
     ax[1].plot(t[120 * 60:][::step], kl_loss, lw=1., alpha=0.7,
-               label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist",
-                      "kb-dist vs. running dist (sanity check)"])
+               label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
     ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
-    ax[1].set_ylim(-.5, 10.)
+    ax[1].set_ylim(-0.1, 3*thres)
     ax[1].legend()
 
     fig.tight_layout()
@@ -245,8 +254,8 @@ def implement():
 
 def main():
     # train()
-    compare()
-    # implement()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':
