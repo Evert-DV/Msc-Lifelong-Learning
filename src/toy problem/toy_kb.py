@@ -6,8 +6,8 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = True
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    pretrain = False
+    data = np.load(f"tmp/train data/m5k0c3_seed996.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
@@ -26,7 +26,7 @@ def train():
     train_size = int(0.7 * len(dataset))
     val_size = len(dataset) - train_size
     train_set, val_set = random_split(dataset, [train_size, val_size])
-    train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
+    train_dataloader = DataLoader(train_set, batch_size=256, shuffle=False)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -50,7 +50,6 @@ def train():
 def compare():
     autoencoder = keras.saving.load_model(model_location)
     autoencoder.eval()
-    encoder = autoencoder.encoder
 
     latent_features = []
     distributions = []
@@ -60,24 +59,24 @@ def compare():
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
-            z_mean, z_log_var = encoder(features)
-            embeddings, cov = sample(z_mean, z_log_var)
-            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
-                                             components=MultivariateNormal(
-                                                 z_mean, cov), bandwidth=0.,
-                                             n_points=1000)
+            dist_mean, dist_log_var = autoencoder.dynamics(features)
+            samples, cov = sample(dist_mean[None], dist_log_var)
+            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(1)),
+                                             components=MultivariateNormal(dist_mean, cov),
+                                             bandwidth=0., n_points=100, use_pca_weights=False,
+                                             *{'use_clusters_from_x': False})
 
             # visualize_distribution(dist, embeddings[::30], use_samples=True)
 
-            latent_features.append(embeddings)
+            latent_features.append(samples)
             distributions.append(dist)
             filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
-    samples = ops.concatenate(latent_features, axis=0)[::30]
+    # samples = ops.concatenate(latent_features, axis=0)
     for i, dist in enumerate(distributions):
         for j, dist2 in enumerate(distributions):
-            scores[i, j] = js_divergence(dist, dist2, samples=samples).item()
+            scores[i, j] = js_divergence(dist, dist2).item()
 
     scores_np = ops.convert_to_numpy(scores)
     plt.figure(figsize=(10, 8))
@@ -104,7 +103,7 @@ def implement():
     autoencoder.eval()
     encoder = autoencoder.encoder
     bw = 0.
-    use_kb = False
+    use_kb = True
 
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
@@ -176,8 +175,8 @@ def implement():
             continue
 
         # KL losses
-        kl_updated_dist = js_divergence(updated_prior, running_distribution, samples=embeddings)
-        kl_prior_updated = js_divergence(prior, updated_prior, samples=embeddings)
+        kl_updated_dist = js_divergence(updated_prior, running_distribution)
+        kl_prior_updated = js_divergence(prior, updated_prior)
         kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
 
         if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and i >= 2 * 60 * 60:
@@ -244,7 +243,7 @@ def implement():
     ax[1].plot(t[120 * 60:][::step], kl_loss, lw=1., alpha=0.7,
                label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
     ax[1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
-    ax[1].set_ylim(-0.1, 3*thres)
+    ax[1].set_ylim(-0.1, 3 * thres)
     ax[1].legend()
 
     fig.tight_layout()
@@ -254,8 +253,8 @@ def implement():
 
 def main():
     # train()
-    # compare()
-    implement()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':

@@ -7,20 +7,17 @@ import keras
 from keras import ops, layers
 import torch
 from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical
-from torch.distributions.kl import register_kl, kl_divergence
+from torch.distributions.kl import register_kl
 from torch.nn import KLDivLoss
 
 
 def sample(z_mean, z_log_var):
     batch = ops.shape(z_mean)[0]
-    dim = ops.shape(z_mean)[1]
+    dim = ops.shape(z_mean)[-1]
     epsilon = keras.random.normal((batch, dim))
-
-    # z_mean = ops.full_like(z_mean, ops.mean(z_mean, axis=0))
 
     # ensure positive variance
     z_var = ops.exp(z_log_var)
-    #     z_var = ops.full_like(z_var, ops.mean(z_var, axis=0))
 
     # Cholesky decomposition
     cholesky = ops.zeros((batch, dim, dim))
@@ -46,9 +43,20 @@ class VariationalAutoEncoder(keras.Model):
         x = layers.Dense(32, activation='softplus')(inputs)
         x = layers.Dense(16, activation='softsign')(x)
         encoded = layers.Dense(9)(x)
+
+        # define latent transitions
         z_mean = layers.Lambda(lambda z: z[..., :3])(encoded)
         z_log_var = layers.Lambda(lambda z: z[..., 3:])(encoded)
         self.encoder = keras.Model(inputs, [z_mean, z_log_var])
+
+        # define dynamics encoder
+        x = layers.Dense(32, activation='softplus')(encoded)
+        x = layers.Dense(16, activation='softsign')(x)
+        x = layers.Dense(9)(x)
+        x = layers.Lambda(lambda y: ops.mean(y, axis=0))(x)
+        d_mean = layers.Lambda(lambda y: y[..., :3])(x)
+        d_log_var = layers.Lambda(lambda y: y[..., 3:])(x)
+        self.dynamics = keras.Model(inputs, [d_mean, d_log_var])
 
         # define decoder
         latent_inputs = layers.Input(shape=(3,))
@@ -62,15 +70,24 @@ class VariationalAutoEncoder(keras.Model):
         z, covariance = sample(z_mean, z_log_var)
         reconstructed = self.decoder(z)
 
-        # #   -- Skip connection
-        # in_slice = layers.concatenate(
-        #     [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
-        # reconstructed = layers.add([in_slice, reconstructed])
+        d_mean, d_log_var = self.dynamics(inputs)
+        _, d_covariance = sample(d_mean[None], d_log_var[None])
+
+        # TODO: another vae layer to make dynamics embedding? with conv layers?
+
+        #   -- Skip connection
+        in_slice = layers.concatenate(
+            [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
+        reconstructed = layers.add([in_slice, reconstructed])
 
         # Add KL divergence regularization loss.
-        kl_loss = 0.5 * (ops.trace(covariance, axis1=-2, axis2=-1) + ops.sum(z_mean ** 2, axis=-1) - 3 - ops.log(
-            torch.linalg.det(covariance)))
-        self.add_loss(ops.mean(kl_loss))
+        kl_loss_transitions = 0.5 * (ops.trace(covariance, axis1=-2, axis2=-1) + ops.sum(z_mean ** 2, axis=-1) - 3
+                                     - ops.log(torch.linalg.det(covariance)))
+        self.add_loss(ops.mean(kl_loss_transitions))
+
+        kl_loss_dynamics = 0.5 * (ops.trace(d_covariance, axis1=-2, axis2=-1) + ops.sum(d_mean ** 2, axis=-1) - 3
+                                  - ops.log(torch.linalg.det(d_covariance)))
+        self.add_loss(10 * ops.mean(kl_loss_dynamics))
 
         return reconstructed
 
@@ -92,7 +109,7 @@ class PCA:
 
 
 class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x=None, mix=None, components=None, bandwidth=1., n_points=100, use_pca_weights=True):
+    def __init__(self, x=None, mix=None, components=None, bandwidth=0., n_points=100, use_pca_weights=True, *args):
         if components is not None and mix is not None:
             # Initialize using precomputed components and mix
             if components.loc.shape[0] > n_points:
@@ -110,16 +127,17 @@ class GaussianDensityEstimation(MixtureSameFamily):
             if x.shape[0] < n_points * 10:
                 n_points = x.shape[0] // 10
             # spread the point selection
-            used_points, labels = k_means_cluster(x, n_points, 10, use_clusters_from_x=True)
+            used_points, labels = k_means_cluster(x, n_points, 10, *args)
             covs = ops.stack([torch.cov(x[labels == idx].T) if x[labels == idx].shape[0] > 1 else ops.eye(3) * 0.1
                               for idx in range(used_points.shape[0])])
             covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
 
             components = MultivariateNormal(used_points, covs)
-            pca_x = PCA(used_points, n_components=2).pca_data
-            weights = torch.linalg.norm(pca_x, dim=-1)
             if not use_pca_weights:
                 weights = ops.ones(len(used_points))
+            else:
+                pca_x = PCA(used_points, n_components=2).pca_data
+                weights = torch.linalg.norm(pca_x, dim=-1)
             mix = Categorical(weights)
             super(GaussianDensityEstimation, self).__init__(mix, components)
 
