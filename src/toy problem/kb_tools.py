@@ -50,9 +50,6 @@ class VariationalAutoEncoder(keras.Model):
         self.encoder = keras.Model(inputs, [z_mean, z_log_var])
 
         # define dynamics encoder
-        # x = layers.Dense(32, activation='softplus')(encoded)
-        # x = layers.Dense(16, activation='softsign')(x)
-        # x = layers.Dense(9)(x)
         x = layers.Lambda(lambda y: ops.mean(y, axis=0))(encoded)
         d_mean = layers.Lambda(lambda y: y[..., :3])(x)
         d_log_var = layers.Lambda(lambda y: y[..., 3:])(x)
@@ -72,8 +69,6 @@ class VariationalAutoEncoder(keras.Model):
 
         d_mean, d_log_var = self.dynamics(inputs)
         _, d_covariance = sample(d_mean[None], d_log_var[None])
-
-        # TODO: another vae layer to make dynamics embedding? with conv layers?
 
         #   -- Skip connection
         in_slice = layers.concatenate(
@@ -95,18 +90,18 @@ class VariationalAutoEncoder(keras.Model):
         return {'input_shape': self.input_shape}
 
 
-class PCA:
-    def __init__(self, data, n_components=2):
-        mean = ops.mean(data, axis=0)
-        std = ops.std(data, axis=0)
-        standardized_data = (data - mean) / std
-        cov = torch.cov(standardized_data.T)
-        eig_vals, eig_vecs = torch.linalg.eigh(cov)
-        idx = torch.argsort(eig_vals, descending=True)
-        eig_vecs = eig_vecs[:, idx]
-        self.components = eig_vecs[:, :n_components]
-        self.pca_data = torch.matmul(standardized_data, self.components)
-
+# class PCA:
+#     def __init__(self, data, n_components=2):
+#         mean = ops.mean(data, axis=0)
+#         std = ops.std(data, axis=0)
+#         standardized_data = (data - mean) / std
+#         cov = torch.cov(standardized_data.T)
+#         eig_vals, eig_vecs = torch.linalg.eigh(cov)
+#         idx = torch.argsort(eig_vals, descending=True)
+#         eig_vecs = eig_vecs[:, idx]
+#         self.components = eig_vecs[:, :n_components]
+#         self.pca_data = torch.matmul(standardized_data, self.components)
+#
 
 # class GaussianDensityEstimation(MixtureSameFamily):
 #     def __init__(self, x=None, mix=None, components=None, bandwidth=0., n_points=100, use_pca_weights=True, *args):
@@ -168,7 +163,7 @@ class PCA:
 #
 #         return new_instance
 
-def copy(self):  # TODO: turn into function, and specifically for an mvn dist
+def copy(self: torch.distributions.multivariate_normal):
     mean = self.loc
     cov = self.covariance_matrix
     new_instance = MultivariateNormal(mean, cov)
@@ -176,7 +171,7 @@ def copy(self):  # TODO: turn into function, and specifically for an mvn dist
     return new_instance
 
 
-def update(self, new_mean, new_cov, weight=0.5):
+def update(self: torch.distributions.multivariate_normal, new_mean, new_cov, weight=0.5):
     assert 0. <= weight <= 1., "Weight must be between 0 and 1"
     old_mean = self.loc
     old_cov = self.covariance_matrix
@@ -191,28 +186,28 @@ MultivariateNormal.copy = copy
 MultivariateNormal.update = update
 
 
-def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
-    pca_x = PCA(x, n_components=2).pca_data
-    weights = torch.linalg.norm(pca_x, dim=-1)
-    # weights = ops.sqrt(weights) + ops.mean(weights)
-    # weights = ops.ones(k)
-    indices = torch.multinomial(weights, k, replacement=False)
-    centroids = x[indices]
-    for _ in range(iters):
-        distances = torch.cdist(x, centroids)
-        cluster_labels = ops.argmin(distances, axis=-1)
-        unique_clusters = torch.unique(cluster_labels)
-        if len(unique_clusters) < k:
-            centroids = centroids[unique_clusters]
-        if use_clusters_from_x:
-            for i, c in enumerate(unique_clusters):
-                cluster_members_idx = (cluster_labels == c).nonzero(as_tuple=False)[0]
-                member_distances = distances[cluster_members_idx, c]
-                closest_member = ops.argmin(member_distances)
-                centroids[i] = x[cluster_members_idx[closest_member]]
-            continue
-        centroids = torch.stack([x[cluster_labels == c].mean(dim=0) for c in unique_clusters])
-    return centroids, cluster_labels
+# def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
+#     pca_x = PCA(x, n_components=2).pca_data
+#     weights = torch.linalg.norm(pca_x, dim=-1)
+#     # weights = ops.sqrt(weights) + ops.mean(weights)
+#     # weights = ops.ones(k)
+#     indices = torch.multinomial(weights, k, replacement=False)
+#     centroids = x[indices]
+#     for _ in range(iters):
+#         distances = torch.cdist(x, centroids)
+#         cluster_labels = ops.argmin(distances, axis=-1)
+#         unique_clusters = torch.unique(cluster_labels)
+#         if len(unique_clusters) < k:
+#             centroids = centroids[unique_clusters]
+#         if use_clusters_from_x:
+#             for i, c in enumerate(unique_clusters):
+#                 cluster_members_idx = (cluster_labels == c).nonzero(as_tuple=False)[0]
+#                 member_distances = distances[cluster_members_idx, c]
+#                 closest_member = ops.argmin(member_distances)
+#                 centroids[i] = x[cluster_members_idx[closest_member]]
+#             continue
+#         centroids = torch.stack([x[cluster_labels == c].mean(dim=0) for c in unique_clusters])
+#     return centroids, cluster_labels
 
 
 kl_div = KLDivLoss(reduction='batchmean', log_target=True)
@@ -233,7 +228,7 @@ def js_divergence(p, q, samples=None, n_samples=10000):
     return js_div
 
 
-def visualize_distribution(distribution, embeddings=None, use_samples=False):
+def visualize_distribution(distribution, embeddings=None, use_samples=True):
     fig = plt.figure(figsize=(10, 7))
     ax = fig.add_subplot(111, projection='3d')
 
@@ -244,15 +239,8 @@ def visualize_distribution(distribution, embeddings=None, use_samples=False):
         ax.scatter(data[:, 0], data[:, 1], data[:, 2], marker='x', alpha=0.25, c='tab:red', lw=1.,
                    depthshade=True)
 
-    used_points = ops.convert_to_numpy(distribution.component_distribution.loc)
-    cov = ops.convert_to_numpy(distribution.component_distribution.covariance_matrix)
-    cov_norms = np.linalg.norm(cov, axis=(1, 2))
-    scatter = ax.scatter(used_points[:, 0], used_points[:, 1], used_points[:, 2], marker='x', c=cov_norms,
-                         cmap='viridis',
-                         alpha=0.7, s=100)
-
     if use_samples:
-        samples = distribution.sample((1000,))
+        samples = distribution.sample((1000,))[:, 0]
         probs = ops.convert_to_numpy(ops.exp(distribution.log_prob(samples)))
         samples = ops.convert_to_numpy(samples)
 
@@ -306,27 +294,3 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
         if kl_prior_dist < .9 * thres:
             return best_idx
     return None
-
-# def get_autoencoder(input_shape, latent_dim=3, skip_connections=False):
-#     inputs = layers.Input(shape=(input_shape,))
-#     encoder = keras.Sequential([
-#         layers.Normalization(),
-#         layers.Dense(32, activation='relu'),
-#         layers.Dropout(0.1),
-#         layers.Dense(latent_dim),
-#     ])
-#     decoder = keras.Sequential([
-#         layers.Input(shape=(latent_dim,)),
-#         layers.Dense(32, activation='relu'),
-#         layers.Dense(input_shape),
-#     ])
-#     encoding = encoder(inputs)
-#     decoding = decoder(encoding)
-#     if skip_connections:
-#         in_slice = layers.Lambda(lambda x: x[..., :-2])(inputs)
-#         out_slice = layers.Lambda(lambda x: x[..., -2:])(decoding)
-#         decoding = layers.concatenate([in_slice, out_slice], axis=-1)
-#
-#     autoencoder = keras.Model(inputs, decoding)
-#
-#     return autoencoder

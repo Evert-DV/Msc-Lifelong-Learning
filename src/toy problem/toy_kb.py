@@ -7,7 +7,7 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
+    data = np.load(f"tmp/train data/m5k0c3_seed996.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
@@ -63,7 +63,7 @@ def compare():
             samples, cov = sample(dist_mean[None], dist_log_var)
             dist = MultivariateNormal(dist_mean, cov)
 
-            # visualize_distribution(dist, embeddings[::30], use_samples=True)
+            visualize_distribution(dist)
 
             latent_features.append(samples)
             distributions.append(dist)
@@ -98,22 +98,15 @@ def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    bw = 0.
     use_kb = True
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
-        # prior = GaussianDensityEstimation(encoder(x_prior), encoder, bandwidth=bw)
         z_mean, z_log_var = autoencoder.dynamics(x_prior)
         embeddings, cov = sample(z_mean[None], z_log_var)
         prior = MultivariateNormal(z_mean, cov)
-        # z_mean, z_log_var = autoencoder.dynamics(x_prior)
-        # embeddings, cov = sample(z_mean, z_log_var)
-        # prior = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
-        #                                   components=MultivariateNormal(
-        #                                       z_mean, cov), bandwidth=bw,
-        #                                   n_points=1)
+
         kb = [[prior], [1.]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
@@ -158,7 +151,6 @@ def implement():
             continue
 
         # Get embeddings
-        # embeddings = encoder(x)
         z_mean, z_log_var = autoencoder.dynamics(x)
         embeddings, cov = sample(z_mean[None], z_log_var)
 
@@ -200,8 +192,7 @@ def implement():
             torch.cuda.empty_cache()
             updates.append(i)
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.1)
-            # running_distribution = MultivariateNormal(z_mean, cov)
+            running_distribution.update(z_mean, cov, weight=0.75)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
@@ -216,8 +207,6 @@ def implement():
             print("No match found")
             backup_updated_prior = updated_prior.copy()
             updated_prior.update(z_mean, cov, weight=0.1)
-            # If storing all recorded data is not a problem (i.e.: data[0:i, ...]), consider updating by:
-            # updated_prior = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
             print(f"Updated prior with {3600} samples")  # TODO: correct print statement
 
     # Save the last updated prior
