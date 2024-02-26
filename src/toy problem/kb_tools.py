@@ -1,20 +1,20 @@
 import os
-import numpy as np
 
 os.environ["KERAS_BACKEND"] = "torch"
 from matplotlib import pyplot as plt
 import keras
 from keras import ops, layers
 import torch
-from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical
-from torch.distributions.kl import register_kl, kl_divergence
+from torch.distributions import MultivariateNormal
 from torch.nn import KLDivLoss
 
 
-def sample(z_mean, z_log_var):  # TODO: allow arbitrary number of samples
+def sample(z_mean, z_log_var, samples_per_centroid=1):  # TODO: allow arbitrary number of samples
+    if z_mean.ndim == 1:
+        z_mean = z_mean.unsqueeze(0)
     batch = ops.shape(z_mean)[0]
     dim = ops.shape(z_mean)[-1]
-    epsilon = keras.random.normal((batch, dim))
+    epsilon = keras.random.normal((batch, samples_per_centroid, dim))
 
     # ensure positive variance
     z_var = ops.exp(z_log_var)
@@ -28,7 +28,12 @@ def sample(z_mean, z_log_var):  # TODO: allow arbitrary number of samples
     cov = ops.matmul(cholesky, ops.transpose(cholesky, axes=(0, 2, 1)))
 
     # Reparameterization trick
-    sample = z_mean + ops.matmul(cholesky, epsilon[..., None])[..., 0]
+    sample = z_mean.unsqueeze(1) + ops.matmul(cholesky.unsqueeze(1), epsilon.unsqueeze(-1))[..., 0]
+
+    if samples_per_centroid > 1:
+        sample = ops.concatenate(ops.unstack(sample), axis=0)
+    else:
+        sample = sample.squeeze(1)
 
     return sample, cov
 
@@ -68,7 +73,7 @@ class VariationalAutoEncoder(keras.Model):
         reconstructed = self.decoder(z)
 
         d_mean, d_log_var = self.dynamics(inputs)
-        _, d_covariance = sample(d_mean[None], d_log_var[None])
+        _, d_covariance = sample(d_mean, d_log_var)
 
         #   -- Skip connection
         in_slice = layers.concatenate(

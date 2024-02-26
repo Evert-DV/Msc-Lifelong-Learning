@@ -6,8 +6,8 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = False
-    data = np.load(f"tmp/train data/m5k0c3_seed996.npy")
+    pretrain = True
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
@@ -18,7 +18,7 @@ def train():
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-4)
+    optimizer = optimizers.Adam(learning_rate=1.e-3)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -60,7 +60,7 @@ def compare():
             data = np.load(f"tmp/train data/{file}")
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             dist_mean, dist_log_var = autoencoder.dynamics(features)
-            samples, cov = sample(dist_mean[None], dist_log_var)
+            samples, cov = sample(dist_mean, dist_log_var, samples_per_centroid=10)
             dist = MultivariateNormal(dist_mean, cov)
 
             visualize_distribution(dist)
@@ -98,13 +98,13 @@ def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    use_kb = True
+    use_kb = False
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
         z_mean, z_log_var = autoencoder.dynamics(x_prior)
-        embeddings, cov = sample(z_mean[None], z_log_var)
+        embeddings, cov = sample(z_mean, z_log_var)
         prior = MultivariateNormal(z_mean, cov)
 
         kb = [[prior], [1.]]
@@ -131,7 +131,7 @@ def implement():
 
         if i < 60 * 60:
             z_mean, z_log_var = autoencoder.dynamics(x)
-            embeddings, cov = sample(z_mean[None], z_log_var)
+            embeddings, cov = sample(z_mean, z_log_var)
             posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
             post_probs = get_posteriors(embeddings, kb[0], kb[1])
@@ -152,7 +152,7 @@ def implement():
 
         # Get embeddings
         z_mean, z_log_var = autoencoder.dynamics(x)
-        embeddings, cov = sample(z_mean[None], z_log_var)
+        embeddings, cov = sample(z_mean, z_log_var)
 
         if i < 120 * 60:
             if i == 60 * 60:
@@ -238,8 +238,8 @@ def implement():
 
 def main():
     # train()
-    # compare()
-    implement()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':
