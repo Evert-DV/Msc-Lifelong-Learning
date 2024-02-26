@@ -7,7 +7,7 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"tmp/train data/m5k0c3_seed996.npy")
+    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
@@ -61,10 +61,7 @@ def compare():
             features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
             dist_mean, dist_log_var = autoencoder.dynamics(features)
             samples, cov = sample(dist_mean[None], dist_log_var)
-            dist = GaussianDensityEstimation(mix=Categorical(ops.ones(1)),
-                                             components=MultivariateNormal(dist_mean, cov),
-                                             bandwidth=0., n_points=100, use_pca_weights=False,
-                                             *{'use_clusters_from_x': False})
+            dist = MultivariateNormal(dist_mean, cov)
 
             # visualize_distribution(dist, embeddings[::30], use_samples=True)
 
@@ -101,21 +98,22 @@ def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    encoder = autoencoder.encoder
     bw = 0.
     use_kb = True
-
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
         # prior = GaussianDensityEstimation(encoder(x_prior), encoder, bandwidth=bw)
-        z_mean, z_log_var = encoder(x_prior)
-        embeddings, cov = sample(z_mean, z_log_var)
-        prior = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
-                                          components=MultivariateNormal(
-                                              z_mean, cov), bandwidth=0.,
-                                          n_points=100)
+        z_mean, z_log_var = autoencoder.dynamics(x_prior)
+        embeddings, cov = sample(z_mean[None], z_log_var)
+        prior = MultivariateNormal(z_mean, cov)
+        # z_mean, z_log_var = autoencoder.dynamics(x_prior)
+        # embeddings, cov = sample(z_mean, z_log_var)
+        # prior = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
+        #                                   components=MultivariateNormal(
+        #                                       z_mean, cov), bandwidth=bw,
+        #                                   n_points=1)
         kb = [[prior], [1.]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
@@ -132,15 +130,15 @@ def implement():
     updates = []
     trespassing = []
     posterior_selection_idx = []
-    thres = np.log(2) * 0.2
+    thres = np.log(2) * 0.25
     step = 300
     for i in np.arange(0, len(data), step):
         print(f"\rt =  {t[i]:.0f}", end="")
         x = data[0:i + step, [0, 1, 2, 3, 4]]
 
         if i < 60 * 60:
-            z_mean, z_log_var = encoder(x)
-            embeddings, cov = sample(z_mean, z_log_var)
+            z_mean, z_log_var = autoencoder.dynamics(x)
+            embeddings, cov = sample(z_mean[None], z_log_var)
             posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
             post_probs = get_posteriors(embeddings, kb[0], kb[1])
@@ -161,17 +159,14 @@ def implement():
 
         # Get embeddings
         # embeddings = encoder(x)
-        z_mean, z_log_var = encoder(x)
-        embeddings, cov = sample(z_mean, z_log_var)
+        z_mean, z_log_var = autoencoder.dynamics(x)
+        embeddings, cov = sample(z_mean[None], z_log_var)
 
         if i < 120 * 60:
             if i == 60 * 60:
                 print(f"\nSelected {kb_idx} as reference")
             if i == 120 * 60 - step:
-                running_distribution = GaussianDensityEstimation(mix=Categorical(ops.ones(len(z_mean))),
-                                                                 components=MultivariateNormal(
-                                                                     z_mean, cov), bandwidth=0.,
-                                                                 n_points=100)
+                running_distribution = MultivariateNormal(z_mean, cov)
             continue
 
         # KL losses
@@ -205,7 +200,8 @@ def implement():
             torch.cuda.empty_cache()
             updates.append(i)
             # Update running distribution
-            running_distribution.update(embeddings[i - 3600:i], weight=0.1)
+            running_distribution.update(z_mean, cov, weight=0.1)
+            # running_distribution = MultivariateNormal(z_mean, cov)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
@@ -219,10 +215,10 @@ def implement():
             # Update prior
             print("No match found")
             backup_updated_prior = updated_prior.copy()
-            updated_prior.update(embeddings[i - 3600:i], weight=0.1)
+            updated_prior.update(z_mean, cov, weight=0.1)
             # If storing all recorded data is not a problem (i.e.: data[0:i, ...]), consider updating by:
             # updated_prior = GaussianDensityEstimation(embeddings, bandwidth=bw, n_points=100)
-            print(f"Updated prior with {3600} samples")
+            print(f"Updated prior with {3600} samples")  # TODO: correct print statement
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
@@ -253,8 +249,8 @@ def implement():
 
 def main():
     # train()
-    compare()
-    # implement()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':

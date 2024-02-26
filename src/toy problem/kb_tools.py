@@ -7,11 +7,11 @@ import keras
 from keras import ops, layers
 import torch
 from torch.distributions import MultivariateNormal, MixtureSameFamily, Categorical
-from torch.distributions.kl import register_kl
+from torch.distributions.kl import register_kl, kl_divergence
 from torch.nn import KLDivLoss
 
 
-def sample(z_mean, z_log_var):
+def sample(z_mean, z_log_var):  # TODO: allow arbitrary number of samples
     batch = ops.shape(z_mean)[0]
     dim = ops.shape(z_mean)[-1]
     epsilon = keras.random.normal((batch, dim))
@@ -50,10 +50,10 @@ class VariationalAutoEncoder(keras.Model):
         self.encoder = keras.Model(inputs, [z_mean, z_log_var])
 
         # define dynamics encoder
-        x = layers.Dense(32, activation='softplus')(encoded)
-        x = layers.Dense(16, activation='softsign')(x)
-        x = layers.Dense(9)(x)
-        x = layers.Lambda(lambda y: ops.mean(y, axis=0))(x)
+        # x = layers.Dense(32, activation='softplus')(encoded)
+        # x = layers.Dense(16, activation='softsign')(x)
+        # x = layers.Dense(9)(x)
+        x = layers.Lambda(lambda y: ops.mean(y, axis=0))(encoded)
         d_mean = layers.Lambda(lambda y: y[..., :3])(x)
         d_log_var = layers.Lambda(lambda y: y[..., 3:])(x)
         self.dynamics = keras.Model(inputs, [d_mean, d_log_var])
@@ -87,7 +87,7 @@ class VariationalAutoEncoder(keras.Model):
 
         kl_loss_dynamics = 0.5 * (ops.trace(d_covariance, axis1=-2, axis2=-1) + ops.sum(d_mean ** 2, axis=-1) - 3
                                   - ops.log(torch.linalg.det(d_covariance)))
-        self.add_loss(10 * ops.mean(kl_loss_dynamics))
+        self.add_loss(ops.mean(kl_loss_dynamics))
 
         return reconstructed
 
@@ -108,65 +108,87 @@ class PCA:
         self.pca_data = torch.matmul(standardized_data, self.components)
 
 
-class GaussianDensityEstimation(MixtureSameFamily):
-    def __init__(self, x=None, mix=None, components=None, bandwidth=0., n_points=100, use_pca_weights=True, *args):
-        if components is not None and mix is not None:
-            # Initialize using precomputed components and mix
-            if components.loc.shape[0] > n_points:
-                weights = mix.probs
-                indices = torch.multinomial(weights, n_points, replacement=False)
-                # top_n_points = torch.argsort(weights, descending=True)[:n_points]
-                loc = components.loc[indices]
-                covariance_matrix = components.covariance_matrix[indices]
-                components = MultivariateNormal(loc, covariance_matrix)
-                probs = mix.probs[indices]
-                mix = Categorical(probs)
-            super(GaussianDensityEstimation, self).__init__(mix, components)
-        else:
-            assert x is not None, "Either x, or components and mix must be provided"
-            if x.shape[0] < n_points * 10:
-                n_points = x.shape[0] // 10
-            # spread the point selection
-            used_points, labels = k_means_cluster(x, n_points, 10, *args)
-            covs = ops.stack([torch.cov(x[labels == idx].T) if x[labels == idx].shape[0] > 1 else ops.eye(3) * 0.1
-                              for idx in range(used_points.shape[0])])
-            covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
+# class GaussianDensityEstimation(MixtureSameFamily):
+#     def __init__(self, x=None, mix=None, components=None, bandwidth=0., n_points=100, use_pca_weights=True, *args):
+#         if components is not None and mix is not None:
+#             # Initialize using precomputed components and mix
+#             if components.loc.shape[0] > n_points:
+#                 weights = mix.probs
+#                 indices = torch.multinomial(weights, n_points, replacement=False)
+#                 # top_n_points = torch.argsort(weights, descending=True)[:n_points]
+#                 loc = components.loc[indices]
+#                 covariance_matrix = components.covariance_matrix[indices]
+#                 components = MultivariateNormal(loc, covariance_matrix)
+#                 probs = mix.probs[indices]
+#                 mix = Categorical(probs)
+#             super(GaussianDensityEstimation, self).__init__(mix, components)
+#         else:
+#             assert x is not None, "Either x, or components and mix must be provided"
+#             if x.shape[0] < n_points * 10:
+#                 n_points = x.shape[0] // 10
+#             # spread the point selection
+#             used_points, labels = k_means_cluster(x, n_points, 10, *args)
+#             covs = ops.stack([torch.cov(x[labels == idx].T) if x[labels == idx].shape[0] > 1 else ops.eye(3) * 0.1
+#                               for idx in range(used_points.shape[0])])
+#             covs += ops.full((covs.shape[0], 3), bandwidth).diag_embed()
+#
+#             components = MultivariateNormal(used_points, covs)
+#             if not use_pca_weights:
+#                 weights = ops.ones(len(used_points))
+#             else:
+#                 pca_x = PCA(used_points, n_components=2).pca_data
+#                 weights = torch.linalg.norm(pca_x, dim=-1)
+#             mix = Categorical(weights)
+#             super(GaussianDensityEstimation, self).__init__(mix, components)
+#
+#         self.bw = bandwidth + 1e-6
+#         self.n_points = n_points
+#
+#     def update(self, new_data, weight=0.1):  # TODO: turn into function, and specifically for an mvn dist
+#         assert 0. <= weight <= 1., "Weight must be between 0 and 1"
+#         new_mix = GaussianDensityEstimation(new_data, bandwidth=self.bw, n_points=self.n_points,
+#                                             use_pca_weights=True)
+#         mix_locs = new_mix.component_distribution.loc
+#         mix_covs = new_mix.component_distribution.covariance_matrix
+#         mix_weights = new_mix.mixture_distribution.probs
+#         loc = ops.concatenate([self.component_distribution.loc, mix_locs], axis=0)
+#         covariance_matrix = ops.concatenate(
+#             [self.component_distribution.covariance_matrix, mix_covs], axis=0)
+#         probs = ops.concatenate(
+#             [(1 - weight) * self.mixture_distribution.probs, weight * mix_weights], axis=0)
+#
+#         self.__init__(mix=Categorical(probs), components=MultivariateNormal(loc, covariance_matrix), bandwidth=self.bw,
+#                       n_points=self.n_points)
+#
+#     def copy(self):  # TODO: turn into function, and specifically for an mvn dist
+#         components = self.component_distribution
+#         mix = self.mixture_distribution
+#         new_instance = GaussianDensityEstimation(mix=mix, components=components, bandwidth=self.bw,
+#                                                  n_points=self.n_points)
+#
+#         return new_instance
 
-            components = MultivariateNormal(used_points, covs)
-            if not use_pca_weights:
-                weights = ops.ones(len(used_points))
-            else:
-                pca_x = PCA(used_points, n_components=2).pca_data
-                weights = torch.linalg.norm(pca_x, dim=-1)
-            mix = Categorical(weights)
-            super(GaussianDensityEstimation, self).__init__(mix, components)
+def copy(self):  # TODO: turn into function, and specifically for an mvn dist
+    mean = self.loc
+    cov = self.covariance_matrix
+    new_instance = MultivariateNormal(mean, cov)
 
-        self.bw = bandwidth + 1e-6
-        self.n_points = n_points
+    return new_instance
 
-    def update(self, new_data, weight=0.1):
-        assert 0. <= weight <= 1., "Weight must be between 0 and 1"
-        new_mix = GaussianDensityEstimation(new_data, bandwidth=self.bw, n_points=self.n_points,
-                                            use_pca_weights=True)
-        mix_locs = new_mix.component_distribution.loc
-        mix_covs = new_mix.component_distribution.covariance_matrix
-        mix_weights = new_mix.mixture_distribution.probs
-        loc = ops.concatenate([self.component_distribution.loc, mix_locs], axis=0)
-        covariance_matrix = ops.concatenate(
-            [self.component_distribution.covariance_matrix, mix_covs], axis=0)
-        probs = ops.concatenate(
-            [(1 - weight) * self.mixture_distribution.probs, weight * mix_weights], axis=0)
 
-        self.__init__(mix=Categorical(probs), components=MultivariateNormal(loc, covariance_matrix), bandwidth=self.bw,
-                      n_points=self.n_points)
+def update(self, new_mean, new_cov, weight=0.5):
+    assert 0. <= weight <= 1., "Weight must be between 0 and 1"
+    old_mean = self.loc
+    old_cov = self.covariance_matrix
 
-    def copy(self):
-        components = self.component_distribution
-        mix = self.mixture_distribution
-        new_instance = GaussianDensityEstimation(mix=mix, components=components, bandwidth=self.bw,
-                                                 n_points=self.n_points)
+    mean = (1 - weight) * old_mean + weight * new_mean
+    cov = (1 - weight) * old_cov + weight * new_cov
 
-        return new_instance
+    self.__init__(mean, cov)
+
+
+MultivariateNormal.copy = copy
+MultivariateNormal.update = update
 
 
 def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
@@ -196,13 +218,12 @@ def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
 kl_div = KLDivLoss(reduction='batchmean', log_target=True)
 
 
-@register_kl(GaussianDensityEstimation, GaussianDensityEstimation)
-def js_divergence(p, q, samples=None, n_samples=1000):
+def js_divergence(p, q, samples=None, n_samples=10000):
     if samples is None:
         samples = ops.concatenate((p.sample((n_samples,)), q.sample((n_samples,))), axis=0)
 
-    log_probs_p = ops.log_softmax(p.log_prob(samples))
-    log_probs_q = ops.log_softmax(q.log_prob(samples))
+    log_probs_p = ops.log_softmax(p.log_prob(samples).ravel())
+    log_probs_q = ops.log_softmax(q.log_prob(samples).ravel())
 
     a = torch.max(log_probs_p, log_probs_q)  # for numerical stability
     log_probs_m = -ops.log(2) + a + ops.log(ops.exp(log_probs_p - a) + ops.exp(log_probs_q - a))
@@ -286,27 +307,26 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
             return best_idx
     return None
 
-
-def get_autoencoder(input_shape, latent_dim=3, skip_connections=False):
-    inputs = layers.Input(shape=(input_shape,))
-    encoder = keras.Sequential([
-        layers.Normalization(),
-        layers.Dense(32, activation='relu'),
-        layers.Dropout(0.1),
-        layers.Dense(latent_dim),
-    ])
-    decoder = keras.Sequential([
-        layers.Input(shape=(latent_dim,)),
-        layers.Dense(32, activation='relu'),
-        layers.Dense(input_shape),
-    ])
-    encoding = encoder(inputs)
-    decoding = decoder(encoding)
-    if skip_connections:
-        in_slice = layers.Lambda(lambda x: x[..., :-2])(inputs)
-        out_slice = layers.Lambda(lambda x: x[..., -2:])(decoding)
-        decoding = layers.concatenate([in_slice, out_slice], axis=-1)
-
-    autoencoder = keras.Model(inputs, decoding)
-
-    return autoencoder
+# def get_autoencoder(input_shape, latent_dim=3, skip_connections=False):
+#     inputs = layers.Input(shape=(input_shape,))
+#     encoder = keras.Sequential([
+#         layers.Normalization(),
+#         layers.Dense(32, activation='relu'),
+#         layers.Dropout(0.1),
+#         layers.Dense(latent_dim),
+#     ])
+#     decoder = keras.Sequential([
+#         layers.Input(shape=(latent_dim,)),
+#         layers.Dense(32, activation='relu'),
+#         layers.Dense(input_shape),
+#     ])
+#     encoding = encoder(inputs)
+#     decoding = decoder(encoding)
+#     if skip_connections:
+#         in_slice = layers.Lambda(lambda x: x[..., :-2])(inputs)
+#         out_slice = layers.Lambda(lambda x: x[..., -2:])(decoding)
+#         decoding = layers.concatenate([in_slice, out_slice], axis=-1)
+#
+#     autoencoder = keras.Model(inputs, decoding)
+#
+#     return autoencoder
