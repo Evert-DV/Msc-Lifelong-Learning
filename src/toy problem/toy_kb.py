@@ -115,13 +115,14 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m6k11c4_seed219.npy")
+    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
     posteriors = []
     updates = []
     trespassing = []
+    kb_selection = []
     posterior_selection_idx = []
     thres = np.log(2) * 0.25
     step = 300
@@ -174,6 +175,7 @@ def implement():
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
                 print(f"Use KB entry {best_idx} as reference")
+                kb_selection.append(i)
                 prior = kb[0][best_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
@@ -192,11 +194,12 @@ def implement():
             torch.cuda.empty_cache()
             updates.append(i)
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.75)
+            running_distribution.update(z_mean, cov, weight=0.5)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
                 print(f"Use KB entry {best_idx} as reference")
+                kb_selection.append(i)
                 prior = kb[0][best_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
@@ -207,7 +210,7 @@ def implement():
             print("No match found")
             backup_updated_prior = updated_prior.copy()
             updated_prior.update(z_mean, cov, weight=0.1)
-            print(f"Updated prior with {3600} samples")  # TODO: correct print statement
+            print(f"Updated prior")
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
@@ -221,9 +224,11 @@ def implement():
 
     ax[0].plot(t[posterior_selection_idx], posteriors, linestyle='-.', marker='x', lw=1., alpha=.5,
                label=[f"P(dist_{i}|emb)" for i in range(initial_kb_len)])
+    ax[0].ticklabel_format(style='plain')
     ax[0].legend()
 
-    ax[1].vlines(t[updates], 0, 15, colors='tab:gray', linestyles=':')
+    ax[1].vlines(t[updates], 0, 15, colors='lightgrey', linestyles='-')
+    ax[1].vlines(t[kb_selection], 0, 15, colors='tab:green', linestyles='--')
     ax[1].vlines(t[trespassing], 0, 15, colors='tab:red', linestyles=':')
     ax[1].plot(t[120 * 60:][::step], kl_loss, lw=1., alpha=0.7,
                label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])

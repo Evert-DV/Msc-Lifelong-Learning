@@ -280,7 +280,7 @@ def get_posteriors(data, distributions, p_dist):
     log_p_data_dist -= max_log_p_data_dist
     log_p_dist_data = log_p_data_dist + log_p_dist[None].T
     p_dist_data = ops.exp(log_p_dist_data)
-    p_dist_data /= ops.sum(p_dist_data, axis=0)
+    p_dist_data /= (ops.sum(p_dist_data, axis=0) + 1e-12)  # Optional
 
     return p_dist_data
 
