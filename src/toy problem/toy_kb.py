@@ -115,7 +115,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
