@@ -6,8 +6,8 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = True
-    data = np.load(f"tmp/train data/m5k10c3_seed131.npy")
+    pretrain = False
+    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
@@ -18,7 +18,7 @@ def train():
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-3)
+    optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -58,12 +58,12 @@ def compare():
         if file.endswith(".npy"):
             print(file.title())
             data = np.load(f"tmp/train data/{file}")
-            features = ops.array(data)[..., [0, 1, 2, 3, 4]]  # .reshape(-1, 5)
+            features = ops.array(data)[..., [0, 1, 2, 3, 4]]
             dist_mean, dist_log_var = autoencoder.dynamics(features)
-            samples, cov = sample(dist_mean, dist_log_var, samples_per_centroid=10)
+            samples, cov = sample(dist_mean, dist_log_var)
             dist = MultivariateNormal(dist_mean, cov)
 
-            visualize_distribution(dist)
+            # visualize_distribution(dist)
 
             latent_features.append(samples)
             distributions.append(dist)
@@ -98,13 +98,13 @@ def implement():
     global kb_idx, ewma_post_prob, updated_prior, prior, backup_updated_prior, running_distribution
     autoencoder = keras.models.load_model(model_location)
     autoencoder.eval()
-    use_kb = False
+    use_kb = True
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
 
         z_mean, z_log_var = autoencoder.dynamics(x_prior)
-        embeddings, cov = sample(z_mean, z_log_var)
+        embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
         prior = MultivariateNormal(z_mean, cov)
 
         kb = [[prior], [1.]]
@@ -115,7 +115,7 @@ def implement():
     print(f"{initial_kb_len} entries in the KB\n")
 
     # Simulate a realtime implementation
-    data = np.load(f"tmp/train data/m5k20c6_w-update_seed843.npy")
+    data = np.load(f"tmp/train data/m6k11c4_seed219.npy")
     data = ops.array(data)
     t = np.arange(0, len(data) / 60, 1 / 60)
     kl_loss = []
@@ -131,7 +131,7 @@ def implement():
 
         if i < 60 * 60:
             z_mean, z_log_var = autoencoder.dynamics(x)
-            embeddings, cov = sample(z_mean, z_log_var)
+            embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
             posterior_selection_idx.append(i)
             # Likelihoods and relative posteriors
             post_probs = get_posteriors(embeddings, kb[0], kb[1])
@@ -152,7 +152,7 @@ def implement():
 
         # Get embeddings
         z_mean, z_log_var = autoencoder.dynamics(x)
-        embeddings, cov = sample(z_mean, z_log_var)
+        embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
 
         if i < 120 * 60:
             if i == 60 * 60:
@@ -238,8 +238,8 @@ def implement():
 
 def main():
     # train()
-    compare()
-    # implement()
+    # compare()
+    implement()
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ from torch.distributions import MultivariateNormal
 from torch.nn import KLDivLoss
 
 
-def sample(z_mean, z_log_var, samples_per_centroid=1):  # TODO: allow arbitrary number of samples
+def sample(z_mean, z_log_var, samples_per_centroid=1):
     if z_mean.ndim == 1:
         z_mean = z_mean.unsqueeze(0)
     batch = ops.shape(z_mean)[0]
@@ -259,7 +259,7 @@ def visualize_distribution(distribution, embeddings=None, use_samples=True):
                              alpha=0.3)
 
         # Colorbar to show the mapping from color to probability
-    fig.colorbar(scatter, ax=ax)
+        fig.colorbar(scatter, ax=ax)
 
     ax.set_xlabel('X axis')
     ax.set_ylabel('Y axis')
@@ -274,9 +274,12 @@ def ewma(data, prev_avg, rho=0.8, axis=0):
 
 
 def get_posteriors(data, distributions, p_dist):
-    p_dist = ops.array(p_dist)
-    p_data_dist = ops.exp([dist.log_prob(data) for dist in distributions])
-    p_dist_data = p_data_dist * p_dist[None].T
+    log_p_dist = ops.log(p_dist)
+    log_p_data_dist = ops.array([dist.log_prob(data) for dist in distributions])
+    max_log_p_data_dist = ops.max(log_p_data_dist, axis=1, keepdims=True)
+    log_p_data_dist -= max_log_p_data_dist
+    log_p_dist_data = log_p_data_dist + log_p_dist[None].T
+    p_dist_data = ops.exp(log_p_dist_data)
     p_dist_data /= ops.sum(p_dist_data, axis=0)
 
     return p_dist_data
