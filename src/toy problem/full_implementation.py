@@ -3,6 +3,7 @@ from toy_tools import *
 import pickle
 import keras
 from keras import optimizers, losses
+from torch.utils.data import TensorDataset, DataLoader
 
 
 def main():
@@ -74,7 +75,6 @@ def main():
         # Target selection
         if ti % 15 == 0:
             target = [np.random.rand() * 6 + 7, 0.]
-            buffer = []
         targets.append(target)
 
         # Control loop
@@ -82,7 +82,7 @@ def main():
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
-        x = system.response(x0, control_action, do_update=True)
+        x = system.response(x0, control_action, do_update=False)
         signal.append(x)
         x0 = x
 
@@ -124,7 +124,6 @@ def main():
                 backup_updated_prior = prior.copy()
                 print(f"\nSelected {kb_idx} as reference")
                 running_distribution = MultivariateNormal(z_mean, cov)  # TODO: fix this
-                continue
 
             # Post-60 seconds
             # KL losses
@@ -133,7 +132,7 @@ def main():
             kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
 
             # Check for shift
-            if (kl_updated_dist > thres or kl_prior_updated > .9 * thres):
+            if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
                 print("\nSHIFT DETECTED\nRestore KB entry reference")
                 # trespassing.append(i)
                 # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
@@ -160,7 +159,7 @@ def main():
             torch.cuda.empty_cache()
             # updates.append(i)
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.5)
+            running_distribution.update(z_mean, cov, weight=0.1)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
@@ -174,10 +173,41 @@ def main():
             # Update prior
             print("No match found")
             backup_updated_prior = updated_prior.copy()
-            updated_prior.update(z_mean, cov, weight=0.5)
+            updated_prior.update(z_mean, cov, weight=0.1)
             print(f"Updated prior")
 
-    #       Update running distribution
+            # Update adapter
+            adapter.optimizer.lr = 1.e-3
+            buffer = ops.array(buffer)
+            features, labels = prep_data(buffer, prediction_window, interval=15)
+            ref_prediction = adapter.predict(features, verbose=0)
+            predicted_targets += ref_prediction[:, 0].ravel().tolist()
+            predicted_targets += prediction_window * [float('nan')]
+
+            print("\nFitting model...")
+            train_dataset, val_dataset = random_split(TensorDataset(features, labels),
+                                                      [int(0.8 * len(features)),
+                                                       len(features) - int(0.8 * len(features))])
+            train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+
+            callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                       mode='min',
+                                                       min_delta=1e-4,
+                                                       patience=5,
+                                                       restore_best_weights=True,
+                                                       verbose=1),
+                         EpochLogger()
+                         ]
+            adapter.fit(train_dataloader,
+                        epochs=100,
+                        callbacks=callbacks,
+                        validation_data=val_dataloader,
+                        verbose=0,
+                        )
+
+            buffer = []
+            print()
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
