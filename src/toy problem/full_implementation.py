@@ -7,7 +7,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 
 def main():
-    # Load adapter model (or included in KB)
+    # Load 'vanilla' adapter model (or included in KB)
     adapter = keras.models.load_model("tmp/target_adapter.keras")
     prediction_window = 10
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
@@ -48,7 +48,7 @@ def main():
 
     # Setup simulation loop
     dt = 1 / 60
-    t = np.arange(0, 600, dt)
+    t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -158,7 +158,7 @@ def main():
                 t_trespassing.append(ti)
                 # retain last or leave it as it was?
                 # kb[0][kb_idx] = backup_updated_prior.copy()
-                kb[1][kb_idx] = adapter.get_weights()
+                # kb[1][kb_idx] = adapter.get_weights()
                 print("Check KB for better match")
                 best_idx, js_divs = search_kb(running_distribution, kb[0])
                 if best_idx != kb_idx and js_divs[best_idx] < thres:
@@ -223,34 +223,34 @@ def main():
 
     fig, ax = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
 
+    for ax_i in ax:
+        for t_update in t_updates:
+            ax_i.axvline(t_update, color='lightgrey', linestyle='-')
+        for t_kb in t_kb_selection:
+            ax_i.axvline(t_kb, color='tab:green', linestyle='--')
+        for t_tres in t_trespassing:
+            ax_i.axvline(t_tres, color='tab:red', linestyle=':')
+
     ax[0].plot(t, reference_signal[:, 0], color='tab:blue', alpha=0.33, label="Reference controller")
     ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
     ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
-    for t_update in t_updates:
-        ax[0].axvline(t_update, color='lightgrey', linestyle='-')
-    for t_kb in t_kb_selection:
-        ax[0].axvline(t_kb, color='tab:green', linestyle='--')
-    for t_tres in t_trespassing:
-        ax[0].axvline(t_tres, color='tab:red', linestyle=':')
     ax[0].legend(fontsize=8, loc='upper left')
 
     ax[1].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
     ax[1].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
     ax[1].legend(fontsize=8, loc='upper left')
 
-    ax[2].plot(t_prior_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5,
-               label=[f"KB entry {i}" for i in range(initial_kb_len)])
+    selection_lines = ax[2].plot(t_prior_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
+    js_loss_lines = ax[2].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7)
+    ax[2].axhline(thres, color='k', linestyle='--', lw=.8)
+    ax[2].axhline(0., color='k', linestyle='--', lw=.8)
     ax[2].ticklabel_format(style='plain')
-    ax[2].legend()
-
-    ax[2].vlines(t_updates, 0, 1, colors='lightgrey', linestyles='-')
-    ax[2].vlines(t_kb_selection, 0, 1, colors='tab:green', linestyles='--')
-    ax[2].vlines(t_trespassing, 0, 1, colors='tab:red', linestyles=':')
-    ax[2].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7,
-               label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
-    ax[2].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
     ax[2].set_ylim(-0.1, np.log(2) + 0.1)
-    ax[2].legend()
+    legend1 = ax[2].legend(fontsize=8, loc='upper left',
+                 handles=selection_lines, labels=[f"KB entry {i}" for i in range(initial_kb_len)])
+    ax[2].add_artist(legend1)
+    ax[2].legend(fontsize=8, loc='upper right',
+                 handles=js_loss_lines, labels=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
 
     fig.tight_layout()
     if not os.path.exists("tmp"):
