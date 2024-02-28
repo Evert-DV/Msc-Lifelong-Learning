@@ -15,7 +15,7 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     # Load VAE model
-    autoencoder = autoencoder = keras.models.load_model("tmp/varautoencoder.keras")
+    autoencoder = keras.models.load_model("tmp/varautoencoder.keras")
     optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
@@ -37,11 +37,11 @@ def main():
         z_mean, z_log_var = autoencoder.dynamics(x_prior)
         cov = sample(z_mean, z_log_var)[1]
         prior = MultivariateNormal(z_mean, cov)
-
-        kb = [[prior], [1.], []]
+        kb = [[prior], [1.], [adapter.get_weights()]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
             kb = pickle.load(f)
+
     initial_kb_len = len(kb[0])
     print(f"{initial_kb_len} entries in the KB\n")
     thres = np.log(2) * 0.25
@@ -123,6 +123,7 @@ def main():
                 prior = kb[0][kb_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
+                adapter.set_weights(kb[2][kb_idx])
                 print(f"\nSelected {kb_idx} as reference")
                 running_distribution = MultivariateNormal(z_mean, cov)  # TODO: fix this
 
@@ -136,7 +137,9 @@ def main():
             if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
                 print("\nSHIFT DETECTED\nRestore KB entry reference")
                 t_trespassing.append(ti)
-                # kb[0][kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
+                # retain last or leave it as it was?
+                # kb[0][kb_idx] = backup_updated_prior.copy()
+                # kb[2][kb_idx] = adapter.get_weights()
                 print("Check KB for better match")
                 best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
                 if best_idx is not None:
@@ -146,6 +149,7 @@ def main():
                     updated_prior = prior.copy()
                     backup_updated_prior = prior.copy()
                     kb_idx = best_idx
+                    adapter.set_weights(kb[2][best_idx])
                     continue
 
                 print("No match found\nInitiate new KB entry")
@@ -153,6 +157,7 @@ def main():
                 updated_prior = prior.copy()
                 kb[0].append(prior)
                 kb[1] = expand_prior_probs(kb[1])
+                kb[2].append(adapter.get_weights())
                 kb_idx = len(kb[0]) - 1
 
         # Update step
@@ -171,6 +176,7 @@ def main():
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
                 kb_idx = best_idx
+                adapter.set_weights(kb[2][best_idx])
                 continue
 
             # Update prior
@@ -215,6 +221,7 @@ def main():
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
     kb[1] = len(kb[1]) * [1 / len(kb[1])]
+    kb[2][-1] = adapter.get_weights()
     print(f"\n\n{len(kb[0])} entries in the KB")
     with open('tmp/kb.pkl', 'wb') as f:
         pickle.dump(kb, f)
@@ -267,7 +274,7 @@ if __name__ == '__main__':
 
     model_location = 'tmp/varautoencoder.keras'
     seed = np.random.randint(0, 1000)
-    # seed = 267
+    # seed = 42
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
