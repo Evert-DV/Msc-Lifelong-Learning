@@ -21,7 +21,7 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    system = System(5, 10, 3, 5)
+    system = System(5, 20, 6, 5)
 
     # Define controller
     controller = PIDController(350, 107.5, 1257)
@@ -37,7 +37,7 @@ def main():
         z_mean, z_log_var = autoencoder.dynamics(x_prior)
         cov = sample(z_mean, z_log_var)[1]
         prior = MultivariateNormal(z_mean, cov)
-        kb = [[prior], [1.], [adapter.get_weights()]]
+        kb = [[prior], [adapter.get_weights()]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
             kb = pickle.load(f)
@@ -48,7 +48,7 @@ def main():
 
     # Setup simulation loop
     dt = 1 / 60
-    t = np.arange(0, 300, dt)
+    t = np.arange(0, 600, dt)
     target = np.array([11., 0.])
     buffer = []
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
@@ -61,13 +61,12 @@ def main():
     adapted_targets = []
     reference_controls = []
     adapted_controls = []
-    predicted_targets = []
     kl_loss = []
-    posteriors = []
+    js_selection = []
     t_updates = []
     t_trespassing = []
     t_kb_selection = []
-    t_posterior_selection = []
+    t_prior_selection = []
 
     # Simulation loop
     for ti in t:
@@ -96,104 +95,11 @@ def main():
         # Buffer data
         buffer.append([*x0, control_action, *x, *predicted_target])
 
-        # KB step
-        if ti % 5 == 0:
-            # Get embeddings
-            z_mean, z_log_var = autoencoder.dynamics(ops.array(buffer)[..., [0, 1, 2, 3, 4]])
-            embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
-
-            # Pre-60 seconds
-            if ti < 60:
-                # Likelihoods and relative posteriors
-                t_posterior_selection.append(ti)
-                post_probs = get_posteriors(embeddings, kb[0], kb[1])
-                posterior_ewma = []
-                for idx, post_prob in enumerate(post_probs):
-                    if ti == 0:
-                        ewma_post_prob = post_prob.mean(axis=-1)
-                    else:
-                        ewma_post_prob = ewma(post_prob, ewma_post_prob, rho=0.1, axis=-1)
-                    posterior_ewma.append(ewma_post_prob.item())
-                    kb[1][idx] = ewma_post_prob.item()  # update P(dist) in kb
-                posteriors.append(posterior_ewma)
-
-                # Select KB entry
-                kb_idx = np.argmax(posterior_ewma)  # rho can really influence the result
-                prior = kb[0][kb_idx]
-                updated_prior = prior.copy()
-                backup_updated_prior = prior.copy()
-                adapter.set_weights(kb[2][kb_idx])
-                running_distribution = MultivariateNormal(z_mean, cov)
-
-            if ti == 60:
-                print(f"\nSelected {kb_idx} as reference")
-
-            # Post-60 seconds
-            # KL losses
-            kl_updated_dist = js_divergence(updated_prior, running_distribution)
-            kl_prior_updated = js_divergence(prior, updated_prior)
-            kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
-
-            # Check for shift
-            if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and ti > 60:
-                print("\nSHIFT DETECTED\nRestore KB entry reference")
-                t_trespassing.append(ti)
-                # retain last or leave it as it was?
-                # kb[0][kb_idx] = backup_updated_prior.copy()
-                # kb[2][kb_idx] = adapter.get_weights()
-                print("Check KB for better match")
-                best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
-                if best_idx is not None:
-                    print(f"Use KB entry {best_idx} as reference")
-                    t_kb_selection.append(ti)
-                    prior = kb[0][best_idx]
-                    updated_prior = prior.copy()
-                    backup_updated_prior = prior.copy()
-                    kb_idx = best_idx
-                    adapter.set_weights(kb[2][best_idx])
-                else:
-                    print("No match found\nInitiate new KB entry")
-                    prior = running_distribution.copy()
-                    updated_prior = prior.copy()
-                    kb[0].append(prior)
-                    kb[1] = expand_prior_probs(kb[1])
-                    kb[2].append(adapter.get_weights())
-                    kb_idx = len(kb[0]) - 1
-
-        # KB update step
-        if ti % 60 == 0 and ti != 0:
-            print('\nUPDATE STEP')
-            torch.cuda.empty_cache()
-            t_updates.append(ti)
-
-            # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.1)
-            print("Check KB for better match")
-            best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
-            if best_idx is not None:
-                print(f"Use KB entry {best_idx} as reference")
-                t_kb_selection.append(ti)
-                prior = kb[0][best_idx]
-                updated_prior = prior.copy()
-                backup_updated_prior = prior.copy()
-                kb_idx = best_idx
-                adapter.set_weights(kb[2][best_idx])
-                continue
-
-            # Update prior
-            print("No match found")
-            backup_updated_prior = updated_prior.copy()
-            updated_prior.update(z_mean, cov, weight=0.1)
-            print(f"Updated prior")
-
         # Adapter update step
-        if ti % 15 == 0 and ti != 0:
+        if ti % 20 == 0 and ti != 0:
             adapter.optimizer.lr = 1.e-3
             buffer = ops.array(buffer)
             features, labels = prep_data(buffer, prediction_window, interval=15)
-            ref_prediction = adapter.predict(features, verbose=0)
-            predicted_targets += ref_prediction[:, 0].ravel().tolist()
-            predicted_targets += prediction_window * [float('nan')]
 
             print("\nFitting model...")
             train_dataset, val_dataset = random_split(TensorDataset(features, labels),
@@ -216,12 +122,94 @@ def main():
                         validation_data=val_dataloader,
                         verbose=0,
                         )
+            buffer = buffer.tolist()
+
+        # KB step
+        if ti % 5 == 0:
+            # Get embeddings
+            z_mean, z_log_var = autoencoder.dynamics(ops.array(buffer)[..., [0, 1, 2, 3, 4]])
+            embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
+
+            # Pre-60 seconds
+            if ti < 60:
+                t_prior_selection.append(ti)
+                running_distribution = MultivariateNormal(z_mean, cov)
+                kb_idx, js_divs = search_kb(running_distribution, kb[0])
+                js_selection.append(js_divs)
+                continue
+
+            if ti == 60:
+                # Select KB entry
+                prior = kb[0][kb_idx]
+                updated_prior = prior.copy()
+                backup_updated_prior = prior.copy()
+                adapter.set_weights(kb[1][kb_idx])
+                print(f"\nSelected {kb_idx} as reference")
+
+            # Post-60 seconds
+            # KL losses
+            kl_updated_dist = js_divergence(updated_prior, running_distribution)
+            kl_prior_updated = js_divergence(prior, updated_prior)
+            kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
+
+            # Check for shift
+            if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
+                print("\nSHIFT DETECTED\nRestore KB entry reference")
+                t_trespassing.append(ti)
+                # retain last or leave it as it was?
+                # kb[0][kb_idx] = backup_updated_prior.copy()
+                kb[1][kb_idx] = adapter.get_weights()
+                print("Check KB for better match")
+                best_idx, js_divs = search_kb(running_distribution, kb[0])
+                if best_idx != kb_idx and js_divs[best_idx] < thres:
+                    print(f"Use KB entry {best_idx} as reference")
+                    t_kb_selection.append(ti)
+                    prior = kb[0][best_idx]
+                    updated_prior = prior.copy()
+                    backup_updated_prior = prior.copy()
+                    kb_idx = best_idx
+                    adapter.set_weights(kb[1][best_idx])
+                else:
+                    print("No match found\nInitiate new KB entry")
+                    prior = running_distribution.copy()
+                    updated_prior = prior.copy()
+                    kb[0].append(prior)
+                    kb[1].append(adapter.get_weights())
+                    kb_idx = len(kb[0]) - 1
+
+        # KB update step
+        if ti % 60 == 0 and ti != 0:
+            print('\nUPDATE STEP')
+            torch.cuda.empty_cache()
+            t_updates.append(ti)
+
+            # Update running distribution
+            running_distribution.update(z_mean, cov, weight=0.5)
+            print("Check KB for better match")
+            best_idx, js_divs = search_kb(running_distribution, kb[0])
+            if best_idx != kb_idx and js_divs[best_idx] < thres:
+                print(f"Use KB entry {best_idx} as reference")
+                t_kb_selection.append(ti)
+                kb[1][kb_idx] = adapter.get_weights()
+                prior = kb[0][best_idx]
+                updated_prior = prior.copy()
+                backup_updated_prior = prior.copy()
+                kb_idx = best_idx
+                adapter.set_weights(kb[1][best_idx])
+                continue
+
+            # Update prior
+            print("No match found")
+            backup_updated_prior = updated_prior.copy()
+            updated_prior.update(z_mean, cov, weight=0.1)
+            print(f"Updated prior")
+
+            # Empty buffer
             buffer = []
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
-    kb[1] = len(kb[1]) * [1 / len(kb[1])]
-    kb[2][-1] = adapter.get_weights()
+    kb[1][-1] = adapter.get_weights()
     print(f"\n\n{len(kb[0])} entries in the KB")
     with open('tmp/kb.pkl', 'wb') as f:
         pickle.dump(kb, f)
@@ -232,39 +220,37 @@ def main():
     reference_signal = np.asarray(reference_signal)
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
-    predicted_targets = np.asarray(predicted_targets).ravel()
 
-    fig, ax = plt.subplots(2, 2, figsize=(16, 8), sharex=True)
+    fig, ax = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
 
-    ax[0, 0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
-    ax[0, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-    ax[0, 0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+    ax[0].plot(t, reference_signal[:, 0], color='tab:blue', alpha=0.33, label="Reference controller")
+    ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
     for t_update in t_updates:
-        ax[0, 0].axvline(t_update, color='lightgrey', linestyle='-')
+        ax[0].axvline(t_update, color='lightgrey', linestyle='-')
     for t_kb in t_kb_selection:
-        ax[0, 0].axvline(t_kb, color='tab:green', linestyle='--')
+        ax[0].axvline(t_kb, color='tab:green', linestyle='--')
     for t_tres in t_trespassing:
-        ax[0, 0].axvline(t_tres, color='tab:red', linestyle=':')
-    ax[0, 0].legend(fontsize=8, loc='upper left')
+        ax[0].axvline(t_tres, color='tab:red', linestyle=':')
+    ax[0].legend(fontsize=8, loc='upper left')
 
-    ax[1, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-    ax[1, 0].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
-    # ax[1, 0].plot(t[60:-60 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
-    ax[1, 0].legend(fontsize=8, loc='upper left')
+    ax[1].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[1].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
+    ax[1].legend(fontsize=8, loc='upper left')
 
-    ax[0, 1].plot(t_posterior_selection, posteriors, linestyle='-.', marker='x', lw=1., alpha=.5,
-                  label=[f"P(dist_{i}|emb)" for i in range(initial_kb_len)])
-    ax[0, 1].ticklabel_format(style='plain')
-    ax[0, 1].legend()
+    ax[2].plot(t_prior_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5,
+               label=[f"KB entry {i}" for i in range(initial_kb_len)])
+    ax[2].ticklabel_format(style='plain')
+    ax[2].legend()
 
-    ax[1, 1].vlines(t_updates, 0, 1, colors='lightgrey', linestyles='-')
-    ax[1, 1].vlines(t_kb_selection, 0, 1, colors='tab:green', linestyles='--')
-    ax[1, 1].vlines(t_trespassing, 0, 1, colors='tab:red', linestyles=':')
-    ax[1, 1].plot(t[::300], kl_loss, lw=1., alpha=0.7,
-                  label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
-    ax[1, 1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
-    ax[1, 1].set_ylim(-0.1, 3 * thres)
-    ax[1, 1].legend()
+    ax[2].vlines(t_updates, 0, 1, colors='lightgrey', linestyles='-')
+    ax[2].vlines(t_kb_selection, 0, 1, colors='tab:green', linestyles='--')
+    ax[2].vlines(t_trespassing, 0, 1, colors='tab:red', linestyles=':')
+    ax[2].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7,
+               label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
+    ax[2].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
+    ax[2].set_ylim(-0.1, np.log(2) + 0.1)
+    ax[2].legend()
 
     fig.tight_layout()
     if not os.path.exists("tmp"):

@@ -302,3 +302,13 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
         if kl_prior_dist < .9 * thres:
             return best_idx
     return None
+
+
+def search_kb(running_dist, kb_dists):
+    js_divs = []
+    for idx, dist in enumerate(kb_dists):
+        js_div = js_divergence(dist, running_dist)
+        js_divs.append(js_div.item())
+    kb_idx = ops.argmin(js_divs).item()
+
+    return kb_idx, js_divs
