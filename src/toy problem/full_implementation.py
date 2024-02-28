@@ -30,7 +30,7 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     # Setup KB
-    use_kb = False
+    use_kb = True
     if not use_kb:
         prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
@@ -82,7 +82,7 @@ def main():
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
-        x = system.response(x0, control_action, do_update=False)
+        x = system.response(x0, control_action, do_update=True)
         signal.append(x)
         x0 = x
 
@@ -93,6 +93,7 @@ def main():
         reference_signal.append(x_reference)
         x0_reference = x_reference
 
+        # Buffer data
         buffer.append([*x0, control_action, *x, *predicted_target])
 
         # KB step
@@ -115,17 +116,17 @@ def main():
                     posterior_ewma.append(ewma_post_prob.item())
                     kb[1][idx] = ewma_post_prob.item()  # update P(dist) in kb
                 posteriors.append(posterior_ewma)
-                continue
 
-            # Select KB entry
-            if ti == 60:
+                # Select KB entry
                 kb_idx = np.argmax(posterior_ewma)  # rho can really influence the result
                 prior = kb[0][kb_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
                 adapter.set_weights(kb[2][kb_idx])
+                running_distribution = MultivariateNormal(z_mean, cov)
+
+            if ti == 60:
                 print(f"\nSelected {kb_idx} as reference")
-                running_distribution = MultivariateNormal(z_mean, cov)  # TODO: fix this
 
             # Post-60 seconds
             # KL losses
@@ -134,7 +135,7 @@ def main():
             kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
 
             # Check for shift
-            if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
+            if (kl_updated_dist > thres or kl_prior_updated > .9 * thres) and ti > 60:
                 print("\nSHIFT DETECTED\nRestore KB entry reference")
                 t_trespassing.append(ti)
                 # retain last or leave it as it was?
@@ -150,23 +151,23 @@ def main():
                     backup_updated_prior = prior.copy()
                     kb_idx = best_idx
                     adapter.set_weights(kb[2][best_idx])
-                    continue
+                else:
+                    print("No match found\nInitiate new KB entry")
+                    prior = running_distribution.copy()
+                    updated_prior = prior.copy()
+                    kb[0].append(prior)
+                    kb[1] = expand_prior_probs(kb[1])
+                    kb[2].append(adapter.get_weights())
+                    kb_idx = len(kb[0]) - 1
 
-                print("No match found\nInitiate new KB entry")
-                prior = running_distribution.copy()
-                updated_prior = prior.copy()
-                kb[0].append(prior)
-                kb[1] = expand_prior_probs(kb[1])
-                kb[2].append(adapter.get_weights())
-                kb_idx = len(kb[0]) - 1
-
-        # Update step
-        if ti % 60 == 0:
+        # KB update step
+        if ti % 60 == 0 and ti != 0:
             print('\nUPDATE STEP')
             torch.cuda.empty_cache()
             t_updates.append(ti)
+
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.5)
+            running_distribution.update(z_mean, cov, weight=0.1)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
@@ -185,7 +186,8 @@ def main():
             updated_prior.update(z_mean, cov, weight=0.1)
             print(f"Updated prior")
 
-            # Update adapter
+        # Adapter update step
+        if ti % 15 == 0 and ti != 0:
             adapter.optimizer.lr = 1.e-3
             buffer = ops.array(buffer)
             features, labels = prep_data(buffer, prediction_window, interval=15)
@@ -214,9 +216,7 @@ def main():
                         validation_data=val_dataloader,
                         verbose=0,
                         )
-
             buffer = []
-            print()
 
     # Save the last updated prior
     kb[0][-1] = backup_updated_prior
@@ -233,18 +233,23 @@ def main():
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
     predicted_targets = np.asarray(predicted_targets).ravel()
-    adapted_controls = np.asarray(adapted_controls)
 
     fig, ax = plt.subplots(2, 2, figsize=(16, 8), sharex=True)
 
     ax[0, 0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
     ax[0, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
     ax[0, 0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+    for t_update in t_updates:
+        ax[0, 0].axvline(t_update, color='lightgrey', linestyle='-')
+    for t_kb in t_kb_selection:
+        ax[0, 0].axvline(t_kb, color='tab:green', linestyle='--')
+    for t_tres in t_trespassing:
+        ax[0, 0].axvline(t_tres, color='tab:red', linestyle=':')
     ax[0, 0].legend(fontsize=8, loc='upper left')
 
     ax[1, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
     ax[1, 0].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
-    # ax[1, 0].plot(t[:-61 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
+    # ax[1, 0].plot(t[60:-60 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
     ax[1, 0].legend(fontsize=8, loc='upper left')
 
     ax[0, 1].plot(t_posterior_selection, posteriors, linestyle='-.', marker='x', lw=1., alpha=.5,
@@ -252,10 +257,10 @@ def main():
     ax[0, 1].ticklabel_format(style='plain')
     ax[0, 1].legend()
 
-    ax[1, 1].vlines(t_updates, 0, 15, colors='lightgrey', linestyles='-')
-    ax[1, 1].vlines(t_kb_selection, 0, 15, colors='tab:green', linestyles='--')
-    ax[1, 1].vlines(t_trespassing, 0, 15, colors='tab:red', linestyles=':')
-    ax[1, 1].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7,
+    ax[1, 1].vlines(t_updates, 0, 1, colors='lightgrey', linestyles='-')
+    ax[1, 1].vlines(t_kb_selection, 0, 1, colors='tab:green', linestyles='--')
+    ax[1, 1].vlines(t_trespassing, 0, 1, colors='tab:red', linestyles=':')
+    ax[1, 1].plot(t[::300], kl_loss, lw=1., alpha=0.7,
                   label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
     ax[1, 1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
     ax[1, 1].set_ylim(-0.1, 3 * thres)
