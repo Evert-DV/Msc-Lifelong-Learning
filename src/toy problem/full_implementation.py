@@ -64,10 +64,10 @@ def main():
     predicted_targets = []
     kl_loss = []
     posteriors = []
-    updates = []
-    trespassing = []
-    kb_selection = []
-    posterior_selection_idx = []
+    t_updates = []
+    t_trespassing = []
+    t_kb_selection = []
+    t_posterior_selection = []
 
     # Simulation loop
     for ti in t:
@@ -104,6 +104,7 @@ def main():
             # Pre-60 seconds
             if ti < 60:
                 # Likelihoods and relative posteriors
+                t_posterior_selection.append(ti)
                 post_probs = get_posteriors(embeddings, kb[0], kb[1])
                 posterior_ewma = []
                 for idx, post_prob in enumerate(post_probs):
@@ -134,12 +135,13 @@ def main():
             # Check for shift
             if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
                 print("\nSHIFT DETECTED\nRestore KB entry reference")
-                # trespassing.append(i)
-                # kb[kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
+                t_trespassing.append(ti)
+                # kb[0][kb_idx] = backup_updated_prior.copy()  # or leave it as it was?
                 print("Check KB for better match")
                 best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
                 if best_idx is not None:
                     print(f"Use KB entry {best_idx} as reference")
+                    t_kb_selection.append(ti)
                     prior = kb[0][best_idx]
                     updated_prior = prior.copy()
                     backup_updated_prior = prior.copy()
@@ -157,13 +159,14 @@ def main():
         if ti % 60 == 0:
             print('\nUPDATE STEP')
             torch.cuda.empty_cache()
-            # updates.append(i)
+            t_updates.append(ti)
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.1)
+            running_distribution.update(z_mean, cov, weight=0.5)
             print("Check KB for better match")
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
                 print(f"Use KB entry {best_idx} as reference")
+                t_kb_selection.append(ti)
                 prior = kb[0][best_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
@@ -216,6 +219,46 @@ def main():
     with open('tmp/kb.pkl', 'wb') as f:
         pickle.dump(kb, f)
     print("KB saved")
+
+    # Plotting
+    signal = np.asarray(signal)
+    reference_signal = np.asarray(reference_signal)
+    targets = np.asarray(targets)
+    adapted_targets = np.asarray(adapted_targets)
+    predicted_targets = np.asarray(predicted_targets).ravel()
+    adapted_controls = np.asarray(adapted_controls)
+
+    fig, ax = plt.subplots(2, 2, figsize=(16, 8), sharex=True)
+
+    ax[0, 0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
+    ax[0, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[0, 0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+    ax[0, 0].legend(fontsize=8, loc='upper left')
+
+    ax[1, 0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+    ax[1, 0].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
+    # ax[1, 0].plot(t[:-61 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
+    ax[1, 0].legend(fontsize=8, loc='upper left')
+
+    ax[0, 1].plot(t_posterior_selection, posteriors, linestyle='-.', marker='x', lw=1., alpha=.5,
+                  label=[f"P(dist_{i}|emb)" for i in range(initial_kb_len)])
+    ax[0, 1].ticklabel_format(style='plain')
+    ax[0, 1].legend()
+
+    ax[1, 1].vlines(t_updates, 0, 15, colors='lightgrey', linestyles='-')
+    ax[1, 1].vlines(t_kb_selection, 0, 15, colors='tab:green', linestyles='--')
+    ax[1, 1].vlines(t_trespassing, 0, 15, colors='tab:red', linestyles=':')
+    ax[1, 1].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7,
+                  label=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
+    ax[1, 1].hlines([-thres, 0, thres], 0., t[-1], color='k', linestyle='--', lw=.8)
+    ax[1, 1].set_ylim(-0.1, 3 * thres)
+    ax[1, 1].legend()
+
+    fig.tight_layout()
+    if not os.path.exists("tmp"):
+        os.makedirs("tmp")
+    # fig.savefig("tmp/plot.png", dpi=300)
+    plt.show()
 
 
 if __name__ == '__main__':

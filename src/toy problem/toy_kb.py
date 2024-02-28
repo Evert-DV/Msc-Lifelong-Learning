@@ -199,7 +199,7 @@ def implement():
             best_idx = search_dists(embeddings, kb[0], kb[1], running_distribution, kb_idx, thres)
             if best_idx is not None:
                 print(f"Use KB entry {best_idx} as reference")
-                kb_selection.append(i)
+
                 prior = kb[0][best_idx]
                 updated_prior = prior.copy()
                 backup_updated_prior = prior.copy()
