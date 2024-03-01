@@ -29,9 +29,9 @@ class System:
         return s[-1]
 
     def update(self):
-        self.k *= 0.995
-        self.c *= 0.995
-        self.l0 += 1 / self.l0
+        self.k = max(0, self.k - 1e-4)
+        self.c = max(0, self.c - 1e-4)
+        self.l0 += 1 / (1000 * self.l0)
         self.u = self.m * self.g + self.k * self.l0
 
         self.A = np.array([[0., 1.], [-self.k / self.m, -self.c / self.m]])

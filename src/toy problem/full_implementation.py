@@ -21,7 +21,7 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    system = System(5, 20, 6, 5)
+    system = System(5, 10, 3, 5)
 
     # Define controller
     controller = PIDController(350, 107.5, 1257)
@@ -32,27 +32,32 @@ def main():
     # Setup KB
     use_kb = True
     if not use_kb:
-        prior_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
-        x_prior = ops.array(prior_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
-        z_mean, z_log_var = autoencoder.dynamics(x_prior)
+        reference_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
+        x_reference = ops.array(reference_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
+        z_mean, z_log_var = autoencoder.dynamics(x_reference)
         cov = sample(z_mean, z_log_var)[1]
-        prior = MultivariateNormal(z_mean, cov)
-        kb = [[prior], [adapter.get_weights()]]
+        reference = MultivariateNormal(z_mean, cov)
+        kb = [[reference], [adapter.get_weights()]]
     else:
         with open('tmp/kb.pkl', 'rb') as f:
             kb = pickle.load(f)
 
     initial_kb_len = len(kb[0])
     print(f"{initial_kb_len} entries in the KB\n")
-    thres = np.log(2) * 0.25
+    thres = np.log(2) / 4
 
     # Setup simulation loop
     dt = 1 / 60
-    t = np.arange(0, 300, dt)
+    t_end = 600
+    t = np.arange(0, t_end, dt)
     target = np.array([11., 0.])
     buffer = []
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     x0_reference = [9.9, 0]
+    train_interval = 30
+    update_interval = 60
+    kb_step = 5
+    t_change = np.random.randint(update_interval, t_end - update_interval)
 
     # Setup plotting lists
     signal = []
@@ -63,10 +68,11 @@ def main():
     adapted_controls = []
     kl_loss = []
     js_selection = []
+    t_train = []
     t_updates = []
     t_trespassing = []
     t_kb_selection = []
-    t_prior_selection = []
+    t_reference_selection = []
 
     # Simulation loop
     for ti in t:
@@ -75,6 +81,16 @@ def main():
         if ti % 15 == 0:
             target = [np.random.rand() * 6 + 7, 0.]
         targets.append(target)
+
+        # Hard change for testing
+        # if ti == t_change:
+        #     print("\n\nHARD CHANGE\n"
+        #           f"k: {system.k:.1f}\t -> {system.k + 10:.1f}\n"
+        #           f"c: {system.c:.1f}\t -> {system.c + 10:.1f}\n"
+        #           f"l0: {system.l0:.1f}\t -> {system.l0 / 3:.1f}")
+        #     system.k += 10
+        #     system.c += 3
+        #     system.l0 /= 3
 
         # Control loop
         predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
@@ -96,7 +112,8 @@ def main():
         buffer.append([*x0, control_action, *x, *predicted_target])
 
         # Adapter update step
-        if ti % 20 == 0 and ti != 0:
+        if ti % train_interval == 0 and ti != 0:
+            t_train.append(ti)
             adapter.optimizer.lr = 1.e-3
             buffer = ops.array(buffer)
             features, labels = prep_data(buffer, prediction_window, interval=15)
@@ -125,91 +142,93 @@ def main():
             buffer = buffer.tolist()
 
         # KB step
-        if ti % 5 == 0:
+        if ti % kb_step == 0:
             # Get embeddings
             z_mean, z_log_var = autoencoder.dynamics(ops.array(buffer)[..., [0, 1, 2, 3, 4]])
-            embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=100)
+            embeddings, cov = sample(z_mean, z_log_var, samples_per_centroid=1)
 
             # Pre-60 seconds
-            if ti < 60:
-                t_prior_selection.append(ti)
+            if ti < update_interval:
+                t_reference_selection.append(ti)
                 running_distribution = MultivariateNormal(z_mean, cov)
-                kb_idx, js_divs = search_kb(running_distribution, kb[0])
+                current_kb_idx, js_divs = search_kb(running_distribution, kb[0])
                 js_selection.append(js_divs)
                 continue
 
-            if ti == 60:
+            if ti == update_interval:
                 # Select KB entry
-                prior = kb[0][kb_idx]
-                updated_prior = prior.copy()
-                backup_updated_prior = prior.copy()
-                adapter.set_weights(kb[1][kb_idx])
-                print(f"\nSelected {kb_idx} as reference")
+                reference = kb[0][current_kb_idx]
+                updated_reference = reference.copy()
+                backup_updated_reference = reference.copy()
+                adapter.set_weights(kb[1][current_kb_idx])
+                print(f"\nSelected {current_kb_idx} as reference")
 
             # Post-60 seconds
+            # Update running distribution
+            running_distribution.update(z_mean, cov, weight=kb_step/(update_interval-kb_step))
+
             # KL losses
-            kl_updated_dist = js_divergence(updated_prior, running_distribution)
-            kl_prior_updated = js_divergence(prior, updated_prior)
-            kl_loss.append([kl_updated_dist.item(), kl_prior_updated.item()])
+            kl_updated_dist = js_divergence(updated_reference, running_distribution)
+            kl_reference_updated = js_divergence(reference, updated_reference)
+            kl_loss.append([kl_updated_dist.item(), kl_reference_updated.item()])
 
             # Check for shift
-            if kl_updated_dist > thres or kl_prior_updated > .9 * thres:
+            if kl_updated_dist > thres or kl_reference_updated > .75 * thres:
                 print("\nSHIFT DETECTED\nRestore KB entry reference")
                 t_trespassing.append(ti)
                 # retain last or leave it as it was?
-                # kb[0][kb_idx] = backup_updated_prior.copy()
+                # kb[0][kb_idx] = backup_updated_reference.copy()
                 # kb[1][kb_idx] = adapter.get_weights()
                 print("Check KB for better match")
                 best_idx, js_divs = search_kb(running_distribution, kb[0])
-                if best_idx != kb_idx and js_divs[best_idx] < thres:
+                if best_idx != current_kb_idx and js_divs[best_idx] < thres:
                     print(f"Use KB entry {best_idx} as reference")
                     t_kb_selection.append(ti)
-                    prior = kb[0][best_idx]
-                    updated_prior = prior.copy()
-                    backup_updated_prior = prior.copy()
-                    kb_idx = best_idx
+                    reference = kb[0][best_idx]
+                    updated_reference = reference.copy()
+                    backup_updated_reference = reference.copy()
+                    current_kb_idx = best_idx
                     adapter.set_weights(kb[1][best_idx])
                 else:
                     print("No match found\nInitiate new KB entry")
-                    prior = running_distribution.copy()
-                    updated_prior = prior.copy()
-                    kb[0].append(prior)
+                    reference = running_distribution.copy()
+                    updated_reference = reference.copy()
+                    kb[0].append(reference)
                     kb[1].append(adapter.get_weights())
-                    kb_idx = len(kb[0]) - 1
+                    current_kb_idx = len(kb[0]) - 1
 
         # KB update step
-        if ti % 60 == 0 and ti != 0:
+        if ti % update_interval == 0 and ti != 0:
             print('\nUPDATE STEP')
             torch.cuda.empty_cache()
             t_updates.append(ti)
 
-            # Update running distribution
-            running_distribution.update(z_mean, cov, weight=0.5)
             print("Check KB for better match")
             best_idx, js_divs = search_kb(running_distribution, kb[0])
-            if best_idx != kb_idx and js_divs[best_idx] < thres:
+            if best_idx != current_kb_idx and js_divs[best_idx] < thres:
                 print(f"Use KB entry {best_idx} as reference")
                 t_kb_selection.append(ti)
-                kb[1][kb_idx] = adapter.get_weights()
-                prior = kb[0][best_idx]
-                updated_prior = prior.copy()
-                backup_updated_prior = prior.copy()
-                kb_idx = best_idx
+                kb[0][current_kb_idx] = backup_updated_reference
+                kb[1][current_kb_idx] = adapter.get_weights()
+                reference = kb[0][best_idx]
+                updated_reference = reference.copy()
+                backup_updated_reference = reference.copy()
+                current_kb_idx = best_idx
                 adapter.set_weights(kb[1][best_idx])
                 continue
 
-            # Update prior
+            # Update reference
             print("No match found")
-            backup_updated_prior = updated_prior.copy()
-            updated_prior.update(z_mean, cov, weight=0.1)
-            print(f"Updated prior")
+            backup_updated_reference = updated_reference.copy()
+            updated_reference.update(z_mean, cov, weight=0.1)
+            print(f"Updated reference")
 
             # Empty buffer
             buffer = []
 
-    # Save the last updated prior
-    kb[0][-1] = backup_updated_prior
-    kb[1][-1] = adapter.get_weights()
+    # Save the last updated reference
+    kb[0][current_kb_idx] = backup_updated_reference
+    kb[1][current_kb_idx] = adapter.get_weights()
     print(f"\n\n{len(kb[0])} entries in the KB")
     with open('tmp/kb.pkl', 'wb') as f:
         pickle.dump(kb, f)
@@ -224,12 +243,15 @@ def main():
     fig, ax = plt.subplots(3, 1, figsize=(16, 8), sharex=True)
 
     for ax_i in ax:
+        for t_trn in t_train:
+            ax_i.axvline(t_trn, color='tab:gray', linestyle=':', alpha=0.33)
         for t_update in t_updates:
             ax_i.axvline(t_update, color='lightgrey', linestyle='-')
         for t_kb in t_kb_selection:
             ax_i.axvline(t_kb, color='tab:green', linestyle='--')
         for t_tres in t_trespassing:
             ax_i.axvline(t_tres, color='tab:red', linestyle=':')
+        ax_i.axvline(t_change, color='r', linestyle='-')
 
     ax[0].plot(t, reference_signal[:, 0], color='tab:blue', alpha=0.33, label="Reference controller")
     ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
@@ -240,14 +262,15 @@ def main():
     ax[1].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
     ax[1].legend(fontsize=8, loc='upper left')
 
-    selection_lines = ax[2].plot(t_prior_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
-    js_loss_lines = ax[2].plot(t[60 * 60:][::300], kl_loss, lw=1., alpha=0.7)
+    selection_lines = ax[2].plot(t_reference_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
+    js_loss_lines = ax[2].plot(t[60 * update_interval:][::60 * kb_step], kl_loss, marker='.', markersize=3., lw=1.,
+                               alpha=0.7)
     ax[2].axhline(thres, color='k', linestyle='--', lw=.8)
     ax[2].axhline(0., color='k', linestyle='--', lw=.8)
     ax[2].ticklabel_format(style='plain')
     ax[2].set_ylim(-0.1, np.log(2) + 0.1)
     legend1 = ax[2].legend(fontsize=8, loc='upper left',
-                 handles=selection_lines, labels=[f"KB entry {i}" for i in range(initial_kb_len)])
+                           handles=selection_lines, labels=[f"KB entry {i}" for i in range(initial_kb_len)])
     ax[2].add_artist(legend1)
     ax[2].legend(fontsize=8, loc='upper right',
                  handles=js_loss_lines, labels=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])

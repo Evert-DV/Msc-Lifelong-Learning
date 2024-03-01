@@ -182,7 +182,10 @@ def update(self: torch.distributions.multivariate_normal, new_mean, new_cov, wei
     old_cov = self.covariance_matrix
 
     mean = (1 - weight) * old_mean + weight * new_mean
-    cov = (1 - weight) * old_cov + weight * new_cov
+    # Compute the covariance of the mixture
+    cov = weight * old_cov + (1 - weight) * new_cov
+    cov += weight * ops.outer((old_mean - mean), (old_mean - mean).T)
+    cov += (1 - weight) * ops.outer((new_mean - mean), (new_mean - mean).T)
 
     self.__init__(mean, cov)
 
@@ -218,7 +221,7 @@ MultivariateNormal.update = update
 kl_div = KLDivLoss(reduction='batchmean', log_target=True)
 
 
-def js_divergence(p, q, samples=None, n_samples=10000):
+def js_divergence(p, q, samples=None, n_samples=1000):
     if samples is None:
         samples = ops.concatenate((p.sample((n_samples,)), q.sample((n_samples,))), axis=0)
 
@@ -304,10 +307,10 @@ def search_dists(x, dists, prior_probs, current_dist, current_idx, thres):
     return None
 
 
-def search_kb(running_dist, kb_dists):
+def search_kb(running_dist, kb_dists, samples=None):
     js_divs = []
     for idx, dist in enumerate(kb_dists):
-        js_div = js_divergence(dist, running_dist)
+        js_div = js_divergence(dist, running_dist, samples=samples)
         js_divs.append(js_div.item())
     kb_idx = ops.argmin(js_divs).item()
 
