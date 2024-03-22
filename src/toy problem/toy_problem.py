@@ -3,16 +3,13 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 import matplotlib.pyplot as plt
 from keras.saving import load_model
-from keras import layers
-import torch
 from torch.utils.data import DataLoader
 from toy_tools import *
 
 
 def main():
-    pretrain = False
+    pretrain = True
     incremental_updates = True
-    use_adaptation = True
 
     seed = np.random.randint(0, 1000)
     # seed = 63
@@ -28,13 +25,23 @@ def main():
     # reference_controller = FuzzyLogicController()
 
     prediction_window = 10
-    adapter = keras.Sequential([
-        layers.Dense(32, activation='sigmoid'),
-        # layers.Dropout(0.05),
-        layers.Dense(32, activation='leaky_relu'),
-        # layers.Dropout(0.05),
-        layers.Dense(2)
-    ])
+    adapter = TargetAdapter()
+    # inputs = layers.Input(shape=(4,))
+    # x = layers.Dense(32, activation='sigmoid')(inputs)
+    # x = layers.Dense(32, activation='leaky_relu')(x)
+    # x = layers.Dense(2)(x)
+    # x = layers.Concatenate(axis=-1)([inputs[..., :2], x])
+    # x = RMSERegularizer()(x)
+    # x = layers.Lambda(lambda x: x[..., -2:])(x)
+    # adapter = keras.Model(inputs=inputs, outputs=x)
+    # adapter = keras.Sequential([
+    #     layers.Dense(32, activation='sigmoid'),
+    #     # layers.Dropout(0.05),
+    #     layers.Dense(32, activation='leaky_relu'),
+    #     # layers.Dropout(0.05),
+    #     layers.Dense(2)
+    # ])
+
     model_location = 'tmp/target_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)

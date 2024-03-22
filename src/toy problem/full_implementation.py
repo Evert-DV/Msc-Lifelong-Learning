@@ -10,6 +10,7 @@ def main():
     # Load 'vanilla' adapter model (or included in KB)
     adapter = keras.models.load_model("tmp/target_adapter.keras")
     prediction_window = 10
+    adapter.regularizer.add(RMSERegularizer())  # add regularizer for fast convergence
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
@@ -30,7 +31,7 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     # Setup KB
-    use_kb = True
+    use_kb = False
     if not use_kb:
         reference_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_reference = ops.array(reference_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
@@ -79,7 +80,9 @@ def main():
         print(f"\rt =  {ti:.0f}", end="")
         # Target selection
         if ti % 15 == 0:
+            # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
             target = [np.random.rand() * 6 + 7, 0.]
+        # target = [2 * np.sin(2 * np.pi * ti / 60) + 11, 0.]
         targets.append(target)
 
         # Hard change for testing
@@ -124,7 +127,6 @@ def main():
                                                        len(features) - int(0.8 * len(features))])
             train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
-
             callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
                                                        mode='min',
                                                        min_delta=1e-4,
