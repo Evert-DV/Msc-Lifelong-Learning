@@ -8,7 +8,7 @@ from toy_tools import *
 
 
 def main():
-    pretrain = True
+    pretrain = False
     incremental_updates = True
 
     seed = np.random.randint(0, 1000)
@@ -22,29 +22,14 @@ def main():
     system = System(5, 10, 3, 5)
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
-    # reference_controller = FuzzyLogicController()
 
     prediction_window = 10
     adapter = TargetAdapter()
-    # inputs = layers.Input(shape=(4,))
-    # x = layers.Dense(32, activation='sigmoid')(inputs)
-    # x = layers.Dense(32, activation='leaky_relu')(x)
-    # x = layers.Dense(2)(x)
-    # x = layers.Concatenate(axis=-1)([inputs[..., :2], x])
-    # x = RMSERegularizer()(x)
-    # x = layers.Lambda(lambda x: x[..., -2:])(x)
-    # adapter = keras.Model(inputs=inputs, outputs=x)
-    # adapter = keras.Sequential([
-    #     layers.Dense(32, activation='sigmoid'),
-    #     # layers.Dropout(0.05),
-    #     layers.Dense(32, activation='leaky_relu'),
-    #     # layers.Dropout(0.05),
-    #     layers.Dense(2)
-    # ])
 
     model_location = 'tmp/target_adapter.keras'
     if not pretrain:
         adapter = load_model(model_location)
+        # adapter.regularizer.add(RMSERegularizer(weight=.75))
 
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
     loss_fn = keras.losses.MeanSquaredError()
@@ -80,7 +65,7 @@ def main():
     reference_controls = []
     adapted_controls = []
     predicted_targets = []
-    t = np.arange(0, 120, dt)
+    t = np.arange(0, 360, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_reference = [9.9, 0]
@@ -121,13 +106,14 @@ def main():
                 buffer = []
 
             if ti % 15 == 0:
-                target = [np.random.rand() * 6 + 7, 0.]
+                target = [7, 0.] if ti % 2 == 0 else [13, 0.]
+                # target = [np.random.rand() * 6 + 7, 0.]
 
             targets.append(target)
 
             predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
             adapted_targets.append(predicted_target)
-            control_action = controller.compute_control(x0, predicted_target, dt)
+            control_action = controller.compute_control(x0, target + predicted_target, dt)
             adapted_controls.append(control_action)
             x = system.response(x0, control_action, do_update=True)
             signal.append(x)
@@ -136,11 +122,11 @@ def main():
             # Reference control loop
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
-            x_reference = system.response(x0_reference, reference_control, do_update=False)
+            x_reference = system.response(x0_reference, reference_control, do_update=True)
             reference_signal.append(x_reference)
             x0_reference = x_reference
 
-            buffer.append([*x0, control_action, *x, *predicted_target])
+            buffer.append([*x0, control_action, *x, *(target + predicted_target)])
 
         # adapter.save(model_location)
 
@@ -179,6 +165,7 @@ def main():
 
 if __name__ == "__main__":
     print("Using backend " + keras.backend.backend())
+    os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
     if torch.cuda.is_available():
         print("Using CUDA")
         with torch.cuda.device(0):

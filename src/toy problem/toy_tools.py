@@ -79,24 +79,23 @@ class TargetAdapter(keras.Model):
         x = self.dense2(x)
         target = self.dense3(x)
 
-        reg_input = ops.concatenate([inputs[..., self.state_size:], target], axis=-1)
-        reg_out = self.regularizer(reg_input)
-        reg_input = ops.concatenate([inputs[..., :self.state_size], target], axis=-1)
-        reg_out = self.regularizer(reg_input)
+        reg_input = ops.concatenate([inputs[..., :self.state_size], inputs[..., self.state_size:] + target], axis=-1)
+        self.regularizer(reg_input)
 
-        target = layers.Lambda(lambda x: x[..., -self.state_size:])(reg_out)
+        # target = layers.Lambda(lambda x: x[..., -self.state_size:])(reg_out)
 
         return target
 
 
 class RMSERegularizer(layers.Layer):
-    def __init__(self, state_size=2, **kwargs):
+    def __init__(self, state_size=2, weight=0.25, **kwargs):
         super().__init__(**kwargs)
         self.state_size = state_size
+        self.weight = weight
 
     def call(self, inputs):
         y_true, y_pred = inputs[:, :self.state_size], inputs[:, self.state_size:]
-        self.add_loss(0.25 * ops.mean((y_true - y_pred) ** 2) ** 0.5)
+        self.add_loss(self.weight * ops.mean((y_true - y_pred) ** 2) ** 0.5)
         return inputs
 
 
@@ -123,8 +122,8 @@ def prep_data(data, prediction_window, interval=15, val_split=None):
         axis=-1).reshape(-1, 4)  # state transitions
     # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
     #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
-    labels = ops.array([windowed_data[j, i + prediction_window, -2:] for j in range(windowed_data.shape[0]) for i in
-                        range(windowed_data.shape[1] - prediction_window)])  # target states as labels
+    labels = ops.array([windowed_data[j, i + prediction_window, -2:] - windowed_data[j, i + prediction_window, 3:5] for j in range(windowed_data.shape[0]) for i in
+                        range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)

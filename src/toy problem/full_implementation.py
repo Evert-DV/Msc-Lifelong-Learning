@@ -9,8 +9,8 @@ from torch.utils.data import TensorDataset, DataLoader
 def main():
     # Load 'vanilla' adapter model (or included in KB)
     adapter = keras.models.load_model("tmp/target_adapter.keras")
+    adapter.regularizer.add(RMSERegularizer(weight=.5))
     prediction_window = 10
-    adapter.regularizer.add(RMSERegularizer())  # add regularizer for fast convergence
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
@@ -31,7 +31,7 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     # Setup KB
-    use_kb = False
+    use_kb = True
     if not use_kb:
         reference_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_reference = ops.array(reference_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
@@ -49,7 +49,7 @@ def main():
 
     # Setup simulation loop
     dt = 1 / 60
-    t_end = 600
+    t_end = 400
     t = np.arange(0, t_end, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -80,23 +80,24 @@ def main():
         print(f"\rt =  {ti:.0f}", end="")
         # Target selection
         if ti % 15 == 0:
-            # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
-            target = [np.random.rand() * 6 + 7, 0.]
+            target = [7, 0.] if ti % 2 == 0 else [13, 0.]
+            # target = [np.random.rand() * 6 + 7, 0.]
         # target = [2 * np.sin(2 * np.pi * ti / 60) + 11, 0.]
         targets.append(target)
 
         # Hard change for testing
-        # if ti == t_change:
-        #     print("\n\nHARD CHANGE\n"
-        #           f"k: {system.k:.1f}\t -> {system.k + 10:.1f}\n"
-        #           f"c: {system.c:.1f}\t -> {system.c + 10:.1f}\n"
-        #           f"l0: {system.l0:.1f}\t -> {system.l0 / 3:.1f}")
-        #     system.k += 10
-        #     system.c += 3
-        #     system.l0 /= 3
+        if ti == t_change:
+            print("\n\nHARD CHANGE\n"
+                  f"k: {system.k:.1f}\t -> {system.k + 10:.1f}\n"
+                  f"c: {system.c:.1f}\t -> {system.c + 10:.1f}\n"
+                  f"l0: {system.l0:.1f}\t -> {system.l0 / 3:.1f}")
+            system.k += 10
+            system.c += 3
+            system.l0 /= 3
 
         # Control loop
-        predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+        delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+        predicted_target = target + delta_target
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
@@ -107,7 +108,7 @@ def main():
         # Reference control loop
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
-        x_reference = system.response(x0_reference, reference_control, do_update=False)
+        x_reference = system.response(x0_reference, reference_control, do_update=True)
         reference_signal.append(x_reference)
         x0_reference = x_reference
 
