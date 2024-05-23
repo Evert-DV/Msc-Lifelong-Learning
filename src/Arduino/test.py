@@ -9,8 +9,6 @@ time.sleep(2)  # Wait for the serial connection to initialize
 def send_command(command):
     ser.write(command.encode())
 
-
-print("Use the left and right arrow keys to control the servo.")
 angles = range(0, 75, 5)
 i = 0
 
