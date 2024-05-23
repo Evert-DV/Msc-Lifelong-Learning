@@ -16,14 +16,20 @@ void loop() {
 
         if (command == 'u') { // 'u' for up arrow key
             servoPos += 1; // Increase the servo position
-            if (servoPos > 90) servoPos = 90; // Limit to maximum angle
+            if (servoPos > 85) servoPos = 85; // Limit to maximum angle
         } else if (command == 'd') { // 'd' for down arrow key
             servoPos -= 1; // Decrease the servo position
-            if (servoPos < 0) servoPos = 0; // Limit to minimum angle
+            if (servoPos < 5) servoPos = 5; // Limit to minimum angle
+        } else if (command == 'q') { // 'q' for quit
+            servo_9.write(5);
+            Serial.println("Quitting the program");
+            delay(1000); // Wait for 1 second
+            exit(0); // Exit the program
+        } else if (command == 'a') { // 'a' for angle
+            Serial.print("Servo Position: ");
+            Serial.println(servoPos);
         }
 
         servo_9.write(servoPos); // Move the servo to the new position
-        Serial.print("Servo Position: ");
-        Serial.println(servoPos); // Print the new servo position to the serial monitor
     }
 }
