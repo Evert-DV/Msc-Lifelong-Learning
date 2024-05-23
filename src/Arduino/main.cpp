@@ -15,10 +15,10 @@ void loop() {
         char command = Serial.read(); // Read the incoming byte
 
         if (command == 'u') { // 'u' for up arrow key
-            servoPos += 1; // Increase the servo position
+            servoPos += 2; // Increase the servo position
             if (servoPos > 85) servoPos = 85; // Limit to maximum angle
         } else if (command == 'd') { // 'd' for down arrow key
-            servoPos -= 1; // Decrease the servo position
+            servoPos -= 2; // Decrease the servo position
             if (servoPos < 5) servoPos = 5; // Limit to minimum angle
         } else if (command == 'q') { // 'q' for quit
             servo_9.write(5);

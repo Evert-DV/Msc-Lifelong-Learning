@@ -25,8 +25,9 @@ def ask_angle():
             send_command('a')  # Wait for key release with a short timeout
             time.sleep(.2)
 
+
 def main():
-    # print("Press the up/down arrow keys to control the servo. Press 'q' to quit.")
+    print("Press the up/down arrow keys to control the servo. Press 'q' to quit.")
     wait = 1 / 60  # 60 Hz
 
     try:
