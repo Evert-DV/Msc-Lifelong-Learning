@@ -15,8 +15,9 @@ int PidController::computeControl(double state, double target, double dt) {
     previous_error_ = error;
 
     controlForce = kp_ * error + ki_ * integral_error_ + kd_ * derivative_error;
-    controlForce = max(0, controlForce);
-    controlAngle = map(controlForce, 0, 10 * ki_, 0, 75);
+    controlForce = max(0, min(controlForce, 10 * kp_ + 10 * kd_ + 10 * ki_));
+    controlAngle = map(controlForce, 0, 10 * kp_ + 10 * kd_ + 10 * ki_, 0, 75);
+    controlAngle = min(75, max(0, controlAngle));
 
     return controlAngle;
 }

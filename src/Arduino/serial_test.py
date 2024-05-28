@@ -2,7 +2,7 @@ import threading
 import serial
 import time
 
-value = 29
+value = 25
 arduino = None
 
 
@@ -50,7 +50,7 @@ def main():
     listen_thread.start()
     input_thread.start()
 
-    # Ensure main thread waits for the completion of other threads
+    # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     listen_thread.join()
     input_thread.join()

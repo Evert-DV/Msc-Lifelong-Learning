@@ -3,7 +3,7 @@
 
 Servo servo_9;  // Create a servo object to control a servo
 int servoPos = 0; // Start position of the servo at 90 degrees
-PidController controller(35, 125, 10); // Initialize the PID controller
+PidController controller(10, 10, 10); // Initialize the PID controller
 String incomingByte;
 double target;
 double state;
@@ -17,14 +17,15 @@ void setup() {
 
 void loop() {
 //    servoPos = keyboard(servo_9, servoPos);
-    state = state + (5 - 10 * servoPos * 3.14 / 180) * 0.02 * 0.02; // dummy state
+    state = state + (10 * (30 - state) - 100 * servoPos * 3.14 / 180) * 0.02 * 0.02; // dummy state
     state = min(30, max(20, state));
+
     if (Serial.available() > 0) {
         incomingByte = Serial.readStringUntil('\n');
         target = incomingByte.toDouble();
         servoPos = controller.computeControl(state, target, 0.02);
-//        servo_9.write(servoPos);
-        Serial.println(servoPos);
+        servo_9.write(servoPos);
+        Serial.println(state);
     }
     delay(20);
 }
