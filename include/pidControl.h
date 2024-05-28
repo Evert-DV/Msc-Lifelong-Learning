@@ -9,9 +9,8 @@ public:
     double integral_error_;
     double previous_error_;
 
-    PidController(double kp, double ki, double kd) : kp_(kp), ki_(ki), kd_(kd), integral_error_(0),
-                                                     previous_error_(0) {}
-    ~PidController() {}
+    PidController(double kp, double ki, double kd);
+    ~PidController();
 
     int computeControl(double state, double target, double dt);
 };
