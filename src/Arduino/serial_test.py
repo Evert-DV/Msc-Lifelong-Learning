@@ -2,7 +2,7 @@ import threading
 import serial
 import time
 
-value = 0
+value = 29
 arduino = None
 
 
@@ -14,7 +14,6 @@ def send_value():
 
 
 def listen_echo():
-    last_print_time = time.time()
     while True:
         if arduino.in_waiting > 0:
             # Read all data in the buffer
@@ -23,14 +22,14 @@ def listen_echo():
             lines = data.split('\n')
             if lines:
                 latest_value = lines[-1].strip()
-                print(f"Echoed Value: {latest_value}")
-        time.sleep(1)  # Check for new data at 50 Hz
+                print(f"Arduino says: {latest_value}")
+        time.sleep(1/2)  # Check for new data at 50 Hz
 
 
 def change_value():
     global value
     while True:
-        new_value = input("Enter new value: ")
+        new_value = input("\nEnter new value: ")
         if new_value.isdigit():
             value = int(new_value)
         else:
