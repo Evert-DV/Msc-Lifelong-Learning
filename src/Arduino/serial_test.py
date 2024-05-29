@@ -38,7 +38,7 @@ def listen_echo():
 
             new_state = float(latest_value[1])
             control_action = float(latest_value[0])
-            print(f"State: {old_state}\tNew state: {new_state}\tControl action: {control_action}\tTarget: {target}")
+            print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
             buffer.append([old_state, control_action, new_state, target])
             old_state = new_state
 

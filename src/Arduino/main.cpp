@@ -2,15 +2,15 @@
 #include <Servo.h>
 
 Servo servo_9;  // Create a servo object to control a servo
-int servoPos = 0; // Start position of the servo at 90 degrees
-PidController controller(10, 10, 10); // Initialize the PID controller
+int servoPos = 0;
+PidController controller(20, 10, 10); // Initialize the PID controller
 String incomingByte;
 double target;
 double state;
 
 void setup() {
     Serial.begin(9600); // Start the serial communication
-    servo_9.attach(9, 500, 2500); // Attach the servo to pin 9 with min and max pulse widths
+    servo_9.attach(9, 500, 2500); // Attach the servo to pin 9
     servo_9.write(servoPos); // Initialize the servo position
     state = 30;
 }
