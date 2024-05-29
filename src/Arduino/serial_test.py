@@ -2,15 +2,17 @@ import threading
 import serial
 import time
 
-value = 25
+target = 25
 arduino = None
+freq = 1/50
 
 
 def send_value():
-    global value
+    global freq
+    global target
     while True:
-        arduino.write(f'{value}\n'.encode())
-        time.sleep(1 / 50)  # Send value at 50 Hz
+        arduino.write(f'{target}\n'.encode())
+        time.sleep(freq)  # Send value at 50 Hz
 
 
 def listen_echo():
@@ -22,23 +24,25 @@ def listen_echo():
             lines = data.split('\n')
             if lines:
                 latest_value = lines[-1].strip()
-                print(f"Arduino says: {latest_value}")
-        time.sleep(1/2)  # Check for new data at 50 Hz
+                new_state = float(latest_value[2:])
+                control_action = float(latest_value[:2])
+                print(f"Target: {target}\tState: {new_state}\tControl Action: {control_action}")
+        time.sleep(1/2)
 
 
 def change_value():
-    global value
+    global target
     while True:
         new_value = input("\nEnter new value: ")
         if new_value.isdigit():
-            value = int(new_value)
+            target = int(new_value)
         else:
             print("Please enter an integer.")
 
 
 def main():
     global arduino
-    arduino = serial.Serial('COM4', 9600)  # Replace 'COM3' with your Arduino's serial port
+    arduino = serial.Serial('COM4', 9600)
 
     # Create threads for sending and receiving data
     send_thread = threading.Thread(target=send_value)

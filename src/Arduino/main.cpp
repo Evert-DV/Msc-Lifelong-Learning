@@ -17,15 +17,16 @@ void setup() {
 
 void loop() {
 //    servoPos = keyboard(servo_9, servoPos);
-    state = state + (10 * (30 - state) - 100 * servoPos * 3.14 / 180) * 0.02 * 0.02; // dummy state
-    state = min(30, max(20, state));
-
     if (Serial.available() > 0) {
         incomingByte = Serial.readStringUntil('\n');
         target = incomingByte.toDouble();
         servoPos = controller.computeControl(state, target, 0.02);
-        servo_9.write(servoPos);
+//        servo_9.write(servoPos);
+        Serial.print(servoPos);
         Serial.println(state);
     }
+    state = state + (10 * (30 - state) - 100 * servoPos * 3.14 / 180) * 0.02 * 0.02; // dummy state
+    state = min(30, max(20, state));
+
     delay(20);
 }
