@@ -23,6 +23,7 @@ void loop() {
         servoPos = controller.computeControl(state, target, 0.02);
 //        servo_9.write(servoPos);
         Serial.print(servoPos);
+        Serial.print(" ");
         Serial.println(state);
     }
     state = state + (10 * (30 - state) - 100 * servoPos * 3.14 / 180) * 0.02 * 0.02; // dummy state
