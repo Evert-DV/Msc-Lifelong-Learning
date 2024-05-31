@@ -2,8 +2,9 @@ import threading
 import serial
 import time
 
-target = 25
+target = 28
 arduino = None
+new_state = None
 freq = 1 / 50
 buffer = []
 
@@ -19,6 +20,7 @@ def send_value():
 def listen_echo():
     global freq
     global buffer
+    global new_state
     first_reading = True
     while True:
         if arduino.in_waiting > 0:
@@ -38,22 +40,31 @@ def listen_echo():
 
             new_state = float(latest_value[1])
             control_action = float(latest_value[0])
-            print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
+            if time.time() % (1 / 2) < 0.03:
+                print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
             buffer.append([old_state, control_action, new_state, target])
             old_state = new_state
 
-        time.sleep(0.5)
+        time.sleep(freq)
         # time.sleep(freq)  # Listen at 50 Hz
 
 
 def change_value():
     global target
+    global new_state
+    global freq
+    count = 0
+
     while True:
-        new_value = input("\nEnter new value: ")
-        if new_value.isdigit():
-            target = int(new_value)
-        else:
-            print("Please enter an integer.")
+        time.sleep(freq)
+        if new_state != float(target):
+            count = 0
+            continue
+        elif count == 5:
+            target = 28 if target == 22 else 22
+            count = 0
+            continue
+        count += 1
 
 
 def main():
@@ -63,17 +74,17 @@ def main():
     # Create threads for sending and receiving data
     send_thread = threading.Thread(target=send_value)
     listen_thread = threading.Thread(target=listen_echo)
-    # input_thread = threading.Thread(target=change_value)
+    target_thread = threading.Thread(target=change_value)
 
     # Start threads
     send_thread.start()
     listen_thread.start()
-#     input_thread.start()
+    target_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     listen_thread.join()
-#     input_thread.join()
+    target_thread.join()
 
 
 if __name__ == '__main__':
