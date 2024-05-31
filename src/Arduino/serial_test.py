@@ -54,10 +54,11 @@ def change_value():
     global new_state
     global freq
     count = 0
+    new_state = 30
 
     while True:
         time.sleep(freq)
-        if new_state != float(target):
+        if abs(new_state - target) > .1:
             count = 0
             continue
         elif count == 5:

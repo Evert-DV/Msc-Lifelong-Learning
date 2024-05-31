@@ -3,7 +3,7 @@
 
 Servo servo_9;  // Create a servo object to control a servo
 int servoPos = 0;
-PidController controller(30, 15, 60); // Initialize the PID controller
+PidController controller(30, 20, 5); // Initialize the PID controller
 String incomingByte;
 double target;
 double state;
@@ -24,7 +24,7 @@ void loop() {
         incomingByte = Serial.readStringUntil('\n');
         target = incomingByte.toDouble();
         servoPos = controller.computeControl(state, target, 0.02);
-//        servo_9.write(servoPos);
+        servo_9.write(servoPos);
         Serial.print(servoPos);
         Serial.print(" ");
         Serial.println(state);
