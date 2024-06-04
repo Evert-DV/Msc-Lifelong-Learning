@@ -3,10 +3,10 @@
 
 Servo servo_9;  // Create a servo object to control a servo
 int servoPos = 0;
-PidController controller(2, 5, .01); // Initialize the PID controller
+PidController controller(-16, 0, 0); // Initialize the PID controller
 String incomingByte;
 double target;
-double state;
+double beta;
 double kos;
 double fx;
 
@@ -14,25 +14,36 @@ void setup() {
     Serial.begin(9600); // Start the serial communication
     servo_9.attach(9, 500, 2500); // Attach the servo to pin 9
     servo_9.write(servoPos); // Initialize the servo position
-    state = 0;
+    beta = 0;
     kos = 30;
 }
 
 void loop() {
-    fx = (30 - kos) * 0.75;
-    state = degrees(
-            radians(state) + 0.5 * (-2 * fx * 52 + 2 * 37 * 15 * radians(servoPos)) * 0.02 * 0.02); // dummy state
-    state = min(8.5, max(0, state));
-    kos = sqrt(46 * 46 - pow(35 + 52 * radians(state), 2));
-
     if (Serial.available() > 0) {
+        // measure state
+        double old_kos = kos;
+
+        // read target
         incomingByte = Serial.readStringUntil('\n');
         target = incomingByte.toDouble();
-        servoPos = controller.computeControl(state, target, 0.02);
-//        servo_9.write(servoPos);
+
+        // compute and execute control
+        servoPos = controller.computeControl(kos, target, 0.02);
+        //        servo_9.write(servoPos);
+
+        fx = (30 - kos) * 0.4;
+        beta = degrees(
+                radians(beta) + 0.5 * (-2 * fx * 52 + .25 * 37 * 15 * radians(servoPos)) * 0.02 * 0.02); // dummy state
+        beta = min(28, max(-9, beta));
+
+        // measure state
+        delay(20);
+        kos = sqrt(43 * 43 - pow(31 + 52 * radians(beta), 2)); //dummy state
+
+        Serial.print(old_kos);
+        Serial.print(" ");
         Serial.print(servoPos);
         Serial.print(" ");
-        Serial.println(state);
+        Serial.println(kos);
     }
-    delay(20);
 }
