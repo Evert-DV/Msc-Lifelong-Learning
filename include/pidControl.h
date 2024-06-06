@@ -5,14 +5,14 @@
 
 class PidController {
 public:
-    double kp_, kd_, ki_;
+    double kp_, ki_, kd_;
     double integral_error_;
     double previous_error_;
 
     PidController(double kp, double ki, double kd);
     ~PidController();
 
-    int computeControl(double state, double target, double dt);
+    double computeControl(double state, double target, double dt);
 };
 
 #endif //MSC_LIFELONG_LEARNING_PIDCONTROL_H
