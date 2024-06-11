@@ -2,7 +2,7 @@ import threading
 import serial
 import time
 
-target = 0
+target = -5
 arduino = None
 new_state = None
 freq = 1 / 50
