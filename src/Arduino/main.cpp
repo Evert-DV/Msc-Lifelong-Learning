@@ -50,7 +50,7 @@ void loop() {
     double controlForce = controller.computeControl(beta, target, 0.02);
     double servoAngle = degrees((controlForce / 0.25 - 32 * radians(beta)) / 15);
     servoPos = map(servoAngle, 0, 75, 550, 1700);
-    servoPos = min(1550, max(550, servoPos));
+    servoPos = min(1700, max(550, servoPos));
     servo_9.writeMicroseconds(servoPos);
 
     delay(20);

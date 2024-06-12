@@ -1,6 +1,7 @@
 import threading
 import serial
 import time
+import numpy as np
 
 target = -5
 arduino = None
@@ -38,7 +39,7 @@ def listen_echo():
             control_action = float(latest_value[1])
             new_state = float(latest_value[2])
 
-            if time.time() % (1 / 2) < 0.03:
+            if time.time() % (1 / 10) < 0.03:
                 print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
             buffer.append([old_state, control_action, new_state, target])
 
@@ -51,22 +52,23 @@ def change_value():
     global new_state
     global freq
 
-    while True:
-        time.sleep(freq)
-        target = int(input("Enter new target: "))
-    # count = 0
-    # new_state = 30
-    #
     # while True:
     #     time.sleep(freq)
-    #     if abs(new_state - target) > .1:
-    #         count = 0
-    #         continue
-    #     elif count == 5:
-    #         target = 23 if target == 28 else 28
-    #         count = 0
-    #         continue
-    #     count += 1
+    #     target = int(input("Enter new target: "))
+    count = 0
+    new_state = 30
+
+    while True:
+        time.sleep(freq)
+        if abs(new_state - target) > .05:
+            count = 0
+            continue
+        elif count == 5:
+            # target = -5 if target == -15 else -15
+            target = np.random.randint(-17, -0)
+            count = 0
+            continue
+        count += 1
 
 
 def main():
