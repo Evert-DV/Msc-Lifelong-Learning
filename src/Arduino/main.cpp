@@ -2,28 +2,22 @@
 #include <Servo.h>
 #include <Wire.h>
 #include <as5600.h>
-#include <MPU9250_WE.h>
 
-#define MPU6500_ADDR 0x68
 
 AS5600 as5600;
-MPU6500_WE mpu6500 = MPU6500_WE(MPU6500_ADDR);
 Servo servo_9;
-PidController controller(0, 0, 0); // Initialize the PID controller
+PidController controller(-.5, 0, 0); // Initialize the PID controller
 
-int servoPos = 0;
+int servoPos = 500;
 String incomingByte;
 double target;
-xyzFloat gValue;
 double beta;
-double theta;
 double beta0;
-double theta0;
 
 void setup() {
     Serial.begin(115200); // Start the serial communication
-    servo_9.attach(9, 500, 2500); // Attach the servo to pin 9
-    servo_9.write(servoPos); // Initialize the servo position
+    servo_9.attach(9); // Attach the servo to pin 9
+    servo_9.writeMicroseconds(servoPos); // Initialize the servo position
 
     Wire.begin();
 
@@ -33,61 +27,38 @@ void setup() {
 //    int b = as5600.isConnected();
 //    Serial.print("Connect: ");
 //    Serial.println(b);
-//
-    if (!mpu6500.init()) {
-        Serial.println("MPU6500 does not respond");
-    }
-//    else{
-//        Serial.println("MPU6500 is connected");
-//    }
-
-    // Set up the MPU6500
-    mpu6500.enableGyrDLPF();
-    mpu6500.setGyrDLPF(MPU6500_DLPF_6);
-    mpu6500.setSampleRateDivider(5);
-    mpu6500.setGyrRange(MPU6500_GYRO_RANGE_250);
-    mpu6500.setAccRange(MPU6500_ACC_RANGE_2G);
-    mpu6500.enableAccDLPF(true);
-    mpu6500.setAccDLPF(MPU6500_DLPF_6);
 
     delay(1000);
-
-    gValue = mpu6500.getGValues();
-    theta0 = degrees(atan(-gValue.x / (gValue.y * gValue.y + gValue.z * gValue.z)));
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
     beta = 0;
-    theta = 0;
     target = 0;
 }
 
 void loop() {
-    if (Serial.available() > 0) {
-        // measure state
-        gValue = mpu6500.getGValues();
-        double old_theta = degrees(atan(-gValue.x / (gValue.y * gValue.y + gValue.z * gValue.z))) - theta0;
-        beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
+    // measure state
+    double old_beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
 
+    if (Serial.available() > 0) {
         // read target
         incomingByte = Serial.readStringUntil('\n');
         if (incomingByte.toDouble() != target) {
             target = incomingByte.toDouble();
         }
-        // compute and execute control
-        servoPos = min(75, max(0, target)); // direct control for testing
-//        double controlForce = controller.computeControl(beta, target, 0.02);
-//        servoPos = degrees((controlForce / 0.25 - 32 * radians(beta)) / 15);
-//        servoPos = min(75, max(0, controlForce));
-        servo_9.write(servoPos);
-
-        delay(20);
-
-        // measure resulting state
-        gValue = mpu6500.getGValues();
-        theta = degrees(atan(-gValue.x / (gValue.y * gValue.y + gValue.z * gValue.z))) - theta0;
-//        double roll = degrees(atan(gValue.y / (gValue.x * gValue.x + gValue.z * gValue.z)));
-
-        // send to serial connection
-        String message = String(old_theta) + " " + String(servoPos) + " " + String(beta);
-        Serial.println(message);
     }
+    // compute and execute control
+//    servoPos = min(1700, max(550, target)); // direct control for testing
+    double controlForce = controller.computeControl(beta, target, 0.02);
+    double servoAngle = degrees((controlForce / 0.25 - 32 * radians(beta)) / 15);
+    servoPos = map(servoAngle, 0, 75, 550, 1700);
+    servoPos = min(1550, max(550, servoPos));
+    servo_9.writeMicroseconds(servoPos);
+
+    delay(20);
+
+    // measure resulting state
+    beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
+
+    // send to serial connection
+    String message = String(old_beta) + " " + String(servoPos) + " " + String(beta);
+    Serial.println(message);
 }
