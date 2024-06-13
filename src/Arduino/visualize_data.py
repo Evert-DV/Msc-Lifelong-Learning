@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-data = np.load("./tmp/arduino_data_2.npy")
+data = np.load("Dynamics data/1-1 perforation/dynamics_1_1_2nd5m.npy")
 
 signal = data[..., 0]
 control_action = data[..., 1]

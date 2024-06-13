@@ -13,7 +13,7 @@ buffer = []
 
 def save_buffer():
     print("Saving buffer")
-    np.save("./tmp/arduino_data_2.npy", buffer)
+    np.save("./Dynamics data/25-1 perforation/8th_5m.npy", buffer)
 
 
 def send_value():
