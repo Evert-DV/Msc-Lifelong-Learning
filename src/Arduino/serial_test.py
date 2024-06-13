@@ -13,7 +13,7 @@ buffer = []
 
 def save_buffer():
     print("Saving buffer")
-    np.save("./tmp/arduino_data.npy", buffer)
+    np.save("./tmp/arduino_data_2.npy", buffer)
 
 
 def send_value():
@@ -51,7 +51,7 @@ def listen_echo():
 
         if keyboard.is_pressed('s'):  # If 's' is pressed, save the buffer
             save_buffer()
-            
+
         time.sleep(freq)
         # time.sleep(freq)  # Listen at 50 Hz
 
@@ -74,7 +74,7 @@ def change_value():
             continue
         elif count == 5:
             # target = -5 if target == -15 else -15
-            target = np.random.randint(-15, -0)
+            target = np.random.randint(-23, -0)
             count = 0
             continue
         count += 1
