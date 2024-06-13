@@ -17,3 +17,7 @@ double PidController::computeControl(double state, double target, double dt) {
 
     return controlForce;
 }
+
+void PidController::reset_integral() {
+    integral_error_ = 0.0;
+}

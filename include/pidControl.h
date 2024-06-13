@@ -13,6 +13,7 @@ public:
     ~PidController();
 
     double computeControl(double state, double target, double dt);
+    void reset_integral();
 };
 
 #endif //MSC_LIFELONG_LEARNING_PIDCONTROL_H

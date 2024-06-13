@@ -6,7 +6,7 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.25, -.9, -0.002); // Initialize the PID controller
+PidController controller(-.25, -.8, 0.001); // Initialize the PID controller
 
 int servoPos = 500;
 String incomingByte;
@@ -43,6 +43,7 @@ void loop() {
         incomingByte = Serial.readStringUntil('\n');
         if (incomingByte.toDouble() != target) {
             target = incomingByte.toDouble();
+            controller.reset_integral();
         }
     }
     // compute and execute control
