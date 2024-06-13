@@ -1,5 +1,6 @@
 import threading
 import serial
+import keyboard
 import time
 import numpy as np
 
@@ -8,6 +9,11 @@ arduino = None
 new_state = None
 freq = 1 / 50
 buffer = []
+
+
+def save_buffer():
+    print("Saving buffer")
+    np.save("./tmp/arduino_data.npy", buffer)
 
 
 def send_value():
@@ -43,6 +49,9 @@ def listen_echo():
                 print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
             buffer.append([old_state, control_action, new_state, target])
 
+        if keyboard.is_pressed('s'):  # If 's' is pressed, save the buffer
+            save_buffer()
+            
         time.sleep(freq)
         # time.sleep(freq)  # Listen at 50 Hz
 
@@ -65,7 +74,7 @@ def change_value():
             continue
         elif count == 5:
             # target = -5 if target == -15 else -15
-            target = np.random.randint(-17, -0)
+            target = np.random.randint(-15, -0)
             count = 0
             continue
         count += 1
@@ -76,9 +85,9 @@ def main():
     arduino = serial.Serial('COM5', 115200)
 
     # Create threads for sending and receiving data
-    send_thread = threading.Thread(target=send_value)
-    listen_thread = threading.Thread(target=listen_echo)
-    target_thread = threading.Thread(target=change_value)
+    send_thread = threading.Thread(target=send_value, daemon=True)
+    listen_thread = threading.Thread(target=listen_echo, daemon=True)
+    target_thread = threading.Thread(target=change_value, daemon=True)
 
     # Start threads
     send_thread.start()
