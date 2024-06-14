@@ -13,7 +13,7 @@ buffer = []
 
 def save_buffer():
     print("Saving buffer")
-    np.save("./Dynamics data/25-1 perforation/extra.npy", buffer)
+    np.save("./Dynamics data/25-1 perforation/extra2.npy", buffer)
 
 
 def send_value():
@@ -45,7 +45,7 @@ def listen_echo():
             control_action = float(latest_value[1])
             new_state = float(latest_value[2])
 
-            if time.time() % (1 / 10) < 0.03:
+            if time.time() % (1 / 4) < 0.03:
                 print(f"State: {old_state}\tControl action: {control_action}\tNew state: {new_state}\tTarget: {target}")
             buffer.append([old_state, control_action, new_state, target])
 
@@ -73,8 +73,9 @@ def change_value():
             count = 0
             continue
         elif count == 5:
-            # target = -5 if target == -15 else -15
+            # target = -5 if target == -21 else -21
             target = np.random.randint(-22, -0)
+            # target = np.random.uniform(-22, 0)
             count = 0
             continue
         count += 1
