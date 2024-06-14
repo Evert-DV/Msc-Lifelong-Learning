@@ -13,7 +13,7 @@ buffer = []
 
 def save_buffer():
     print("Saving buffer")
-    np.save("./Dynamics data/25-1 perforation/8th_5m.npy", buffer)
+    np.save("./Dynamics data/25-1 perforation/extra.npy", buffer)
 
 
 def send_value():
@@ -74,7 +74,7 @@ def change_value():
             continue
         elif count == 5:
             # target = -5 if target == -15 else -15
-            target = np.random.randint(-23, -0)
+            target = np.random.randint(-22, -0)
             count = 0
             continue
         count += 1
