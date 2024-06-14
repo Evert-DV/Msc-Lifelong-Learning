@@ -2,4 +2,4 @@ reports/auxil
 !reports/out/*.pdf
 src/toy problem/tmp
 ../../.pio
-!src/Arduino/Dynamics data
+!src/Arduino/Dynamics data/*
