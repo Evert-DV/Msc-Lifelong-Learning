@@ -7,18 +7,18 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
-    features = ops.array(data)[..., [0, 1, 2, 3, 4]]
-    labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
+    data = np.load(f"../Arduino/Dynamics data/25-1 perforation/extra2.npy")
+    features = ops.array(data)[..., [0, 1, 2]]
+    labels = ops.array(data)[..., [0, 1, 2]]
 
     if pretrain:
-        autoencoder = VariationalAutoEncoder(input_shape=5)
+        autoencoder = VariationalAutoEncoder(input_shape=3)
         # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
         # autoencoder.encoder.layers[1].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-4)
+    optimizer = optimizers.Adam(learning_rate=1.e-5)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -54,11 +54,11 @@ def compare():
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("tmp/train data"):
+    for file in os.listdir("../Arduino/Dynamics data/1-1 perforation"):
         if file.endswith(".npy"):
             print(file.title())
-            data = np.load(f"tmp/train data/{file}")
-            features = ops.array(data)[..., [0, 1, 2, 3, 4]]
+            data = np.load(f"../Arduino/Dynamics data/1-1 perforation/{file}")
+            features = ops.array(data)[..., [0, 1, 2]]
             dist_mean, dist_log_var = autoencoder.dynamics(features)
             samples, cov = sample(dist_mean, dist_log_var)
             dist = MultivariateNormal(dist_mean, cov)
@@ -91,7 +91,7 @@ def compare():
     plt.yticks(np.arange(scores_np.shape[0]), labels=filenames, fontsize=8)
     plt.tight_layout()
     plt.show()
-    plt.savefig('tmp/kb_compare.png', dpi=250)
+    # plt.savefig('../tmp/kb_compare.png', dpi=250)
 
 
 def implement():
@@ -243,15 +243,15 @@ def implement():
 
 def main():
     # train()
-    # compare()
-    implement()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/varautoencoder.keras'
+    model_location = '../Arduino/Models/varautoencoder.keras'
     seed = np.random.randint(0, 1000)
     # seed = 267
     print(f"Seed: {seed}")
