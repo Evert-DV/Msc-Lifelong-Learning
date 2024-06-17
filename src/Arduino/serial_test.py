@@ -11,9 +11,9 @@ freq = 1 / 50
 buffer = []
 
 
-def save_buffer():
+def save_buffer(name):
     print("Saving buffer")
-    np.save("./Dynamics data/25-1 perforation/extra2.npy", buffer)
+    np.save(f"./Dynamics data/25-1 perforation/{name}.npy", buffer)
 
 
 def send_value():
@@ -50,7 +50,7 @@ def listen_echo():
             buffer.append([old_state, control_action, new_state, target])
 
         if keyboard.is_pressed('s'):  # If 's' is pressed, save the buffer
-            save_buffer()
+            save_buffer("user_save")
 
         time.sleep(freq)
         # time.sleep(freq)  # Listen at 50 Hz
@@ -60,7 +60,9 @@ def change_value():
     global target
     global new_state
     global freq
+    global buffer
 
+    start_time = time.time()
     old_t = time.time()
     count = 0
     new_state = 30
@@ -79,6 +81,11 @@ def change_value():
         if time.time() - old_t > 5:
             target = np.random.randint(-22, 0)
             old_t = time.time()
+
+        if time.time() % 300 < 0.1:
+            save_buffer(f"auto_save_{count}")
+            buffer = []
+            count += 1
 
         time.sleep(freq)
 
