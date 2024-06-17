@@ -61,24 +61,26 @@ def change_value():
     global new_state
     global freq
 
-    # while True:
-    #     time.sleep(freq)
-    #     target = int(input("Enter new target: "))
+    old_t = time.time()
     count = 0
     new_state = 30
 
     while True:
+        # if abs(new_state - target) > .05:
+        #     count = 0
+        #     continue
+        # elif count == 5:
+        #     # target = -5 if target == -21 else -21
+        #     target = np.random.randint(-22, -0)
+        #     # target = np.random.uniform(-22, 0)
+        #     count = 0
+        #     continue
+        # count += 1
+        if time.time() - old_t > 5:
+            target = np.random.randint(-22, 0)
+            old_t = time.time()
+
         time.sleep(freq)
-        if abs(new_state - target) > .05:
-            count = 0
-            continue
-        elif count == 5:
-            # target = -5 if target == -21 else -21
-            target = np.random.randint(-22, -0)
-            # target = np.random.uniform(-22, 0)
-            count = 0
-            continue
-        count += 1
 
 
 def main():
