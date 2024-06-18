@@ -7,13 +7,12 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"../Arduino/Dynamics data/25-1 perforation/extra2.npy")
+    data = np.load(f"../Arduino/Dynamics data/25-1 perforation/1st_5m.npy")
     features = ops.array(data)[..., [0, 1, 2]]
     labels = ops.array(data)[..., [0, 1, 2]]
 
     if pretrain:
         autoencoder = VariationalAutoEncoder(input_shape=3)
-        # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
         # autoencoder.encoder.layers[1].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
@@ -54,10 +53,10 @@ def compare():
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("../Arduino/Dynamics data/1-1 perforation"):
+    for file in os.listdir("../Arduino/Dynamics data/25-1 perforation"):
         if file.endswith(".npy"):
             print(file.title())
-            data = np.load(f"../Arduino/Dynamics data/1-1 perforation/{file}")
+            data = np.load(f"../Arduino/Dynamics data/25-1 perforation/{file}")
             features = ops.array(data)[..., [0, 1, 2]]
             dist_mean, dist_log_var = autoencoder.dynamics(features)
             samples, cov = sample(dist_mean, dist_log_var)

@@ -68,11 +68,11 @@ class TargetAdapter(keras.Model):
         self.state_size = state_size
         self.dense1 = layers.Dense(32, activation='sigmoid')
         self.dense2 = layers.Dense(32, activation='leaky_relu')
-        self.dense3 = layers.Dense(2)
+        self.dense3 = layers.Dense(self.state_size)
 
         self.regularizer = keras.Sequential([
             layers.Lambda(lambda x: x)  # dummy pass-through
-            ])
+        ])
 
     def call(self, inputs):
         x = self.dense1(inputs)
@@ -113,17 +113,21 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, interval=15, val_split=None):
+def prep_data(data, prediction_window, state_size=2, interval=15, freq=50, val_split=None):
     # First sort by target
     windowed_data = ops.array(
-        [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
+        [data[i:i + interval * freq] for i in range(0, len(data) - interval * freq + 1)[::interval * freq]])
     features = ops.concatenate(
-        (windowed_data[..., :-prediction_window, [0, 1]], windowed_data[..., prediction_window:, [0, 1]]),
-        axis=-1).reshape(-1, 4)  # state transitions
+        (windowed_data[..., :-prediction_window, list(range(state_size))],
+         windowed_data[..., prediction_window:, list(range(state_size))]),
+        axis=-1).reshape(-1, 2 * state_size)  # state transitions
     # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
     #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
-    labels = ops.array([windowed_data[j, i + prediction_window, -2:] - windowed_data[j, i + prediction_window, 3:5] for j in range(windowed_data.shape[0]) for i in
-                        range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels
+    labels = ops.array(
+        [windowed_data[j, i + prediction_window - 1, -state_size:] - windowed_data[j, i + prediction_window - 1,
+                                                                 -2 * state_size:-state_size] for j in
+         range(windowed_data.shape[0]) for i in
+         range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
