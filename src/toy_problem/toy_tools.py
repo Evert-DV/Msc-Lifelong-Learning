@@ -66,18 +66,19 @@ class TargetAdapter(keras.Model):
     def __init__(self, state_size=2, **kwargs):
         super().__init__(**kwargs)
         self.state_size = state_size
-        self.dense1 = layers.Dense(32, activation='sigmoid')
-        self.dense2 = layers.Dense(32, activation='leaky_relu')
-        self.dense3 = layers.Dense(self.state_size)
+
+        inputs = layers.Input(shape=(2 * state_size,))
+        x = layers.Dense(32, activation='sigmoid')(inputs)
+        x = layers.Dense(32, activation='leaky_relu')(x)
+        y = layers.Dense(state_size)(x)
+        self.adapter = keras.Model(inputs=inputs, outputs=y)
 
         self.regularizer = keras.Sequential([
             layers.Lambda(lambda x: x)  # dummy pass-through
         ])
 
     def call(self, inputs):
-        x = self.dense1(inputs)
-        x = self.dense2(x)
-        target = self.dense3(x)
+        target = self.adapter(inputs)
 
         reg_input = ops.concatenate([inputs[..., :self.state_size], inputs[..., self.state_size:] + target], axis=-1)
         self.regularizer(reg_input)
@@ -113,7 +114,7 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, state_size=2, interval=15, freq=50, val_split=None):
+def prep_data(data, prediction_window, state_size=2, val_split=None):
     # First sort by target
     # windowed_data = ops.array(
     #     [data[i:i + interval * freq] for i in range(0, len(data) - interval * freq + 1)[::interval * freq]])
