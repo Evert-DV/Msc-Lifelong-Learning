@@ -3,6 +3,8 @@ import serial
 import keyboard
 import time
 import numpy as np
+from torch import ops
+from src.toy_problem.toy_tools import TargetAdapter
 
 target = -5
 arduino = None
@@ -68,25 +70,23 @@ def change_value():
     count = 0
     new_state = 30
 
+    adapter = TargetAdapter(state_size=1)
+    adapter.load_weights(f"./Models/adapter_weights.weights.h5")
+
     while True:
-        # if abs(new_state - target) > .05:
-        #     count = 0
-        #     continue
-        # elif count == 5:
-        #     # target = -5 if target == -21 else -21
-        #     target = np.random.randint(-22, -0)
-        #     # target = np.random.uniform(-22, 0)
-        #     count = 0
-        #     continue
-        # count += 1
-        if time.time() - old_t > 5:
-            target = np.random.randint(-22, 0)
+        if time.time() - old_t > 2:
+            # true_target = np.random.randint(-22, 0)
+            true_target = -3 if true_target == -21 else -21
             old_t = time.time()
 
         if (time.time() - start_time) % 300 < 0.025:
-            save_buffer(f"c_auto_save_{count}")
+            save_buffer(f"fatigue_auto_save_{count}")
             buffer = []
             count += 1
+
+        adapter_input = ops.array([*new_state, *true_target])[None]
+        delta_target = adapter.predict(adapter_input, verbose=0)[0]
+        target = target + delta_target
 
         time.sleep(freq)
 

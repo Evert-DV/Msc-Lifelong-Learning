@@ -38,7 +38,7 @@ def main():
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
-    pretrain_data = np.load("./Dynamics data/75-75 perforation/b_auto_save_3.npy")
+    pretrain_data = np.load("./Dynamics data/75-75 perforation/b_auto_save_7.npy")
     train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=1, val_split=0.2)
     train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
