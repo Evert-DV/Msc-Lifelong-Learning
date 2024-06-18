@@ -1,4 +1,4 @@
 reports/auxil
 !reports/out/*.pdf
-src/toy problem/tmp
+src/toy_problem/tmp
 ../../.pio
