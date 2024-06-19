@@ -13,6 +13,7 @@ String incomingByte;
 double target;
 double beta;
 double beta0;
+double omega;
 
 void setup() {
     Serial.begin(115200); // Start the serial communication
@@ -31,19 +32,21 @@ void setup() {
     delay(1000);
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
     beta = 0;
+    omega = 0;
     target = 0;
 }
 
 void loop() {
     // measure state
     double old_beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
+    double old_omega = as5600.getAngularSpeed();
 
     if (Serial.available() > 0) {
         // read target
         incomingByte = Serial.readStringUntil('\n');
         if (incomingByte.toDouble() != target) {
             target = incomingByte.toDouble();
-            controller.reset_integral();
+//            controller.reset_integral();
         }
     }
     // compute and execute control
@@ -51,15 +54,17 @@ void loop() {
     double controlForce = controller.computeControl(beta, target, 0.02);
     double servoAngle = degrees((controlForce / 0.25 - 32 * radians(beta)) / 15);
     servoPos = map(servoAngle, 0, 75, 550, 1700);
-    servoPos = min(1700, max(550, servoPos));
-    servo_9.writeMicroseconds(servoPos);
+//    servoPos = min(1700, max(550, servoPos));
+    servo_9.writeMicroseconds(min(1700, max(550, servoPos)));
 
     delay(20);
 
     // measure resulting state
     beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
+    omega = as5600.getAngularSpeed();
 
     // send to serial connection
-    String message = String(old_beta) + " " + String(servoPos) + " " + String(beta);
+    String message = String(old_beta) + " " + String(old_omega) + " " + String(servoPos) + " " + String(beta) + " " +
+                     String(omega);
     Serial.println(message);
 }
