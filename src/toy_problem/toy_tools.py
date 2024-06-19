@@ -63,14 +63,15 @@ class PIDController:
 
 
 class TargetAdapter(keras.Model):
-    def __init__(self, state_size=2, **kwargs):
+    def __init__(self, state_size=2, target_size=1, **kwargs):
         super().__init__(**kwargs)
         self.state_size = state_size
+        self.target_size = target_size
 
         inputs = layers.Input(shape=(2 * state_size,))
         x = layers.Dense(32, activation='sigmoid')(inputs)
         x = layers.Dense(32, activation='leaky_relu')(x)
-        y = layers.Dense(state_size)(x)
+        y = layers.Dense(target_size)(x)
         self.adapter = keras.Model(inputs=inputs, outputs=y)
 
         self.regularizer = keras.Sequential([
@@ -114,12 +115,12 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, state_size=2, val_split=None):
+def prep_data(data, prediction_window, state_size=2, target_size=1, val_split=None):
     # First sort by target
     # windowed_data = ops.array(
     #     [data[i:i + interval * freq] for i in range(0, len(data) - interval * freq + 1)[::interval * freq]])
-    windowed_data = [data[np.all(data[..., -state_size:] == i, axis=-1)] for i in
-                     np.unique(data[..., -state_size:], axis=0)]
+    windowed_data = [data[np.all(data[..., -target_size:] == i, axis=-1)] for i in
+                     np.unique(data[..., -target_size:], axis=0)]
     features = ops.concatenate(
         ops.concatenate((array[..., :-prediction_window, :state_size], array[..., prediction_window:, :state_size]),
                         axis=-1) for array in windowed_data)
@@ -130,13 +131,13 @@ def prep_data(data, prediction_window, state_size=2, val_split=None):
     # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
     #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
     labels = ops.concatenate(
-        (array[..., prediction_window:, -state_size:] - array[..., prediction_window:, :state_size]) for array in
+        array[..., prediction_window:, -target_size:] for array in
         windowed_data)
     # labels = ops.array(
     #     [windowed_data[j, i + prediction_window, -state_size:] - windowed_data[j, i + prediction_window,
     #                                                              -2 * state_size:-state_size] for j in
     #      range(windowed_data.shape[0]) for i in
-    #      range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels
+    #      range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels# - array[..., prediction_window:, :state_size])
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
