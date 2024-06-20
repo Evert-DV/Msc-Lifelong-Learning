@@ -42,12 +42,10 @@ void loop() {
     double old_omega = as5600.getAngularSpeed();
 
     if (Serial.available() > 0) {
-        // read target
-        incomingByte = Serial.readStringUntil('\n');
-        if (incomingByte.toDouble() != target) {
-            target = incomingByte.toDouble();
-//            controller.reset_integral();
+        while (Serial.available() > 0) {
+            incomingByte = Serial.readStringUntil('\n');
         }
+        target = incomingByte.toDouble();
     }
     // compute and execute control
 //    servoPos = min(1700, max(550, target)); // direct control for testing
