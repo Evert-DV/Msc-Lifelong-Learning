@@ -6,7 +6,7 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.4, -.6, -.001); // Initialize the PID controller
+PidController controller(-.4, -.5, 0); // Initialize the PID controller
 
 int servoPos = 500;
 String incomingByte;
