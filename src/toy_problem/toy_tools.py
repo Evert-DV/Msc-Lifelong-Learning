@@ -115,29 +115,19 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, state_size=2, target_size=1, val_split=None):
+def prep_data(data, prediction_window, state_size=2, target_size=1, true_target_list=None, val_split=None):
+    data = ops.array(data)
     # First sort by target
-    # windowed_data = ops.array(
-    #     [data[i:i + interval * freq] for i in range(0, len(data) - interval * freq + 1)[::interval * freq]])
-    windowed_data = [data[np.all(data[..., -target_size:] == i, axis=-1)] for i in
-                     np.unique(data[..., -target_size:], axis=0)]
+    if true_target_list is None:
+        true_target_list = data[..., -target_size:].tolist()
+    windowed_data = [data[ops.all(ops.array(true_target_list) == ops.array(i), axis=-1)] for i in
+                     np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
         ops.concatenate((array[..., :-prediction_window, :state_size], array[..., prediction_window:, :state_size]),
                         axis=-1) for array in windowed_data)
-    # features = ops.concatenate(
-    #     (windowed_data[..., :-prediction_window, list(range(state_size))],
-    #      windowed_data[..., prediction_window:, list(range(state_size))]),
-    #     axis=-1).reshape(-1, 2 * state_size)  # state transitions
-    # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
-    #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
     labels = ops.concatenate(
         array[..., prediction_window:, -target_size:] for array in
         windowed_data)
-    # labels = ops.array(
-    #     [windowed_data[j, i + prediction_window, -state_size:] - windowed_data[j, i + prediction_window,
-    #                                                              -2 * state_size:-state_size] for j in
-    #      range(windowed_data.shape[0]) for i in
-    #      range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels# - array[..., prediction_window:, :state_size])
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)

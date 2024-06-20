@@ -5,14 +5,17 @@ import threading
 import serial
 # import keyboard
 import time
+from torch.utils.data import DataLoader
 from src.toy_problem.toy_tools import *
 
 target = -5
+true_target = -5
 arduino = None
 new_state = None
 new_omega = None
 freq = 1 / 50
 recorded_data = []
+buffer = []
 
 
 def save_recorded_data(name):
@@ -31,6 +34,7 @@ def send_value():
 def listen_echo():
     global freq
     global recorded_data
+    global buffer
     global new_state
     global new_omega
 
@@ -58,7 +62,7 @@ def listen_echo():
                     f"State: {old_state:.2f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
                     f"\tNew state: {new_state}, {new_omega:.2f}\tTarget: {target:.1f}")
             recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, target])
-
+            buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
         # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
         #     save_recorded_data("user_save")
 
@@ -67,33 +71,67 @@ def listen_echo():
 
 def change_value():
     global target
+    global true_target
     global new_state
     global new_omega
     global freq
     global recorded_data
+    global buffer
 
+    # set epoch
     start_time = time.time()
-    old_t = time.time()
+    target_t = start_time
+    train_t = start_time
+
     count = 0
     new_state = 0
     new_omega = 0
     true_target = -5
+    prediction_window = 3
 
-    adapter = TargetAdapter(state_size=2)
-    adapter.load_weights(f"./Models/adapter_weights_25.weights.h5")
+    adapter = keras.models.load_model('./Models/adapter_5.keras')
 
     while True:
-        if time.time() - old_t > 7.5:
+        if time.time() - target_t > 7.5:
             true_target = np.random.randint(-20, -5)
-            print(f"===== TRUE TARGET: {true_target} =====")
-            # true_target = -6 if true_target == -17 else -17
+            print(f"{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
+            # true_target = -6 if true_target == -17 else -17  # oscillate
             # target = true_target
-            old_t = time.time()
+            target_t = time.time()
 
         if (time.time() - start_time) % 300 < 0.025 and (time.time() - start_time) > 5:
             save_recorded_data(f"b_auto_save_{count}")
             # recorded_data = []
             count += 1
+
+        if (time.time() - train_t) > 15:
+            print(f"{10 * '='} Updating model {10 * '='}")
+            adapter.optimizer.lr = 1.e-3
+            update_buffer = ops.array(buffer)[..., :-1]
+            true_target_list = ops.array(buffer)[..., -1:].tolist()
+            features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
+                                         true_target_list=true_target_list)
+            train_dataset, val_dataset = random_split(TensorDataset(features, labels),
+                                                      [int(0.8 * len(features)),
+                                                       len(features) - int(0.8 * len(features))])
+            train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+            callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                       mode='min',
+                                                       min_delta=1e-4,
+                                                       patience=5,
+                                                       restore_best_weights=True,
+                                                       verbose=1),
+                         EpochLogger()
+                         ]
+            adapter.fit(train_dataloader,
+                        epochs=100,
+                        callbacks=callbacks,
+                        validation_data=val_dataloader,
+                        verbose=0,
+                        )
+            buffer = []
+            train_t = time.time()
 
         adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
         delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
