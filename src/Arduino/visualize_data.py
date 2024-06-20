@@ -2,14 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-data = np.load("Dynamics data/25-1 perforation/extra2.npy")
-signal = data[..., 0]
-control_action = data[..., 1]
-targets = data[..., -1]
+data = np.load("Dynamics data/75-75 perforation/b_auto_save_3.npy")
+signal = data[..., [0, 3]].ravel()
+control_action = data[..., [1, 1]].ravel()
+targets = data[..., [-1, -1]].ravel()
 
 fig, ax = plt.subplots(2, 1, figsize=(16, 8), sharex=True)
 
-ax[0].plot(signal, color='tab:blue', alpha=0.33, label="Reference controller")
+ax[0].plot(signal, color='tab:blue', alpha=0.33)
 ax[0].plot(targets, '--', color='tab:gray', label="Target position")
 ax[0].legend(fontsize=8, loc='upper left')
 
