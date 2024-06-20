@@ -11,6 +11,7 @@ from src.toy_problem.toy_tools import *
 target = -5
 true_target = -5
 arduino = None
+lock = None
 new_state = None
 new_omega = None
 freq = 1 / 50
@@ -19,7 +20,7 @@ buffer = []
 
 
 def save_recorded_data(name):
-    print("Saving recorded_data")
+    print(f"\nSaving recorded_data")
     np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
 
 
@@ -59,10 +60,11 @@ def listen_echo():
 
             if time.time() % (1 / 4) < 0.03:
                 print(
-                    f"State: {old_state:.2f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
-                    f"\tNew state: {new_state}, {new_omega:.2f}\tTarget: {target:.1f}")
+                    f"\rState: {old_state:.1f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
+                    f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {target:.1f}", end="")
             recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, target])
-            buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
+            with lock:
+                buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
         # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
         #     save_recorded_data("user_save")
 
@@ -91,10 +93,15 @@ def change_value():
 
     adapter = keras.models.load_model('./Models/adapter_5.keras')
 
+    print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while True:
+        adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
+        delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
+        target = delta_target
+
         if time.time() - target_t > 7.5:
             true_target = np.random.randint(-20, -5)
-            print(f"{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
+            print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             # true_target = -6 if true_target == -17 else -17  # oscillate
             # target = true_target
             target_t = time.time()
@@ -105,10 +112,13 @@ def change_value():
             count += 1
 
         if (time.time() - train_t) > 15:
-            print(f"{10 * '='} Updating model {10 * '='}")
-            adapter.optimizer.lr = 1.e-3
-            update_buffer = ops.array(buffer)[..., :-1]
-            true_target_list = ops.array(buffer)[..., -1:].tolist()
+            print(f"\n{10 * '='} Updating model {10 * '='}")
+            adapter.optimizer.lr = 1.e-4
+
+            with lock:
+                update_buffer = ops.array(buffer)[..., :-1]
+                true_target_list = ops.array(buffer)[..., -1:].tolist()
+
             features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
                                          true_target_list=true_target_list)
             train_dataset, val_dataset = random_split(TensorDataset(features, labels),
@@ -133,16 +143,15 @@ def change_value():
             buffer = []
             train_t = time.time()
 
-        adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
-        delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
-        target = delta_target
-
         time.sleep(freq)
 
 
 def main():
+    global lock
     global arduino
     arduino = serial.Serial('COM5', 115200)
+
+    lock = threading.Lock()
 
     # Create threads for sending and receiving data
     send_thread = threading.Thread(target=send_value, daemon=True)
