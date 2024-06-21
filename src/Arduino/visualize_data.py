@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-data = np.load("Dynamics data/75-75 perforation/b_auto_save_3.npy")
+data = np.load("Dynamics data/75-75 perforation/user_save.npy")
 signal = data[..., [0, 3]].ravel()
 control_action = data[..., [1, 1]].ravel()
 targets = data[..., [-1, -1]].ravel()

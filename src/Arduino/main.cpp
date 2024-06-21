@@ -6,7 +6,7 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.5, -.8, .004); // Initialize the PID controller
+PidController controller(-.5, -.8, .002); // Initialize the PID controller
 
 int servoPos = 550;
 String incomingByte;
@@ -31,7 +31,7 @@ void setup() {
     Serial.print("Connect: ");
     Serial.println(b);
 
-    delay(1000);
+    delay(500);
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
     beta = 0;
     omega = 0;

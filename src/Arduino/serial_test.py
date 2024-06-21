@@ -3,7 +3,7 @@ import os
 os.environ["KERAS_BACKEND"] = "torch"
 import threading
 import serial
-# import keyboard
+import keyboard
 import time
 from torch.utils.data import DataLoader
 from src.toy_problem.toy_tools import *
@@ -20,7 +20,7 @@ buffer = []
 
 
 def save_recorded_data(name):
-    print(f"\nSaving recorded_data")
+    print(f"\n{10*'='} Saving recorded data {10*'='}")
     np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
 
 
@@ -39,7 +39,7 @@ def listen_echo():
     global new_state
     global new_omega
 
-    time.sleep(.5)
+    time.sleep(1)
 
     while True:
         if arduino.in_waiting > 0:
@@ -58,17 +58,18 @@ def listen_echo():
             new_state = float(latest_value[-2])
             new_omega = float(latest_value[-1])
 
-            if time.time() % (1 / 4) < 0.03:
+            if time.time() % (1 / 4) < 0.025:
                 print(
                     f"\rState: {old_state:.1f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
                     f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {target:.1f}", end="")
             recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, target])
             with lock:
                 buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
-        # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
-        #     save_recorded_data("user_save")
+        if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
+            save_recorded_data("user_save")
+            time.sleep(freq)
 
-        time.sleep(freq)
+        # time.sleep(freq/4)
 
 
 def change_value():
@@ -89,59 +90,59 @@ def change_value():
     new_state = 0
     new_omega = 0
     true_target = -5
-    prediction_window = 3
+    prediction_window = 25
 
-    adapter = keras.models.load_model('./Models/adapter_5.keras')
+    adapter = keras.models.load_model('./Models/adapter_25.keras')
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while True:
-        adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
-        delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
-        target = delta_target
+        # adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
+        # delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
+        # target = delta_target
 
-        if time.time() - target_t > 7.5:
-            true_target = np.random.randint(-20, -5)
+        if time.time() - target_t > 5:
+            true_target = np.random.randint(-23, -3)
             print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             # true_target = -6 if true_target == -17 else -17  # oscillate
-            # target = true_target
+            target = true_target
             target_t = time.time()
 
         if (time.time() - start_time) % 300 < 0.025 and (time.time() - start_time) > 5:
-            save_recorded_data(f"b_auto_save_{count}")
+            save_recorded_data(f"auto_save_{count}")
             # recorded_data = []
             count += 1
 
-        if (time.time() - train_t) > 15:
-            print(f"\n{10 * '='} Updating model {10 * '='}")
-            adapter.optimizer.lr = 1.e-4
-
-            with lock:
-                update_buffer = ops.array(buffer)[..., :-1]
-                true_target_list = ops.array(buffer)[..., -1:].tolist()
-
-            features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
-                                         true_target_list=true_target_list)
-            train_dataset, val_dataset = random_split(TensorDataset(features, labels),
-                                                      [int(0.8 * len(features)),
-                                                       len(features) - int(0.8 * len(features))])
-            train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-            val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
-            callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                       mode='min',
-                                                       min_delta=1e-4,
-                                                       patience=5,
-                                                       restore_best_weights=True,
-                                                       verbose=1),
-                         EpochLogger()
-                         ]
-            adapter.fit(train_dataloader,
-                        epochs=100,
-                        callbacks=callbacks,
-                        validation_data=val_dataloader,
-                        verbose=0,
-                        )
-            buffer = []
-            train_t = time.time()
+        # if (time.time() - train_t) > 15:
+        #     print(f"\n{10 * '='} Updating model {10 * '='}")
+        #     adapter.optimizer.lr = 1.e-4
+        #
+        #     with lock:
+        #         update_buffer = ops.array(buffer)[..., :-1]
+        #         true_target_list = ops.array(buffer)[..., -1:].tolist()
+        #
+        #     features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
+        #                                  true_target_list=true_target_list)
+        #     train_dataset, val_dataset = random_split(TensorDataset(features, labels),
+        #                                               [int(0.8 * len(features)),
+        #                                                len(features) - int(0.8 * len(features))])
+        #     train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+        #     val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+        #     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+        #                                                mode='min',
+        #                                                min_delta=1e-4,
+        #                                                patience=5,
+        #                                                restore_best_weights=True,
+        #                                                verbose=1),
+        #                  EpochLogger()
+        #                  ]
+        #     adapter.fit(train_dataloader,
+        #                 epochs=100,
+        #                 callbacks=callbacks,
+        #                 validation_data=val_dataloader,
+        #                 verbose=0,
+        #                 )
+        #     buffer = []
+        #     train_t = time.time()
 
         time.sleep(freq)
 

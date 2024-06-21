@@ -7,7 +7,7 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"../Arduino/Dynamics data/25-1 perforation/1st_5m.npy")
+    data = np.load(f"../Arduino/Dynamics data/75-75 perforation/b_auto_save_7.npy")
     features = ops.array(data)[..., [0, 1, 2]]
     labels = ops.array(data)[..., [0, 1, 2]]
 
@@ -17,7 +17,7 @@ def train():
     else:
         autoencoder = keras.models.load_model(model_location)
 
-    optimizer = optimizers.Adam(learning_rate=1.e-5)
+    optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -53,10 +53,10 @@ def compare():
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("../Arduino/Dynamics data/25-1 perforation"):
+    for file in os.listdir("../Arduino/Dynamics data/75-75 perforation"):
         if file.endswith(".npy"):
             print(file.title())
-            data = np.load(f"../Arduino/Dynamics data/25-1 perforation/{file}")
+            data = np.load(f"../Arduino/Dynamics data/75-75 perforation/{file}")
             features = ops.array(data)[..., [0, 1, 2]]
             dist_mean, dist_log_var = autoencoder.dynamics(features)
             samples, cov = sample(dist_mean, dist_log_var)
