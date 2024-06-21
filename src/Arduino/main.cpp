@@ -6,14 +6,18 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.4, -.5, 0); // Initialize the PID controller
+PidController controller(-.5, -.8, .004); // Initialize the PID controller
 
-int servoPos = 500;
+int servoPos = 550;
 String incomingByte;
 double target;
 double beta;
 double beta0;
 double omega;
+//unsigned long lastTime;
+//unsigned long currentTime;
+double dt = 0.017;
+bool first = true;
 
 void setup() {
     Serial.begin(115200); // Start the serial communication
@@ -23,17 +27,16 @@ void setup() {
     Wire.begin();
 
     // Set up the AS5600
-    as5600.begin(4);  //  set direction pin.
-    as5600.setDirection(AS5600_COUNTERCLOCK_WISE);
-//    int b = as5600.isConnected();
-//    Serial.print("Connect: ");
-//    Serial.println(b);
+    int b = as5600.isConnected();
+    Serial.print("Connect: ");
+    Serial.println(b);
 
     delay(1000);
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
     beta = 0;
     omega = 0;
     target = 0;
+    dt = 0.02;
 }
 
 void loop() {
@@ -47,15 +50,21 @@ void loop() {
         }
         target = incomingByte.toDouble();
     }
-    // compute and execute control
-//    servoPos = min(1700, max(550, target)); // direct control for testing
-    double controlForce = controller.computeControl(beta, target, 0.02);
-    double servoAngle = degrees((controlForce / 0.25 - 32 * radians(beta)) / 15);
-    servoPos = map(servoAngle, 0, 75, 550, 1700);
-//    servoPos = min(1700, max(550, servoPos));
-    servo_9.writeMicroseconds(min(1700, max(550, servoPos)));
 
-    delay(20);
+//    currentTime = millis();
+//    if (not first) {
+//        dt = (currentTime - lastTime) / 1000.0;
+//    }
+//    lastTime = currentTime;
+
+    // compute control
+    double controlForce = controller.computeControl(beta, target, dt);
+    double servoAngle = degrees((controlForce / .23 - 35 * radians(old_beta)) / 15);
+    servoPos = map(servoAngle, 0, 110, 550, 1700);
+    servoPos = min(1700, max(550, servoPos));
+    servo_9.writeMicroseconds(servoPos);
+
+    delay(17);
 
     // measure resulting state
     beta = as5600.rawAngle() * AS5600_RAW_TO_DEGREES - beta0;
@@ -65,4 +74,8 @@ void loop() {
     String message = String(old_beta) + " " + String(old_omega) + " " + String(servoPos) + " " + String(beta) + " " +
                      String(omega);
     Serial.println(message);
+
+    if (first) {
+        first = false;
+    }
 }
