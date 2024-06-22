@@ -8,32 +8,36 @@ import time
 from torch.utils.data import DataLoader
 from src.toy_problem.toy_tools import *
 
+arduino = None
+buffer_lock = None
+update_lock = None
+
 target = -5
 true_target = -5
-arduino = None
-lock = None
-new_state = None
-new_omega = None
+new_state = 0
+new_omega = 0
+
 freq = 1 / 50
+
 recorded_data = []
 buffer = []
 
+prediction_window = 3
+adapter = keras.models.load_model(f'./Models/adapter_{prediction_window}.keras')
+
 
 def save_recorded_data(name):
-    print(f"\n{10*'='} Saving recorded data {10*'='}")
+    print(f"\n{32 * '='}\n===   Saving recorded data   ===\n{32 * '='}")
     np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
 
 
 def send_value():
-    global freq
-    global target
     while True:
         arduino.write(f'{target}\n'.encode())
         time.sleep(freq)
 
 
 def listen_echo():
-    global freq
     global recorded_data
     global buffer
     global new_state
@@ -63,11 +67,13 @@ def listen_echo():
                     f"\rState: {old_state:.1f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
                     f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {target:.1f}", end="")
             recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, target])
-            with lock:
+
+            with buffer_lock:
                 buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
-        if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
-            save_recorded_data("user_save")
-            time.sleep(freq)
+
+        # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
+        #     save_recorded_data("user_save")
+        #     time.sleep(freq*2)
 
         # time.sleep(freq/4)
 
@@ -75,30 +81,19 @@ def listen_echo():
 def change_value():
     global target
     global true_target
-    global new_state
-    global new_omega
-    global freq
     global recorded_data
-    global buffer
 
     # set epoch
     start_time = time.time()
     target_t = start_time
-    train_t = start_time
 
     count = 0
-    new_state = 0
-    new_omega = 0
-    true_target = -5
-    prediction_window = 25
-
-    adapter = keras.models.load_model('./Models/adapter_25.keras')
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while True:
-        # adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
-        # delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
-        # target = delta_target
+        adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
+        delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
+        target = delta_target
 
         if time.time() - target_t > 5:
             true_target = np.random.randint(-23, -3)
@@ -112,62 +107,92 @@ def change_value():
             # recorded_data = []
             count += 1
 
-        # if (time.time() - train_t) > 15:
-        #     print(f"\n{10 * '='} Updating model {10 * '='}")
-        #     adapter.optimizer.lr = 1.e-4
-        #
-        #     with lock:
-        #         update_buffer = ops.array(buffer)[..., :-1]
-        #         true_target_list = ops.array(buffer)[..., -1:].tolist()
-        #
-        #     features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
-        #                                  true_target_list=true_target_list)
-        #     train_dataset, val_dataset = random_split(TensorDataset(features, labels),
-        #                                               [int(0.8 * len(features)),
-        #                                                len(features) - int(0.8 * len(features))])
-        #     train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
-        #     val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
-        #     callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
-        #                                                mode='min',
-        #                                                min_delta=1e-4,
-        #                                                patience=5,
-        #                                                restore_best_weights=True,
-        #                                                verbose=1),
-        #                  EpochLogger()
-        #                  ]
-        #     adapter.fit(train_dataloader,
-        #                 epochs=100,
-        #                 callbacks=callbacks,
-        #                 validation_data=val_dataloader,
-        #                 verbose=0,
-        #                 )
-        #     buffer = []
-        #     train_t = time.time()
+        time.sleep(freq)
+
+
+def update_adapter():
+    global adapter
+    global buffer
+
+    # set epoch
+    start_time = time.time()
+    train_t = start_time
+    clear_t = start_time
+
+    temp_adapter = TargetAdapter(state_size=2)
+
+    while True:
+        if (time.time() - train_t) > 15:
+            print(f"\n{10 * '='} Updating model {10 * '='}")
+
+            temp_adapter.set_weights(adapter.get_weights())
+            temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+                                 loss=keras.losses.MeanSquaredError())
+
+            with buffer_lock:
+                update_buffer = ops.array(buffer)[..., :-1]
+                true_target_list = ops.array(buffer)[..., -1:].tolist()
+
+            features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
+                                         true_target_list=true_target_list)
+            train_dataset, val_dataset = random_split(TensorDataset(features, labels),
+                                                      [int(0.8 * len(features)),
+                                                       len(features) - int(0.8 * len(features))])
+            train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+            val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
+            callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+                                                       mode='min',
+                                                       min_delta=1e-4,
+                                                       patience=5,
+                                                       restore_best_weights=True,
+                                                       verbose=1),
+                         EpochLogger()
+                         ]
+            temp_adapter.fit(train_dataloader,
+                             epochs=1000,
+                             callbacks=callbacks,
+                             validation_data=val_dataloader,
+                             verbose=0,
+                             )
+            with update_lock:
+                adapter.set_weights(temp_adapter.get_weights())
+
+            train_t = time.time()
+
+        if (time.time() - clear_t) > 60:
+            with buffer_lock:
+                buffer = []
+            clear_t = time.time()
 
         time.sleep(freq)
 
 
 def main():
-    global lock
+    global buffer_lock
+    global update_lock
     global arduino
     arduino = serial.Serial('COM5', 115200)
 
-    lock = threading.Lock()
+    buffer_lock = threading.Lock()
+    update_lock = threading.Lock()
 
     # Create threads for sending and receiving data
     send_thread = threading.Thread(target=send_value, daemon=True)
     listen_thread = threading.Thread(target=listen_echo, daemon=True)
     target_thread = threading.Thread(target=change_value, daemon=True)
+    update_thread = threading.Thread(target=update_adapter, daemon=True)
 
     # Start threads
     send_thread.start()
-    listen_thread.start()
     target_thread.start()
+    update_thread.start()
+    listen_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
-    listen_thread.join()
     target_thread.join()
+    update_thread.join()
+    listen_thread.join()
 
 
 if __name__ == "__main__":
