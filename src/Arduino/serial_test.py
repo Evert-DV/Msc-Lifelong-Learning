@@ -23,14 +23,22 @@ recorded_data = []
 buffer = []
 
 # Load vanilla model
-prediction_window = 3
+prediction_window = 10
 adapter = keras.models.load_model(f'./Models/adapter_{prediction_window}.keras')
-# adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
 
 
 def save_recorded_data(name):
     print(f"\n{32 * '='}\n===   Saving recorded data   ===\n{32 * '='}")
     np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
+
+
+def user_save():
+    save_recorded_data("user_save")
+    with update_lock:
+        adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+    time.sleep(.5)
+
 
 
 def send_value():
@@ -76,11 +84,8 @@ def listen_echo():
 
             with buffer_lock:
                 buffer.append([old_state, old_omega, control_action, new_state, new_omega, read_target, true_target])
-                if len(buffer) > 750:
+                if len(buffer) > 3000:  # about a minute of data
                     buffer.pop(0)
-        # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
-        #     save_recorded_data("user_save")
-        #     time.sleep(freq*2)
 
         # time.sleep(freq/4)
 
@@ -187,6 +192,8 @@ def main():
     global update_lock
     global arduino
     arduino = serial.Serial('COM5', 115200)
+
+    keyboard.add_hotkey('ctrl+s', user_save)
 
     buffer_lock = threading.Lock()
     update_lock = threading.Lock()
