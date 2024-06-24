@@ -6,7 +6,7 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.25, -.8, .006); // Initialize the PID controller
+PidController controller(-.25, -.5, .002); // Initialize the PID controller
 
 int servoPos = 550;
 String incomingByte;
@@ -72,7 +72,7 @@ void loop() {
 
     // send to serial connection
     String message = String(old_beta) + " " + String(old_omega) + " " + String(servoPos) + " " + String(beta) + " " +
-                     String(omega);
+                     String(omega) + " " + String(target);
     Serial.println(message);
 
     if (first) {
