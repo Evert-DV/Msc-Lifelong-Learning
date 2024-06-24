@@ -22,8 +22,10 @@ freq = 1 / 50
 recorded_data = []
 buffer = []
 
+# Load vanilla model
 prediction_window = 3
 adapter = keras.models.load_model(f'./Models/adapter_{prediction_window}.keras')
+# adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
 
 
 def save_recorded_data(name):
@@ -44,6 +46,7 @@ def listen_echo():
     global new_omega
 
     time.sleep(1)
+    print_time = time.time()
 
     while True:
         if arduino.in_waiting > 0:
@@ -59,18 +62,22 @@ def listen_echo():
             old_state = float(latest_value[0])
             old_omega = float(latest_value[1])
             control_action = float(latest_value[2])
-            new_state = float(latest_value[-2])
-            new_omega = float(latest_value[-1])
+            new_state = float(latest_value[-3])
+            new_omega = float(latest_value[-2])
+            read_target = float(latest_value[-1])
 
-            if time.time() % (1 / 4) < 0.025:
+            if time.time() - print_time > 0.5:
                 print(
                     f"\rState: {old_state:.1f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
-                    f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {target:.1f}", end="")
-            recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, target])
+                    f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {read_target:.1f}", end="")
+                print_time = time.time()
+
+            recorded_data.append([old_state, old_omega, control_action, new_state, new_omega, read_target, true_target])
 
             with buffer_lock:
-                buffer.append([old_state, old_omega, control_action, new_state, new_omega, target, true_target])
-
+                buffer.append([old_state, old_omega, control_action, new_state, new_omega, read_target, true_target])
+                if len(buffer) > 750:
+                    buffer.pop(0)
         # if keyboard.is_pressed('s'):  # If 's' is pressed, save the recorded_data
         #     save_recorded_data("user_save")
         #     time.sleep(freq*2)
@@ -86,28 +93,42 @@ def change_value():
     # set epoch
     start_time = time.time()
     target_t = start_time
+    save_t = start_time
 
     count = 0
+    n = 0
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while True:
+        t0 = time.time()
+
         adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
         delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
         target = delta_target
 
         if time.time() - target_t > 5:
-            true_target = np.random.randint(-23, -3)
+            true_target = np.random.randint(-23, -2)
+            # if n % 2 == 0:
+            #     true_target = np.random.randint(-23, -15)
+            # else:
+            #     true_target = np.random.randint(-10, -2)
+            # n += 1
+
             print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             # true_target = -6 if true_target == -17 else -17  # oscillate
-            target = true_target
+            # target = true_target
             target_t = time.time()
 
-        if (time.time() - start_time) % 300 < 0.025 and (time.time() - start_time) > 5:
+        if time.time() - save_t > 300:
             save_recorded_data(f"auto_save_{count}")
+            with update_lock:
+                adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
             # recorded_data = []
             count += 1
+            save_t = time.time()
 
-        time.sleep(freq)
+        dt = time.time() - t0
+        time.sleep(max(0, freq - dt))
 
 
 def update_adapter():
@@ -117,13 +138,12 @@ def update_adapter():
     # set epoch
     start_time = time.time()
     train_t = start_time
-    clear_t = start_time
 
     temp_adapter = TargetAdapter(state_size=2)
 
     while True:
-        if (time.time() - train_t) > 15:
-            print(f"\n{10 * '='} Updating model {10 * '='}")
+        if time.time() - train_t > 15:
+            print(f"\n{26 * '='}\n===   Updating model   ===\n{26 * '='}")
 
             temp_adapter.set_weights(adapter.get_weights())
             temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-4),
@@ -159,11 +179,6 @@ def update_adapter():
 
             train_t = time.time()
 
-        if (time.time() - clear_t) > 60:
-            with buffer_lock:
-                buffer = []
-            clear_t = time.time()
-
         time.sleep(freq)
 
 
@@ -185,14 +200,14 @@ def main():
     # Start threads
     send_thread.start()
     target_thread.start()
-    update_thread.start()
     listen_thread.start()
+    update_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     target_thread.join()
-    update_thread.join()
     listen_thread.join()
+    update_thread.join()
 
 
 if __name__ == "__main__":
