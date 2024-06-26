@@ -2,18 +2,25 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-data = np.load("Dynamics data/75-75 perforation/deployed_adapter_3.npy")
-signal = data[..., [0, 3]].ravel()
-control_action = data[..., [1, 1]].ravel()
+data = np.load("Dynamics data/75-75 perforation/deployed_adapter_15.npy")
+count = data[..., [0, 0]].ravel()
+beta = data[..., [1, 4]].ravel()
+omega = data[..., [2, 5]].ravel()
+control_action = data[..., [3, 3]].ravel()
 targets = data[..., [-2, -2]].ravel()
 true_targets = data[..., [-1, -1]].ravel()
 
-fig, ax = plt.subplots(1, 1, figsize=(8, 4), sharex=True)
+fig, ax = plt.subplots(3, 1, figsize=(12, 6), sharex=True)
 
-ax.plot(signal, color='tab:blue', alpha=0.5)
-ax.plot(true_targets, '--', color='tab:gray', alpha=0.33, label="True target")
-ax.plot(targets, '--', color='tab:gray', label="Adapted target")
-ax.legend(fontsize=8, loc='upper left')
+ax[0].plot(count, beta, marker='.', color='tab:blue', alpha=0.5, markersize=3, label="Angle")
+ax[0].plot(count, targets, '--', color='tab:gray', alpha=0.33, label="Adapted target")
+ax[0].plot(count, true_targets, '--', color='tab:gray', label="True target")
+ax[0].legend(fontsize=8, loc='upper left')
+
+ax[1].plot(count, omega, marker='.', color='tab:orange', alpha=0.5, markersize=3, label="Angular velocity")
+ax[1].legend(fontsize=8, loc='upper left')
+
+ax[2].plot(count, control_action, marker='.', color='tab:green', alpha=0.5, markersize=3, label="Control action")
 
 fig.tight_layout()
 plt.show()
