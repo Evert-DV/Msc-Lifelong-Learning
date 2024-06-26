@@ -81,10 +81,10 @@ class TargetAdapter(keras.Model):
     def call(self, inputs):
         target = self.adapter(inputs)
 
-        reg_input = ops.concatenate([inputs[..., :self.state_size], inputs[..., self.state_size:] + target], axis=-1)
+        reg_input = ops.concatenate(
+            [inputs[..., self.state_size:], ops.pad(target, [[0, 0], [0, self.state_size - self.target_size]])],
+            axis=-1)
         self.regularizer(reg_input)
-
-        # target = layers.Lambda(lambda x: x[..., -self.state_size:])(reg_out)
 
         return target
 
