@@ -18,6 +18,7 @@ double omega;
 //unsigned long currentTime;
 double dt = 0.017;
 bool first = true;
+int counter = 0;
 
 void setup() {
     Serial.begin(115200); // Start the serial communication
@@ -71,11 +72,12 @@ void loop() {
     omega = as5600.getAngularSpeed();
 
     // send to serial connection
-    String message = String(old_beta) + " " + String(old_omega) + " " + String(servoPos) + " " + String(beta) + " " +
+    String message = String(counter) + " " + String(old_beta) + " " + String(old_omega) + " " + String(servoPos) + " " + String(beta) + " " +
                      String(omega) + " " + String(target);
     Serial.println(message);
 
     if (first) {
         first = false;
     }
+    counter++;
 }
