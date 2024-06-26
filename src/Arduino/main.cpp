@@ -18,7 +18,7 @@ double omega;
 //unsigned long currentTime;
 double dt = 0.017;
 bool first = true;
-int counter = 0;
+unsigned long int counter = 0;
 
 void setup() {
     Serial.begin(115200); // Start the serial communication
