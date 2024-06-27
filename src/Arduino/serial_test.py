@@ -31,8 +31,8 @@ recorded_data = []
 buffer = []
 
 # Load vanilla model
-prediction_window = 15
-adapter = keras.models.load_model(f'./Models/adapter_{prediction_window}.keras')
+prediction_window = 10
+adapter = keras.models.load_model(f'./Models/adapter_allround.keras')
 
 # Load deployed model weights
 adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
@@ -40,9 +40,6 @@ adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5'
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)  # keras.models.load_model("./Models/vae_skip_a.keras")
 autoencoder.load_weights("./Models/vae_skip_s.weights.h5")
-
-
-# autoencoder.compile(optimizer=optimizers.Adam(learning_rate=1.e-4), loss=losses.MeanSquaredError())
 
 
 def save_recorded_data(name):
@@ -74,6 +71,7 @@ def listen_echo():
     print_time = time.time()
 
     while running:
+        t0 = time.time()
         if arduino.in_waiting > 0:
             # Read all data in the recorded_data
             data = arduino.readlines(arduino.in_waiting)
@@ -104,6 +102,8 @@ def listen_echo():
                 buffer.append([old_state, old_omega, control_action, new_state, new_omega, read_target, true_target])
                 if len(buffer) > 3000:  # about a minute of data
                     buffer.pop(0)
+        dt = time.time() - t0
+        time.sleep(max(0, freq - dt))
 
     print("\nClosing `listen_echo` thread")
 
@@ -114,7 +114,7 @@ def change_value():
     global recorded_data
 
     # kb setup
-    use_kb = True
+    use_kb = False
 
     if use_kb:
         try:
@@ -147,20 +147,22 @@ def change_value():
     update_t = start_time
 
     count = 0
+    n = 0
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
         t0 = time.time()
-
-        adapter_input = ops.array([new_state, new_omega, true_target, 0.])[None]
+        to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
+        adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
         delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
         target = delta_target
 
         if time.time() - target_t > 5:
             true_target = np.random.randint(-23, -2)
-
-            print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
+            # true_target = -20 if n % 2 == 0 else -5  # oscillate
+            # n += 1
             # target = true_target
+            print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             target_t = time.time()
 
         if time.time() - save_t > 300:
@@ -280,14 +282,17 @@ def change_value():
         time.sleep(max(0, freq - dt))
 
     # Save the last updated reference
-    kb[0][current_kb_idx] = backup_updated_reference
+    if use_kb:
+        kb[0][current_kb_idx] = backup_updated_reference
+        with update_lock:
+            kb[1][current_kb_idx] = adapter.get_weights()
+
+        with open('kb.pkl', 'wb') as f:
+            pickle.dump(kb, f)
+
+        print(f"\n{len(kb[0])} entries saved in the KB\nClosing `change_value` thread")
     with update_lock:
-        kb[1][current_kb_idx] = adapter.get_weights()
-
-    with open('kb.pkl', 'wb') as f:
-        pickle.dump(kb, f)
-
-    print(f"\n{len(kb[0])} entries saved in the KB\nClosing `change_value` thread")
+        adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
     save_recorded_data(f"deployed_adapter_{prediction_window}")
 
 
@@ -300,7 +305,7 @@ def update_adapter():
     train_t = start_time
 
     temp_adapter = TargetAdapter(state_size=2)
-    temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
+    # temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
     temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=5e-5),
                          loss=keras.losses.MeanSquaredError())
 
