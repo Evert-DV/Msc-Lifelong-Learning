@@ -76,10 +76,13 @@ class VariationalAutoEncoder(keras.Model):
         d_mean, d_log_var = self.dynamics(inputs)
         _, d_covariance = sample(d_mean, d_log_var)
 
-        #   -- Skip connection
+        #   -- Skip connection (choose)
         in_slice = layers.concatenate(
             [inputs[..., :self.state_size], ops.zeros_like(inputs[..., 0:1]),
              inputs[..., -self.state_size:]])  # provide s, s', but not a
+        # in_slice = layers.concatenate(
+        #     [ops.zeros_like(inputs[..., :self.state_size]), inputs[..., self.state_size:-self.state_size],
+        #      ops.zeros_like(inputs[..., :self.state_size])])  # provide a but not s, s'
         reconstructed = layers.add([in_slice, reconstructed])
 
         # Add KL divergence regularization loss.

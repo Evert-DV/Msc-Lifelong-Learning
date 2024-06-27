@@ -6,13 +6,13 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = False
-    data = np.load(f"../Arduino/Dynamics data/75-75 perforation/b_auto_save_7.npy")
-    features = ops.array(data)[..., [0, 1, 2]]
-    labels = ops.array(data)[..., [0, 1, 2]]
+    pretrain = True
+    data = np.load(f"../Arduino/Dynamics data/75-75 perforation/vae data/pretrain_data.npy")
+    features = ops.array(data)[..., [0, 1, 2, 3, 4]]
+    labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
     if pretrain:
-        autoencoder = VariationalAutoEncoder(input_shape=3)
+        autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
         # autoencoder.encoder.layers[1].adapt(features)
     else:
         autoencoder = keras.models.load_model(model_location)
@@ -53,11 +53,11 @@ def compare():
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("../Arduino/Dynamics data/75-75 perforation"):
+    for file in os.listdir("../Arduino/Dynamics data/75-75 perforation/vae data"):
         if file.endswith(".npy"):
             print(file.title())
-            data = np.load(f"../Arduino/Dynamics data/75-75 perforation/{file}")
-            features = ops.array(data)[..., [0, 1, 2]]
+            data = np.load(f"../Arduino/Dynamics data/75-75 perforation/vae data/{file}")
+            features = ops.array(data)[..., [0, 1, 2, 3, 4]]
             dist_mean, dist_log_var = autoencoder.dynamics(features)
             samples, cov = sample(dist_mean, dist_log_var)
             dist = MultivariateNormal(dist_mean, cov)
@@ -76,7 +76,7 @@ def compare():
 
     scores_np = ops.convert_to_numpy(scores)
     plt.figure(figsize=(10, 8))
-    cax = plt.imshow(scores_np, cmap='viridis', aspect='auto')
+    cax = plt.imshow(scores_np, vmin=0, vmax=np.log(2), cmap='viridis', aspect='auto')
     plt.colorbar(cax, label='KL-Divergence')
 
     for i in range(scores_np.shape[0]):
@@ -250,7 +250,7 @@ if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = '../Arduino/Models/varautoencoder.keras'
+    model_location = '../Arduino/Models/vae_skip_a.keras'
     seed = np.random.randint(0, 1000)
     # seed = 267
     print(f"Seed: {seed}")
