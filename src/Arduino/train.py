@@ -9,7 +9,7 @@ from src.toy_problem.toy_tools import TargetAdapter, prep_data
 
 
 def main():
-    pretrain = True
+    pretrain = False
     seed = np.random.randint(0, 1000)
     # seed = 63
     print(f"Seed: {seed}")
@@ -21,7 +21,7 @@ def main():
     prediction_window = 5
 
     model_location = './Models/'
-    model_name = f'adapter_{prediction_window}.keras'
+    model_name = f'adapter_5.keras'
 
     adapter = TargetAdapter(state_size=2)
 
@@ -35,8 +35,8 @@ def main():
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
-    pretrain_data = np.load("./Dynamics data/75-75 perforation/auto_save_3.npy")
-    # pretrain_data = pretrain_data[..., [0, 2, 3, -1]]  # temp solution until velocity is incorporated
+    pretrain_data = np.load(f"./Dynamics data/75-75 perforation/pretrain_data.npy")
+    pretrain_data = pretrain_data[..., 1:]  # Remove the counter
     train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, val_split=0.2)
     train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)

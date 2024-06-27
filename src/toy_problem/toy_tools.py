@@ -82,7 +82,7 @@ class TargetAdapter(keras.Model):
         target = self.adapter(inputs)
 
         reg_input = ops.concatenate(
-            [inputs[..., self.state_size:], ops.pad(target, [[0, 0], [0, self.state_size - self.target_size]])],
+            [inputs[..., :self.state_size], ops.pad(target, [[0, 0], [0, self.state_size - self.target_size]])],
             axis=-1)
         self.regularizer(reg_input)
 
@@ -115,7 +115,14 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, state_size=2, target_size=1, true_target_list=None, val_split=None):
+def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_target_list=None,
+              val_split=None):
+    window_list = prediction_window
+    if type(prediction_window) is int:
+        window_list = [prediction_window]
+    elif prediction_window is None:
+        window_list = [3, 5, 10, 15, 25]
+
     data = ops.array(data)
     # First sort by target
     if true_target_list is None:
@@ -123,11 +130,11 @@ def prep_data(data, prediction_window, state_size=2, target_size=1, true_target_
     windowed_data = [data[ops.all(ops.array(true_target_list) == ops.array(i), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
-        ops.concatenate((array[..., :-prediction_window, :state_size], array[..., prediction_window:, :state_size]),
-                        axis=-1) for array in windowed_data)
+        ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
+                        axis=-1) for array in windowed_data for window in window_list)
     labels = ops.concatenate(
-        array[..., prediction_window:, -target_size:] for array in
-        windowed_data)
+        array[..., window:, -target_size:] for array in
+        windowed_data for window in window_list)
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
