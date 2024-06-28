@@ -15,6 +15,8 @@ from keras import ops, optimizers, losses
 from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
+use_kb = True
+use_adapter = True
 
 arduino = None
 buffer_lock = None
@@ -27,23 +29,24 @@ new_omega = 0
 
 freq = 1 / 50
 
+counter = 0
 recorded_data = []
 buffer = []
 
 # Load vanilla model
-prediction_window = 10
+prediction_window = 25
 adapter = keras.models.load_model(f'./Models/adapter_allround.keras')
 
 # Load deployed model weights
 adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
-autoencoder = VariationalAutoEncoder(5, 2)  # keras.models.load_model("./Models/vae_skip_a.keras")
+autoencoder = VariationalAutoEncoder(5, 2)
 autoencoder.load_weights("./Models/vae_skip_s.weights.h5")
 
 
 def save_recorded_data(name):
-    print(f"\n{32 * '='}\n===   Saving recorded data   ===\n{32 * '='}")
+    print(f"\n{32 * '='}\n||    Saving recorded data    ||\n{32 * '='}")
     np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
 
 
@@ -66,6 +69,7 @@ def listen_echo():
     global buffer
     global new_state
     global new_omega
+    global counter
 
     time.sleep(1)
     print_time = time.time()
@@ -108,13 +112,11 @@ def listen_echo():
     print("\nClosing `listen_echo` thread")
 
 
+# noinspection PyUnboundLocalVariable
 def change_value():
     global target
     global true_target
     global recorded_data
-
-    # kb setup
-    use_kb = False
 
     if use_kb:
         try:
@@ -135,9 +137,15 @@ def change_value():
         backup_updated_reference = None
         current_kb_idx = None
 
-        thres = np.log(2) / 2
+        threshold = np.log(2) / 2
 
         first_selection = True
+
+        js_div_vals = []
+        js_div_counts = []
+        update_counts = []
+        selection_counts = []
+        trespass_counts = []
 
     # set epoch
     start_time = time.time()
@@ -152,18 +160,20 @@ def change_value():
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
         t0 = time.time()
-        to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
-        adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
-        delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
-        target = delta_target
 
         if time.time() - target_t > 5:
             true_target = np.random.randint(-23, -2)
             # true_target = -20 if n % 2 == 0 else -5  # oscillate
             # n += 1
-            # target = true_target
+            target = true_target
             print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             target_t = time.time()
+
+        if use_adapter:
+            to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
+            adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
+            delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
+            target = delta_target
 
         if time.time() - save_t > 300:
             save_recorded_data(f"auto_save_{count}")
@@ -190,6 +200,8 @@ def change_value():
             if time.time() - start_time < 60:
                 running_distribution = MultivariateNormal(z_mean, cov)
                 current_kb_idx, js_divs = search_kb(running_distribution, kb[0])
+                dt = time.time() - t0
+                time.sleep(max(0, freq - dt))
                 continue
 
             if first_selection:
@@ -199,25 +211,28 @@ def change_value():
                 backup_updated_reference = reference.copy()
                 with update_lock:
                     adapter.set_weights(kb[1][current_kb_idx])
-                print(f"\nSelected KB entry {current_kb_idx} as reference")
+                print(f"\n===  Selected KB entry {current_kb_idx} as reference  ===")
                 first_selection = False
 
             # Post-60 seconds
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=5 / (60 - 5))
+            running_distribution.update(z_mean, cov, weight=.1)  # 5 / (60 - 5)
 
             # KL losses
-            kl_updated_dist = js_divergence(updated_reference, running_distribution)
-            kl_reference_updated = js_divergence(reference, updated_reference)
-            # kl_loss.append([kl_updated_dist.item(), kl_reference_updated.item()])
+            js_updated_dist = js_divergence(updated_reference, running_distribution)
+            js_reference_updated = js_divergence(reference, updated_reference)
+            js_div_vals.append([js_updated_dist.item(), js_reference_updated.item()])
+            js_div_counts.append(counter)
 
             # Check for shift
-            if kl_updated_dist > thres or kl_reference_updated > .75 * thres:
+            if js_updated_dist > threshold or js_reference_updated > .75 * threshold:
+                trespass_counts.append(counter)
                 # retain last or leave it as it was?
                 # kb[0][kb_idx] = backup_updated_reference.copy()
                 # kb[1][kb_idx] = adapter.get_weights()
                 best_idx, js_divs = search_kb(running_distribution, kb[0])
-                if best_idx != current_kb_idx and js_divs[best_idx] < thres:
+                if best_idx != current_kb_idx and js_divs[best_idx] < threshold:
+                    selection_counts.append(counter)
                     print(f"\n{34 * '='}\n"
                           f"||        SHIFT DETECTED        ||\n"
                           f"||  Restore KB entry reference  ||\n"
@@ -247,9 +262,11 @@ def change_value():
 
         # KB update step
         if time.time() - update_t > 60 and not first_selection:
+            update_counts.append(counter)
             torch.cuda.empty_cache()
             best_idx, js_divs = search_kb(running_distribution, kb[0])
-            if best_idx != current_kb_idx and js_divs[best_idx] < thres:
+            if best_idx != current_kb_idx and js_divs[best_idx] < threshold:
+                selection_counts.append(counter)
                 print(f"\n{34 * '='}\n"
                       f"||         UPDATE STEP          ||\n"
                       f"||  Check KB for better match   ||\n"
@@ -264,6 +281,9 @@ def change_value():
                 current_kb_idx = best_idx
                 with update_lock:
                     adapter.set_weights(kb[1][best_idx])
+                update_t = time.time()
+                dt = time.time() - t0
+                time.sleep(max(0, freq - dt))
                 continue
 
             # Update reference
@@ -290,6 +310,10 @@ def change_value():
         with open('kb.pkl', 'wb') as f:
             pickle.dump(kb, f)
 
+        plot_counter = [js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts]
+        with open("./tmp/plot_counters.pkl", 'wb') as f:
+            pickle.dump(plot_counter, f)
+
         print(f"\n{len(kb[0])} entries saved in the KB\nClosing `change_value` thread")
     with update_lock:
         adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
@@ -305,13 +329,13 @@ def update_adapter():
     train_t = start_time
 
     temp_adapter = TargetAdapter(state_size=2)
-    # temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
+    temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
     temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=5e-5),
                          loss=keras.losses.MeanSquaredError())
 
     while running:
         if time.time() - train_t > 15:
-            print(f"\n{26 * '='}\n===   Updating model   ===\n{26 * '='}")
+            print(f"\n{26 * '='}\n||    Updating model    ||\n{26 * '='}")
 
             temp_adapter.set_weights(adapter.get_weights())
 
