@@ -44,6 +44,9 @@ adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5'
 autoencoder = VariationalAutoEncoder(5, 2)
 autoencoder.load_weights("./Models/vae_skip_s.weights.h5")
 
+# KB
+kb_file = 'kb_test.pkl'
+
 
 def save_recorded_data(name):
     print(f"\n{32 * '='}\n||    Saving recorded data    ||\n{32 * '='}")
@@ -120,7 +123,7 @@ def change_value():
 
     if use_kb:
         try:
-            with open('kb.pkl', 'rb') as f:
+            with open(f'{kb_file}.pkl', 'rb') as f:
                 kb = pickle.load(f)
                 reference = None
                 print(f"\n{len(kb[0])} entries loaded from the KB")
@@ -154,15 +157,21 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    count = 0
-    n = 0
+    save_count = 0
+    target_count = -1
+    generated_targets = np.random.randint(-23, -2, 30 * 60 / 5)  # 30 mins of random targets
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
         t0 = time.time()
 
         if time.time() - target_t > 5:
-            true_target = np.random.randint(-23, -2)
+            target_count += 1
+            if target_count >= len(generated_targets):
+                globals().update(running=False)
+                break
+            true_target = generated_targets[target_count]
+            # true_target = np.random.randint(-23, -2)
             # true_target = -20 if n % 2 == 0 else -5  # oscillate
             # n += 1
             target = true_target
@@ -176,10 +185,10 @@ def change_value():
             target = delta_target
 
         if time.time() - save_t > 300:
-            save_recorded_data(f"auto_save_{count}")
+            save_recorded_data(f"auto_save_{save_count}")
             with update_lock:
                 adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
-            count += 1
+            save_count += 1
             save_t = time.time()
 
         # KB step
@@ -225,7 +234,7 @@ def change_value():
             js_div_counts.append(counter)
 
             # Check for shift
-            if js_updated_dist > threshold or js_reference_updated > .75 * threshold:
+            if js_updated_dist > threshold or js_reference_updated > .5 * threshold:
                 trespass_counts.append(counter)
                 # retain last or leave it as it was?
                 # kb[0][kb_idx] = backup_updated_reference.copy()
@@ -307,7 +316,7 @@ def change_value():
         with update_lock:
             kb[1][current_kb_idx] = adapter.get_weights()
 
-        with open('kb.pkl', 'wb') as f:
+        with open(f'{kb_file}.pkl', 'wb') as f:
             pickle.dump(kb, f)
 
         plot_counter = [js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts]
@@ -407,6 +416,12 @@ def main():
 if __name__ == "__main__":
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+    seed = np.random.randint(0, 1000)
+    np.random.seed(seed)
+    torch.torch.manual_seed(seed)
+    print(f"Seed: {seed}")
+
     if torch.cuda.is_available():
         print("Using CUDA")
         with torch.cuda.device(0):
