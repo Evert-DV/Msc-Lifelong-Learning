@@ -15,8 +15,8 @@ from keras import ops, optimizers, losses
 from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
-use_kb = True
-use_adapter = True
+use_kb = False
+use_adapter = False
 
 arduino = None
 buffer_lock = None
@@ -159,7 +159,7 @@ def change_value():
 
     save_count = 0
     target_count = -1
-    generated_targets = np.random.randint(-23, -2, 30 * 60 / 5)  # 30 mins of random targets
+    generated_targets = np.random.randint(-23, -2, int(30 * 60 / 5))  # 30 mins of random targets
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
@@ -398,19 +398,23 @@ def main():
     send_thread = threading.Thread(target=send_value, daemon=True)
     listen_thread = threading.Thread(target=listen_echo, daemon=True)
     target_thread = threading.Thread(target=change_value, daemon=True)
-    update_thread = threading.Thread(target=update_adapter, daemon=True)
+    if use_adapter:
+        update_thread = threading.Thread(target=update_adapter, daemon=True)
 
     # Start threads
     send_thread.start()
     target_thread.start()
     listen_thread.start()
-    update_thread.start()
+    if use_adapter:
+        # noinspection PyUnboundLocalVariable
+        update_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     target_thread.join()
     listen_thread.join()
-    update_thread.join()
+    if use_adapter:
+        update_thread.join()
 
 
 if __name__ == "__main__":
@@ -418,6 +422,7 @@ if __name__ == "__main__":
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     seed = np.random.randint(0, 1000)
+    # seed = 398
     np.random.seed(seed)
     torch.torch.manual_seed(seed)
     print(f"Seed: {seed}")
