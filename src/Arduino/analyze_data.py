@@ -1,5 +1,6 @@
 import pickle
 import numpy as np
+import matplotlib
 from matplotlib import pyplot as plt
 
 adapter_window = 15
@@ -87,35 +88,48 @@ for metric, value in zip(metrics, values):
     else:
         print("| {:<20} | {:<20} |".format(metric, "Array"))
 
+# matplotlib.use("pgf")
+# matplotlib.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     'font.family': 'serif',
+#     'font.size': 10.,
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+# })
+plt.style.use('tableau-colorblind10')
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
 signal_fig, signal_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
-signal_ax[0].plot(count, beta, marker='.', color='tab:blue', alpha=0.5, markersize=3, label="Angle")
-signal_ax[0].plot(count, targets, '--', color='tab:gray', alpha=0.33, label="Adapted target")
-signal_ax[0].plot(count, true_targets, '--', color='tab:gray', label="True target")
+signal_ax[0].plot(count, targets, '--', color=colors[-1], label="Adapted target")
+signal_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
+signal_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
 signal_ax[0].legend(fontsize=8, loc='upper left')
+signal_ax[0].set_ylabel("Angle [deg]")
 
-signal_ax[1].plot(count, omega, marker='.', color='tab:orange', alpha=0.5, markersize=3, label="Angular velocity")
-signal_ax[1].legend(fontsize=8, loc='upper left')
+signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=3)
+signal_ax[1].set_ylabel("Angular velocity [deg/s]")
 
-signal_ax[2].plot(count, control_action, marker='.', color='tab:green', alpha=0.5, markersize=3, label="Control action")
-signal_ax[2].legend(fontsize=8, loc='upper left')
+signal_ax[2].plot(count, control_action, color=colors[5], marker='.', markersize=3)
+signal_ax[2].set_xlabel("Count")
+signal_ax[2].set_ylabel("Control action [-]")
 
 signal_fig.tight_layout()
 plt.savefig(f'tmp/signal_{file}.png')
 
-
 ise_fig, ise_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
-ise_ax[0].plot(count, beta, marker='.', color='tab:blue', alpha=0.5, markersize=3, label="Angle")
-ise_ax[0].plot(count, true_targets, '--', color='tab:gray', label="True target")
+ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
+ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
 ise_ax[0].legend(fontsize=8, loc='upper left')
+ise_ax[0].set_ylabel("Angle [deg]")
 
-ise_ax[1].plot(count, se, color='tab:red', alpha=0.5, label="Squared error")
-ise_ax[1].legend(fontsize=8, loc='upper left')
+ise_ax[1].plot(count, se, color=colors[5])
+ise_ax[1].set_ylabel("Squared error [deg$^2$]")
 
-ise_ax[2].plot(count[1:], ise, color='tab:red', alpha=0.75, label="Integral of the squared error")
-ise_ax[2].legend(fontsize=8, loc='upper left')
+ise_ax[2].plot(count[1:], ise, color=colors[5])
+ise_ax[2].set_xlabel("Count")
+ise_ax[2].set_ylabel("ISE [deg$^2$]")
 
 ise_fig.tight_layout()
 plt.savefig(f'tmp/ise_{file}.png')
@@ -123,26 +137,26 @@ plt.savefig(f'tmp/ise_{file}.png')
 if kb_plot:
     kb_fig, kb_ax = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
 
-    kb_ax[0].plot(count, beta, marker='.', color='tab:blue', alpha=0.5, markersize=3, label="Angle")
-    kb_ax[0].plot(count, true_targets, '--', color='tab:gray', label="True target")
+    kb_ax[0].plot(count, beta, marker='.', markersize=3, label="System response")
+    kb_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
     kb_ax[0].legend(fontsize=8, loc='upper left')
+    kb_ax[0].set_ylabel("Angle [deg]")
 
-    js_lines = kb_ax[1].plot(js_div_counts, js_div_vals, marker='.', markersize=3., lw=1., alpha=0.7)
+    js_lines = kb_ax[1].plot(js_div_counts, js_div_vals, marker='.', markersize=3., lw=1.)
     for t_update, t_selection, t_trespass in zip(update_counts, selection_counts, trespass_counts):
-        update_lines = kb_ax[1].axvline(t_update, color='lightgrey', linestyle='-')
-        selection_lines = kb_ax[1].axvline(t_selection, color='tab:green', linestyle='--')
-        trespass_lines = kb_ax[1].axvline(t_trespass, color='tab:red', linestyle=':')
-    kb_ax[1].axhline(np.log(2) / 2, color='tab:blue', alpha=.5, linestyle='--', lw=1.)
-    kb_ax[1].axhline(np.log(2) / 4, color='tab:orange', alpha=.5, linestyle='--', lw=1.)
+        update_lines = kb_ax[1].axvline(t_update, linestyle='-', color=colors[2])
+        selection_lines = kb_ax[1].axvline(t_selection, linestyle='--', color=colors[-1])
+        trespass_lines = kb_ax[1].axvline(t_trespass, linestyle=':', color=colors[-4])
+    kb_ax[1].axhline(np.log(2) / 2, alpha=.5, linestyle='--', lw=1., color=colors[-3])
+    kb_ax[1].axhline(np.log(2) / 4, alpha=.5, linestyle='--', lw=1., color=colors[-2])
     kb_ax[1].legend(fontsize=8, loc='upper left',
                     handles=(*js_lines, update_lines, selection_lines, trespass_lines),
                     labels=['Running distribution vs. updated reference', 'Updated reference vs. Backed-up reference',
                             'Updates', 'KB selections', 'Trespasses'])
+    kb_ax[1].set_xlabel("Count")
+    kb_ax[1].set_ylabel("JS divergence [-]")
 
     kb_fig.tight_layout()
     plt.savefig(f'tmp/kb_{file}.png')
 
-
 plt.show()
-
-
