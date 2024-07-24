@@ -69,9 +69,18 @@ class TargetAdapter(keras.Model):
         self.target_size = target_size
 
         inputs = layers.Input(shape=(2 * state_size,))
-        x = layers.Dense(32, activation='sigmoid')(inputs)
-        x = layers.Dense(32, activation='leaky_relu')(x)
-        y = layers.Dense(target_size)(x)
+        x = layers.Dense(32, activation='sigmoid',
+                         kernel_initializer=keras.initializers.GlorotUniform(),
+                         bias_initializer='zeros'
+                         )(inputs)
+        x = layers.Dense(32, activation='leaky_relu',
+                         kernel_initializer=keras.initializers.HeNormal(),
+                         bias_initializer='zeros'
+                         )(x)
+        y = layers.Dense(target_size,
+                         kernel_initializer=keras.initializers.RandomNormal(mean=0.0, stddev=1e-2),
+                         bias_initializer='zeros'
+                         )(x)
         self.adapter = keras.Model(inputs=inputs, outputs=y)
 
         self.regularizer = keras.Sequential([
@@ -121,19 +130,20 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
     if type(prediction_window) is int:
         window_list = [prediction_window]
     elif prediction_window is None:
-        window_list = [3, 5, 10, 15, 25]
+        window_list = [1, 3, 5, 10, 15, 25]
 
     data = ops.array(data)
     # First sort by target
     if true_target_list is None:
         true_target_list = data[..., -target_size:].tolist()
+        # data = data[..., :-target_size]
     windowed_data = [data[ops.all(ops.array(true_target_list) == ops.array(i), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
         ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
                         axis=-1) for array in windowed_data for window in window_list)
     labels = ops.concatenate(
-        array[..., window:, -target_size:] for array in
+        array[..., window:, -target_size:] - array[..., window:, :1] for array in
         windowed_data for window in window_list)
 
     if val_split is not None:
