@@ -17,6 +17,7 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 running = True
 use_kb = False
 use_adapter = False
+run_time = 15
 
 arduino = None
 buffer_lock = None
@@ -33,12 +34,16 @@ counter = 0
 recorded_data = []
 buffer = []
 
+model_dir = './Models/crawling gait'
+save_dir = './Dynamics data/crawling gait'
+
 # Load vanilla model
-prediction_window = 25
-adapter = keras.models.load_model(f'./Models/adapter_allround.keras')
+prediction_window = 0  # [1, 3, 5, 10, 15, 25]
+adapter = TargetAdapter(state_size=2, target_size=1)
+# adapter = keras.models.load_model(f'{model_dir}/adapter_5.keras')
 
 # Load deployed model weights
-adapter.load_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+# adapter.load_weights(f'./Models/75-75 perf/PID 75-75/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -50,7 +55,7 @@ kb_file = 'kb_test.pkl'
 
 def save_recorded_data(name):
     print(f"\n{32 * '='}\n||    Saving recorded data    ||\n{32 * '='}")
-    np.save(f"./Dynamics data/75-75 perforation/{name}.npy", recorded_data)
+    np.save(f"{save_dir}/{name}.npy", recorded_data)
 
 
 def user_save():
@@ -128,7 +133,7 @@ def change_value():
                 reference = None
                 print(f"\n{len(kb[0])} entries loaded from the KB")
         except FileNotFoundError:
-            reference_data = np.load(f"./Dynamics data/75-75 perforation/deployed_adapter_{prediction_window}.npy")
+            reference_data = np.load(f"{save_dir}/deployed_adapter_{prediction_window}.npy")
             x_reference = ops.array(reference_data)[..., [1, 2, 3, 4, 5]].reshape(-1, 5)
             z_mean, z_log_var = autoencoder.dynamics(x_reference)
             cov = sample(z_mean, z_log_var)[1]
@@ -159,7 +164,8 @@ def change_value():
 
     save_count = 0
     target_count = -1
-    generated_targets = np.random.randint(-23, -2, int(30 * 60 / 5))  # 30 mins of random targets
+    # generated_targets = np.random.randint(-20, -2, int(run_time * 60 / 5))  # n mins of random targets
+    generated_targets = int(run_time * 60 / 10) * [-5, -18]  # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
@@ -171,23 +177,22 @@ def change_value():
                 globals().update(running=False)
                 break
             true_target = generated_targets[target_count]
-            # true_target = np.random.randint(-23, -2)
-            # true_target = -20 if n % 2 == 0 else -5  # oscillate
-            # n += 1
             target = true_target
             print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             target_t = time.time()
 
         if use_adapter:
-            to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
+            # to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
+            to_reach = true_target
             adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
             delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
-            target = delta_target
+            target = true_target + delta_target
 
         if time.time() - save_t > 300:
             save_recorded_data(f"auto_save_{save_count}")
-            with update_lock:
-                adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+            if use_adapter:
+                with update_lock:
+                    adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
             save_count += 1
             save_t = time.time()
 
@@ -320,12 +325,13 @@ def change_value():
             pickle.dump(kb, f)
 
         plot_counter = [js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts]
-        with open("./tmp/plot_counters.pkl", 'wb') as f:
+        with open(f"./tmp/plot_counters_adapter_{prediction_window}.pkl", 'wb') as f:
             pickle.dump(plot_counter, f)
 
         print(f"\n{len(kb[0])} entries saved in the KB\nClosing `change_value` thread")
-    with update_lock:
-        adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+    if use_adapter:
+        with update_lock:
+            adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
     save_recorded_data(f"deployed_adapter_{prediction_window}")
 
 
@@ -338,12 +344,13 @@ def update_adapter():
     train_t = start_time
 
     temp_adapter = TargetAdapter(state_size=2)
-    temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
-    temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=5e-5),
-                         loss=keras.losses.MeanSquaredError())
+    # temp_adapter.regularizer.add(RMSERegularizer(weight=.1))
+    temp_adapter.compile(optimizer=keras.optimizers.Adam(learning_rate=1e-3),
+                         loss=keras.losses.MeanAbsoluteError())
 
     while running:
         if time.time() - train_t > 15:
+            torch.cuda.empty_cache()
             print(f"\n{26 * '='}\n||    Updating model    ||\n{26 * '='}")
 
             temp_adapter.set_weights(adapter.get_weights())
@@ -359,10 +366,16 @@ def update_adapter():
                                                        len(features) - int(0.8 * len(features))])
             train_dataloader = DataLoader(train_dataset, batch_size=256, shuffle=True)
             val_dataloader = DataLoader(val_dataset, batch_size=256, shuffle=False)
-            callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+            callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                           factor=0.1,
+                                                           patience=7,
+                                                           min_lr=5e-5,
+                                                           min_delta=1e-3,
+                                                           verbose=0),
+                         keras.callbacks.EarlyStopping(monitor='val_loss',
                                                        mode='min',
-                                                       min_delta=1e-4,
-                                                       patience=5,
+                                                       min_delta=1e-3,
+                                                       patience=10,
                                                        restore_best_weights=True,
                                                        verbose=1),
                          EpochLogger()
@@ -421,8 +434,8 @@ if __name__ == "__main__":
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    seed = np.random.randint(0, 1000)
-    # seed = 398
+    # seed = np.random.randint(0, 1000)
+    seed = 42
     np.random.seed(seed)
     torch.torch.manual_seed(seed)
     print(f"Seed: {seed}")
