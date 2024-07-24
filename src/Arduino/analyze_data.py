@@ -3,10 +3,10 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 
-adapter_window = 15
-file = f"deployed_adapter_{adapter_window}"
-# file = "auto_save_0"
-data = np.load(f"Dynamics data/75-75 perforation/{file}.npy")
+adapter_window = 10
+# file = f"deployed_adapter_{adapter_window}"
+file = "pretrain"
+data = np.load(f"Dynamics data/crawling gait/{file}.npy")
 count = data[..., [0]].ravel()
 beta = data[..., [1]].ravel()
 omega = data[..., [2]].ravel()
@@ -41,7 +41,7 @@ for window in windowed_data:
     rise_times.append((window[rise_count, 0] - window[0, 0]) / 50)
 
     # Settling time
-    settle_threshold = 0.02 * np.abs(window[0, -1] - window[0, 1])
+    settle_threshold = 0.05 * np.abs(window[0, -1] - window[0, 1])
     settle_switch = np.diff((np.abs(window[:, -1] - window[:, 1]) <= settle_threshold).astype(int))
     settling_indices = np.argwhere(settle_switch == 1).ravel()
     last_settle_idx = settling_indices[-1] if settling_indices.size > 0 else len(window) - 1
@@ -58,23 +58,24 @@ mean_settle_time = np.mean(settle_times)
 mean_overshoot = np.mean(overshoots)
 
 # Root mean squared error
-se = (true_targets - beta) ** 2
-rmse = np.sqrt(np.trapz(se, count) / (count[-1] - count[0]))
+ae = np.abs(true_targets - beta)
+mae = np.trapz(ae, count) / (count[-1] - count[0])
+cae = np.convolve(ae, np.ones(15 * 50) / (15 * 50), mode='same')
 
 # Integral of the squared error
-ise = np.cumsum(se[:-1] * dt)
+iae = np.cumsum(ae[:-1] * dt)
 
-# Mean absolute control effort
-mace = np.trapz(np.abs(control_action), count) / (count[-1] - count[0])
+# Mean absolute velocity
+mav = np.trapz(np.abs(omega), count) / (count[-1] - count[0])
 
 # Normalized total variation of control action
 ntv = np.sum(np.abs(np.diff(control_action))) / (count[-1] - count[0])
 
 # Define headers
 headers = ["Metric", "Value"]
-metrics = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "RMSE [deg]", "ISE [deg]", "MACE [-]",
-           "NTV [-]"]
-values = [mean_rise_time, mean_settle_time, mean_overshoot, rmse, ise[-1], mace, ntv]
+metrics = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
+           "MAV [deg/s]", "NTV [-]"]
+values = [mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv]
 
 # Print header
 header_row = "| {:<20} | {:<20} |".format(headers[0], headers[1])
@@ -124,12 +125,14 @@ ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
 ise_ax[0].legend(fontsize=8, loc='upper left')
 ise_ax[0].set_ylabel("Angle [deg]")
 
-ise_ax[1].plot(count, se, color=colors[5])
-ise_ax[1].set_ylabel("Squared error [deg$^2$]")
+ise_ax[1].plot(count, ae, color=colors[5], label='Error')
+ise_ax[1].plot(count, cae, color=colors[1], label='Moving average')
+ise_ax[1].legend(fontsize=8, loc='upper left')
+ise_ax[1].set_ylabel("Absolute error [deg]")
 
-ise_ax[2].plot(count[1:], ise, color=colors[5])
+ise_ax[2].plot(count[1:], iae, color=colors[5])
 ise_ax[2].set_xlabel("Count")
-ise_ax[2].set_ylabel("ISE [deg$^2$]")
+ise_ax[2].set_ylabel("Integral of absolute error [deg]")
 
 ise_fig.tight_layout()
 plt.savefig(f'tmp/ise_{file}.png')
