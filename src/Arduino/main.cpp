@@ -6,9 +6,12 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.25, -.5, .002); // Initialize the PID controller
+PidController controller(-.35, -.3, .001); // Initialize the PID controller
+// PID values kp, ki, kd:
+// 75-75: -.7, -.5, .001
+// 150 - 50: -.35, -.3, .001
 
-int servoPos = 550;
+int servoPos = 540;
 String incomingByte;
 double target;
 double beta;
@@ -31,6 +34,12 @@ void setup() {
     int b = as5600.isConnected();
     Serial.print("Connect: ");
     Serial.println(b);
+    while (b == 0) { // If the sensor is not connected, halt the program
+        // Infinite loop to prevent proceeding to loop()
+        delay(1000); // Delay to reduce CPU usage, not necessary but nice to have
+        Serial.println("AS5600 not connected. Please check the sensor.");
+        b = as5600.isConnected();
+    }
 
     delay(500);
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
@@ -61,10 +70,10 @@ void loop() {
     // compute control
     double controlForce = controller.computeControl(beta, target, dt);
     double servoAngle = degrees((controlForce / .23 - 35 * radians(old_beta)) / 15);
-    servoPos = map(servoAngle, 0, 110, 550, 1700);
-    servoPos = min(1700, max(550, servoPos));
+    servoPos = map(servoAngle, 0, 125, 540, 1800);
+    servoPos = min(1800, max(540, servoPos));
     servo_9.writeMicroseconds(servoPos);
-
+//    servo_9.write(target);
     delay(17);
 
     // measure resulting state
