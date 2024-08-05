@@ -5,6 +5,17 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 
+plt.style.use('tableau-colorblind10')
+colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+# matplotlib.use("pgf")
+# matplotlib.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     'font.family': 'serif',
+#     'font.size': 10.,
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+# })
+
 adapter_window = 10
 # file = f"deployed_adapter_{adapter_window}"
 file_name = "auto_save_23"
@@ -114,17 +125,6 @@ def metrics(file, do_print=False):
 def plot_file():
     global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv
 
-    # matplotlib.use("pgf")
-    # matplotlib.rcParams.update({
-    #     "pgf.texsystem": "xelatex",
-    #     'font.family': 'serif',
-    #     'font.size': 10.,
-    #     'text.usetex': True,
-    #     'pgf.rcfonts': False,
-    # })
-    plt.style.use('tableau-colorblind10')
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-
     signal_fig, signal_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
     signal_ax[0].plot(count, targets, '--', color=colors[-1], label="Adapted target")
@@ -191,8 +191,10 @@ def plot_file():
     plt.show()
 
 
-def make_xls(data_folder, save_folder):
-    files = [f for f in os.listdir(data_folder) if f.endswith(".npy")]
+def make_xls(data_folder, save_folder, do_plot=True):
+    # Filter and sort files
+    files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
     metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
                        "MAV [deg/s]", "NTV [-]"]
     csv_data = {"Metric": metrics_headers}
@@ -205,6 +207,34 @@ def make_xls(data_folder, save_folder):
     df = pd.DataFrame(csv_data)
     excel_file = os.path.join(save_folder, "metrics_summary.xlsx")
     df.to_excel(excel_file, index=False)
+
+    if do_plot:
+        plot_metrics_evolution(excel_file, save_folder)
+
+
+def plot_metrics_evolution(excel_file, save_folder):
+    df = pd.read_excel(excel_file)
+    metrics_headers = df["Metric"].tolist()
+    file_names = df.columns[1:]
+    start_t = 5 * int(file_names[0].split('_')[-1].strip('.npy'))
+    x_ticks = range(start_t, start_t + 5 * len(file_names), 5)
+
+    fig, axes = plt.subplots(len(metrics_headers) // 2 + len(metrics_headers) % 2, 2, figsize=(16, 8), sharex=True)
+    axes = axes.flatten()
+
+    for ax, header in zip(axes, metrics_headers):
+        ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=colors[0])
+        ax.set_title(header)
+        ax.set_ylabel(header)
+
+    for ax in axes[len(metrics_headers):]:
+        fig.delaxes(ax)
+
+    fig.tight_layout()
+    plot_file = os.path.join(save_folder, "metrics_evolution.png")
+
+    plt.savefig(plot_file)
+    plt.show()
 
 
 def main():
