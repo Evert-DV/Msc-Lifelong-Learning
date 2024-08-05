@@ -1,5 +1,6 @@
 import os
 import pickle
+from datetime import datetime
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -191,10 +192,10 @@ def plot_file():
     plt.show()
 
 
-def make_xls(data_folder, save_folder, do_plot=True):
-    # Filter and sort files
+def make_xls(data_folder, save_folder):
     files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+
     metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
                        "MAV [deg/s]", "NTV [-]"]
     csv_data = {"Metric": metrics_headers}
@@ -205,14 +206,13 @@ def make_xls(data_folder, save_folder, do_plot=True):
         csv_data[file] = file_metrics
 
     df = pd.DataFrame(csv_data)
-    excel_file = os.path.join(save_folder, "metrics_summary.xlsx")
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    excel_file = os.path.join(save_folder, f"metrics_summary_{timestamp}.xlsx")
     df.to_excel(excel_file, index=False)
-
-    if do_plot:
-        plot_metrics_evolution(excel_file, save_folder)
+    return excel_file
 
 
-def plot_metrics_evolution(excel_file, save_folder):
+def plot_metrics_evolution(excel_file, save_folder, compare_excel_file=None):
     df = pd.read_excel(excel_file)
     metrics_headers = df["Metric"].tolist()
     file_names = df.columns[1:]
@@ -223,9 +223,15 @@ def plot_metrics_evolution(excel_file, save_folder):
     axes = axes.flatten()
 
     for ax, header in zip(axes, metrics_headers):
-        ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=colors[0])
+        ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=colors[0],
+                label='Original')
+        if compare_excel_file is not None:
+            compare_df = pd.read_excel(compare_excel_file)
+            ax.plot(x_ticks, compare_df.loc[compare_df["Metric"] == header].values[0][1:], marker='.', markersize=3,
+                    color=colors[1], label='Comparison')
         ax.set_title(header)
         ax.set_ylabel(header)
+        ax.legend()
 
     for ax in axes[len(metrics_headers):]:
         fig.delaxes(ax)
@@ -235,6 +241,23 @@ def plot_metrics_evolution(excel_file, save_folder):
 
     plt.savefig(plot_file)
     plt.show()
+
+
+def compare_folders(data_folder, save_folder, compare_folder=None):
+    excel_file = make_xls(data_folder, save_folder)
+    compare_excel_file = None
+    if compare_folder is not None:
+        compare_excel_file = make_xls(compare_folder, save_folder)
+    plot_metrics_evolution(excel_file, save_folder, compare_excel_file)
+
+
+def main():
+    compare_folders("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter", "tmp",
+                    compare_folder="Dynamics data/150-50 perforation/PID 150-50/EOL with adapter")
+
+
+if __name__ == '__main__':
+    main()
 
 
 def main():
