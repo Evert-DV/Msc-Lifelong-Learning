@@ -16,8 +16,8 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
 use_kb = False
-use_adapter = False
-run_time = 15
+use_adapter = True
+run_time = 60
 
 arduino = None
 buffer_lock = None
@@ -34,16 +34,16 @@ counter = 0
 recorded_data = []
 buffer = []
 
-model_dir = './Models/crawling gait'
-save_dir = './Dynamics data/crawling gait'
+model_dir = './Models/150-50 perf/PID 150-50/EOL'
+save_dir = './Dynamics data/150-50 perforation/PID 150-50/EOL extra/w adapter'
 
 # Load vanilla model
-prediction_window = 0  # [1, 3, 5, 10, 15, 25]
+prediction_window = [3, 5, 10, 15, 25]
 adapter = TargetAdapter(state_size=2, target_size=1)
-# adapter = keras.models.load_model(f'{model_dir}/adapter_5.keras')
+# adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-# adapter.load_weights(f'./Models/75-75 perf/PID 75-75/deployed_adapter_{prediction_window}.weights.h5')
+# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -54,8 +54,10 @@ kb_file = 'kb_test.pkl'
 
 
 def save_recorded_data(name):
+    global recorded_data
     print(f"\n{32 * '='}\n||    Saving recorded data    ||\n{32 * '='}")
     np.save(f"{save_dir}/{name}.npy", recorded_data)
+    recorded_data = []
 
 
 def user_save():
@@ -81,6 +83,7 @@ def listen_echo():
 
     time.sleep(1)
     print_time = time.time()
+    start_time = time.time()
 
     while running:
         t0 = time.time()
@@ -92,7 +95,7 @@ def listen_echo():
                 continue
 
             latest_value = data[-1].decode('utf-8').strip().split()
-            # latest value: old beta, old omega, control action, new beta, new omega
+
             counter = int(latest_value[0])
             old_state = float(latest_value[1])
             old_omega = float(latest_value[2])
@@ -112,7 +115,7 @@ def listen_echo():
 
             with buffer_lock:
                 buffer.append([old_state, old_omega, control_action, new_state, new_omega, read_target, true_target])
-                if len(buffer) > 3000:  # about a minute of data
+                if time.time() - start_time > 60:  # about a minute of data
                     buffer.pop(0)
         dt = time.time() - t0
         time.sleep(max(0, freq - dt))
@@ -162,10 +165,10 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 0
+    save_count = 12
     target_count = -1
-    # generated_targets = np.random.randint(-20, -2, int(run_time * 60 / 5))  # n mins of random targets
-    generated_targets = int(run_time * 60 / 10) * [-5, -18]  # crawling gait
+    generated_targets = max(1, run_time // 5) * np.random.randint(-20, -2, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
+    # generated_targets = int(run_time * 60 / 10) * [-3, -18]  # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
@@ -174,6 +177,8 @@ def change_value():
         if time.time() - target_t > 5:
             target_count += 1
             if target_count >= len(generated_targets):
+                target = 0
+                time.sleep(0.1)
                 globals().update(running=False)
                 break
             true_target = generated_targets[target_count]
@@ -351,7 +356,7 @@ def update_adapter():
     while running:
         if time.time() - train_t > 15:
             torch.cuda.empty_cache()
-            print(f"\n{26 * '='}\n||    Updating model    ||\n{26 * '='}")
+            print(f"\n{26 * '='}\n||    Updating model    ||\t(buffer: {len(buffer)})\n{26 * '='}")
 
             temp_adapter.set_weights(adapter.get_weights())
 
