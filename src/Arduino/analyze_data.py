@@ -1,6 +1,5 @@
 import os
 import pickle
-from datetime import datetime
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -17,8 +16,6 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #     'pgf.rcfonts': False,
 # })
 
-adapter_window = 10
-# file = f"deployed_adapter_{adapter_window}"
 file_name = "auto_save_23"
 file = f"Dynamics data/150-50 perforation/PID 150-50/EOL extra/wo adapter/{file_name}.npy"
 
@@ -26,7 +23,7 @@ mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv = 
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
 
 try:
-    with open(f'./tmp/plot_counters_adapter_{adapter_window}.pkl', 'rb') as f:
+    with open('./tmp/plot_counters_adapter.pkl', 'rb') as f:
         plot_counters = pickle.load(f)
     js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts = plot_counters
     kb_plot = True
@@ -47,7 +44,7 @@ def get_file_data(file):
     return data, count, beta, omega, control_action, targets, true_targets
 
 
-def metrics(file, do_print=False):
+def metrics(file, do_print=True, do_plot=True):
     global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv
     global count, beta, omega, control_action, targets, true_targets
 
@@ -120,6 +117,9 @@ def metrics(file, do_print=False):
             else:
                 print("| {:<20} | {:<20} |".format(metric, "Array"))
 
+    if do_plot:
+        plot_file()
+
     return mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv
 
 
@@ -142,7 +142,7 @@ def plot_file():
     signal_ax[2].set_ylabel("Control action [-]")
 
     signal_fig.tight_layout()
-    # plt.savefig(f'tmp/signal_{file}.png')
+    # plt.savefig(f'tmp/signal_{file_name}.pgf')
 
     ise_fig, ise_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
@@ -161,7 +161,7 @@ def plot_file():
     ise_ax[2].set_ylabel("Integral of absolute error [deg]")
 
     ise_fig.tight_layout()
-    # plt.savefig(f'tmp/ise_{file}.png')
+    #     plt.savefig(f'tmp/ise_{file_name}.pgf')
 
     if kb_plot:
         kb_fig, kb_ax = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
@@ -187,12 +187,12 @@ def plot_file():
         kb_ax[1].set_ylabel("JS divergence [-]")
 
         kb_fig.tight_layout()
-        plt.savefig(f'tmp/kb_{file}.png')
+    #         plt.savefig(f'tmp/kb_{file}.png')
 
     plt.show()
 
 
-def make_xls(data_folder, save_folder):
+def make_xls(data_folder, save_folder=None):
     files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
@@ -202,12 +202,14 @@ def make_xls(data_folder, save_folder):
 
     for file in files:
         file_path = os.path.join(data_folder, file)
-        file_metrics = metrics(file_path)
+        file_metrics = metrics(file_path, do_print=False, do_plot=False)
         csv_data[file] = file_metrics
 
     df = pd.DataFrame(csv_data)
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    excel_file = os.path.join(save_folder, f"metrics_summary_{timestamp}.xlsx")
+    if save_folder is None:
+        save_folder = data_folder
+
+    excel_file = os.path.join(save_folder, f"metrics_summary.xlsx")
     df.to_excel(excel_file, index=False)
     return excel_file
 
@@ -237,33 +239,24 @@ def plot_metrics_evolution(excel_file, save_folder, compare_excel_file=None):
         fig.delaxes(ax)
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, "metrics_evolution.png")
+    plot_file = os.path.join(save_folder, "metrics_evolution.pgf")
 
-    plt.savefig(plot_file)
+    # plt.savefig(plot_file)
     plt.show()
 
 
 def compare_folders(data_folder, save_folder, compare_folder=None):
-    excel_file = make_xls(data_folder, save_folder)
+    excel_file = make_xls(data_folder)
     compare_excel_file = None
     if compare_folder is not None:
-        compare_excel_file = make_xls(compare_folder, save_folder)
+        compare_excel_file = make_xls(compare_folder)
     plot_metrics_evolution(excel_file, save_folder, compare_excel_file)
 
 
 def main():
+    # metrics(file, do_print=True, do_plot=True)
     compare_folders("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter", "tmp",
                     compare_folder="Dynamics data/150-50 perforation/PID 150-50/EOL with adapter")
-
-
-if __name__ == '__main__':
-    main()
-
-
-def main():
-    make_xls("Dynamics data/150-50 perforation/PID 150-50/EOL extra/wo adapter", "tmp")
-    # metrics(file)
-    # plot_file()
 
 
 if __name__ == '__main__':
