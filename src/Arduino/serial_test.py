@@ -17,7 +17,7 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 running = True
 use_kb = False
 use_adapter = True
-run_time = 60
+run_time = 20
 
 arduino = None
 buffer_lock = None
@@ -34,8 +34,8 @@ counter = 0
 recorded_data = []
 buffer = []
 
-model_dir = './Models/150-50 perf/PID 150-50/EOL'
-save_dir = './Dynamics data/150-50 perforation/PID 150-50/EOL extra/w adapter'
+model_dir = './Models/150-50 perf/PID 150-50/crawling gait'
+save_dir = './Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online'
 
 # Load vanilla model
 prediction_window = [3, 5, 10, 15, 25]
@@ -128,6 +128,7 @@ def change_value():
     global target
     global true_target
     global recorded_data
+    global use_adapter
 
     if use_kb:
         try:
@@ -165,14 +166,17 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 12
+    save_count = 0
     target_count = -1
-    generated_targets = max(1, run_time // 5) * np.random.randint(-20, -2, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
-    # generated_targets = int(run_time * 60 / 10) * [-3, -18]  # crawling gait
+    # generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
+    generated_targets = int(run_time * 60 / 10) * [-8, -18]  # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
         t0 = time.time()
+
+        # if time.time() - start_time > (run_time / 2) * 60:
+        #     use_adapter = not use_adapter
 
         if time.time() - target_t > 5:
             target_count += 1
@@ -354,7 +358,7 @@ def update_adapter():
                          loss=keras.losses.MeanAbsoluteError())
 
     while running:
-        if time.time() - train_t > 15:
+        if time.time() - train_t > 15 and use_adapter:
             torch.cuda.empty_cache()
             print(f"\n{26 * '='}\n||    Updating model    ||\t(buffer: {len(buffer)})\n{26 * '='}")
 
@@ -416,23 +420,19 @@ def main():
     send_thread = threading.Thread(target=send_value, daemon=True)
     listen_thread = threading.Thread(target=listen_echo, daemon=True)
     target_thread = threading.Thread(target=change_value, daemon=True)
-    if use_adapter:
-        update_thread = threading.Thread(target=update_adapter, daemon=True)
+    update_thread = threading.Thread(target=update_adapter, daemon=True)
 
     # Start threads
     send_thread.start()
     target_thread.start()
     listen_thread.start()
-    if use_adapter:
-        # noinspection PyUnboundLocalVariable
-        update_thread.start()
+    update_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     target_thread.join()
     listen_thread.join()
-    if use_adapter:
-        update_thread.join()
+    update_thread.join()
 
 
 if __name__ == "__main__":
