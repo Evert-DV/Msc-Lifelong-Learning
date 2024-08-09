@@ -7,6 +7,7 @@
 AS5600 as5600;
 Servo servo_9;
 PidController controller(-.35, -.3, .001); // Initialize the PID controller
+//PidController controller(-.7, -.5, .001); // Initialize the PID controller
 // PID values kp, ki, kd:
 // 75-75: -.7, -.5, .001
 // 150 - 50: -.35, -.3, .001
