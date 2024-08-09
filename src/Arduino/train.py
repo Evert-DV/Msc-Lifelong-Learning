@@ -9,7 +9,7 @@ from src.toy_problem.toy_tools import TargetAdapter, prep_data
 
 
 def main():
-    pretrain = True
+    pretrain = False
     # seed = np.random.randint(0, 1000)
     seed = 63
     print(f"Seed: {seed}")
@@ -18,9 +18,9 @@ def main():
     if pretrain:
         torch.manual_seed(16)
 
-    prediction_window = 3  # [1, 3, 5, 10, 15, 25]
+    prediction_window = [3, 5, 10, 15, 25]
 
-    model_location = './Models/crawling gait/'
+    model_location = './Models/150-50 perf/PID 150-50/crawling gait/'
     model_name = f'adapter_{prediction_window}.keras'
 
     adapter = TargetAdapter(state_size=2)
@@ -35,10 +35,10 @@ def main():
     loss_fn = keras.losses.MeanAbsoluteError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
-    pretrain_data = np.load(f"./Dynamics data/crawling gait/pretrain.npy")
+    pretrain_data = np.load(f"./Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter/auto_save_0.npy")
     pretrain_data = pretrain_data[..., 1:]  # Remove the counter
     train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, val_split=0.2)
-    train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
+    train_dataloader = DataLoader(train_set, batch_size=256, shuffle=False)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
     callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
