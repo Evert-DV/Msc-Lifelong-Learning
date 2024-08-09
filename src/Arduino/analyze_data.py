@@ -16,10 +16,12 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #     'pgf.rcfonts': False,
 # })
 
-file_name = "auto_save_23"
-file = f"Dynamics data/150-50 perforation/PID 150-50/EOL extra/wo adapter/{file_name}.npy"
+file_name = "auto_save_3"
+file = f"Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online/{file_name}.npy"
+compare_dirs = ["Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
+                "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter"]
 
-mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv = 9 * [None]
+mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
 
 try:
@@ -98,12 +100,15 @@ def metrics(file, do_print=True, do_plot=True):
     # Normalized total variation of control action
     ntv = np.sum(np.abs(np.diff(control_action))) / (count[-1] - count[0])
 
+    # mean magnitude of the control action
+    mca = np.mean(np.abs(control_action))
+
     if do_print:
         # Define headers
         headers = ["Metric", "Value"]
         metrics = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
-                   "MAV [deg/s]", "NTV [-]"]
-        values = [mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv]
+                   "MAV [deg/s]", "NTV [-]", "MCA [-]"]
+        values = [mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv, mca]
 
         # Print header
         header_row = "| {:<20} | {:<20} |".format(headers[0], headers[1])
@@ -120,11 +125,11 @@ def metrics(file, do_print=True, do_plot=True):
     if do_plot:
         plot_file()
 
-    return mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv
+    return mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv, mca
 
 
 def plot_file():
-    global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv
+    global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca
 
     signal_fig, signal_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
@@ -192,12 +197,12 @@ def plot_file():
     plt.show()
 
 
-def make_xls(data_folder, save_folder=None):
+def make_xls(data_folder, save_folder=None, do_plot=False):
     files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
     metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
-                       "MAV [deg/s]", "NTV [-]"]
+                       "MAV [deg/s]", "NTV [-]", "MCA [-]"]
     csv_data = {"Metric": metrics_headers}
 
     for file in files:
@@ -211,14 +216,18 @@ def make_xls(data_folder, save_folder=None):
 
     excel_file = os.path.join(save_folder, f"metrics_summary.xlsx")
     df.to_excel(excel_file, index=False)
+
+    if do_plot:
+        plot_metrics_evolution(excel_file)
+
     return excel_file
 
 
-def plot_metrics_evolution(excel_file, save_folder, compare_excel_file=None):
+def plot_metrics_evolution(excel_file, save_folder='tmp', compare_excel_file=None):
     df = pd.read_excel(excel_file)
     metrics_headers = df["Metric"].tolist()
     file_names = df.columns[1:]
-    start_t = 5 * int(file_names[0].split('_')[-1].strip('.npy'))
+    start_t = 5 + 5 * int(file_names[0].split('_')[-1].strip('.npy'))
     x_ticks = range(start_t, start_t + 5 * len(file_names), 5)
 
     fig, axes = plt.subplots(len(metrics_headers) // 2 + len(metrics_headers) % 2, 2, figsize=(16, 8), sharex=True)
@@ -229,10 +238,12 @@ def plot_metrics_evolution(excel_file, save_folder, compare_excel_file=None):
                 label='Original')
         if compare_excel_file is not None:
             compare_df = pd.read_excel(compare_excel_file)
-            ax.plot(x_ticks, compare_df.loc[compare_df["Metric"] == header].values[0][1:], marker='.', markersize=3,
+            x_ticks_2 = range(start_t, start_t + 5 * len(compare_df.columns[1:]), 5)
+            ax.plot(x_ticks_2, compare_df.loc[compare_df["Metric"] == header].values[0][1:], marker='.', markersize=3,
                     color=colors[1], label='Comparison')
         ax.set_title(header)
         ax.set_ylabel(header)
+        ax.set_xticks(x_ticks[::2])
         ax.legend()
 
     for ax in axes[len(metrics_headers):]:
@@ -253,10 +264,46 @@ def compare_folders(data_folder, save_folder, compare_folder=None):
     plot_metrics_evolution(excel_file, save_folder, compare_excel_file)
 
 
+def compare_refs(data_folder, compare_folder):
+    files = [f for f in os.listdir(data_folder) if 'ref_minute' in f and f.endswith(".npy")]
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    labels = [*files]
+
+    vecs1 = np.array([[*metrics(os.path.join(data_folder, f), do_print=False, do_plot=False)] for f in files])
+
+    files = [f for f in os.listdir(compare_folder) if 'ref_minute' in f and f.endswith(".npy")]
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    labels += [*files]
+
+    vecs2 = np.array([[*metrics(os.path.join(compare_folder, f), do_print=False, do_plot=False)] for f in files])
+
+    distances = np.empty((len(vecs1) + len(vecs2), len(vecs1) + len(vecs2)))
+    for i, metric_vec in enumerate(np.concatenate((vecs1, vecs2), axis=0)):
+        for j, metric_vec2 in enumerate(np.concatenate((vecs1, vecs2), axis=0)):
+            distances[i, j] = np.linalg.norm(metric_vec - metric_vec2, axis=-1)
+
+    plt.figure(figsize=(10, 8))
+    cax = plt.imshow(distances, vmin=0, cmap='viridis', aspect='auto')
+    plt.colorbar(cax, label='metric distance')
+
+    for i in range(distances.shape[0]):
+        for j in range(distances.shape[1]):
+            plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white')
+
+    plt.xticks(np.arange(distances.shape[1]), labels=labels, fontsize=8, rotation=45)
+    plt.yticks(np.arange(distances.shape[0]), labels=labels, fontsize=8)
+    plt.tight_layout()
+    plt.show()
+
+    pass
+
+
 def main():
-    # metrics(file, do_print=True, do_plot=True)
-    compare_folders("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter", "tmp",
-                    compare_folder="Dynamics data/150-50 perforation/PID 150-50/EOL with adapter")
+    metrics(file, do_print=True, do_plot=True)
+    compare_folders(compare_dirs[1], "tmp",
+                    compare_folder=compare_dirs[0])
+    # compare_refs("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter",
+    #              "Dynamics data/150-50 perforation/PID 150-50/EOL w adapter")
 
 
 if __name__ == '__main__':
