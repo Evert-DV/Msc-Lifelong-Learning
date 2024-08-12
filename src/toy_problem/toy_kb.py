@@ -7,15 +7,16 @@ from keras import optimizers, losses
 
 def train():
     pretrain = True
-    data = np.load(f"../Arduino/Dynamics data/75-75 perforation/vae data/pretrain_data.npy")
+    data = np.load(f"../Arduino/Dynamics data/150-50 perforation/PID 150-50"
+                   f"/KB/wo adapter/auto_save_0.npy")
+    data = data[..., 1:]  # Remove the counter
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
-    if pretrain:
-        autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
-        # autoencoder.encoder.layers[1].adapt(features)
-    else:
-        autoencoder = keras.models.load_model(model_location)
+    autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
+    # autoencoder.encoder.layers[1].adapt(features)
+    if not pretrain:
+        autoencoder.load_weights(f'{model_location}/vae_skip_s.weights.h5')
 
     optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
@@ -28,7 +29,13 @@ def train():
     train_dataloader = DataLoader(train_set, batch_size=256, shuffle=False)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
-    callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+    callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                   factor=0.1,
+                                                   patience=7,
+                                                   min_lr=5e-5,
+                                                   min_delta=1e-3,
+                                                   verbose=0),
+                 keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
                                                patience=7,
@@ -41,7 +48,8 @@ def train():
                     validation_data=val_dataloader,
                     )
 
-    keras.saving.save_model(autoencoder, model_location)
+    # keras.saving.save_model(autoencoder, model_location)
+    autoencoder.save_weights(f'{model_location}/vae_skip_s.weights.h5')
 
     print("model saved")
 
@@ -241,8 +249,8 @@ def implement():
 
 
 def main():
-    # train()
-    compare()
+    train()
+    # compare()
     # implement()
 
 
@@ -250,9 +258,9 @@ if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = '../Arduino/Models/vae_skip_a.keras'
-    seed = np.random.randint(0, 1000)
-    # seed = 267
+    model_location = '../Arduino/Models'
+    # seed = np.random.randint(0, 1000)
+    seed = 267
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 

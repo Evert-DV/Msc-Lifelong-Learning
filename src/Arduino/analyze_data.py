@@ -16,10 +16,10 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #     'pgf.rcfonts': False,
 # })
 
-file_name = "auto_save_3"
+file_name = "auto_save_2"
 file = f"Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online/{file_name}.npy"
-compare_dirs = ["Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
-                "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter"]
+compare_dirs = ["Dynamics data/150-50 perforation/PID 150-50/adapter to no adapter",
+                "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained"]
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -147,7 +147,7 @@ def plot_file():
     signal_ax[2].set_ylabel("Control action [-]")
 
     signal_fig.tight_layout()
-    # plt.savefig(f'tmp/signal_{file_name}.pgf')
+    plt.savefig(f'tmp/signal_{file_name}.pgf')
 
     ise_fig, ise_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
 
@@ -166,7 +166,7 @@ def plot_file():
     ise_ax[2].set_ylabel("Integral of absolute error [deg]")
 
     ise_fig.tight_layout()
-    #     plt.savefig(f'tmp/ise_{file_name}.pgf')
+    plt.savefig(f'tmp/ise_{file_name}.pgf')
 
     if kb_plot:
         kb_fig, kb_ax = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
@@ -192,9 +192,9 @@ def plot_file():
         kb_ax[1].set_ylabel("JS divergence [-]")
 
         kb_fig.tight_layout()
-    #         plt.savefig(f'tmp/kb_{file}.png')
+        plt.savefig(f'tmp/kb_{file}.png')
 
-    plt.show()
+    # plt.show()
 
 
 def make_xls(data_folder, save_folder=None, do_plot=False):
@@ -252,8 +252,8 @@ def plot_metrics_evolution(excel_file, save_folder='tmp', compare_excel_file=Non
     fig.tight_layout()
     plot_file = os.path.join(save_folder, "metrics_evolution.pgf")
 
-    # plt.savefig(plot_file)
-    plt.show()
+    plt.savefig(plot_file)
+    # plt.show()
 
 
 def compare_folders(data_folder, save_folder, compare_folder=None):
@@ -299,9 +299,9 @@ def compare_refs(data_folder, compare_folder):
 
 
 def main():
-    metrics(file, do_print=True, do_plot=True)
-    compare_folders(compare_dirs[1], "tmp",
-                    compare_folder=compare_dirs[0])
+    # metrics(file, do_print=True, do_plot=True)
+    compare_folders(compare_dirs[0], "tmp",
+                    compare_folder=None)
     # compare_refs("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter",
     #              "Dynamics data/150-50 perforation/PID 150-50/EOL w adapter")
 

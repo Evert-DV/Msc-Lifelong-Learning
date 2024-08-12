@@ -17,7 +17,7 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 running = True
 use_kb = False
 use_adapter = True
-run_time = 20
+run_time = 60
 
 arduino = None
 buffer_lock = None
@@ -34,8 +34,10 @@ counter = 0
 recorded_data = []
 buffer = []
 
-model_dir = './Models/150-50 perf/PID 150-50/crawling gait'
-save_dir = './Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online'
+root = os.getcwd()
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/KB'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/KB/wo kb'
+print(root)
 
 # Load vanilla model
 prediction_window = [3, 5, 10, 15, 25]
@@ -43,14 +45,14 @@ adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
-autoencoder.load_weights("./Models/vae_skip_s.weights.h5")
+# autoencoder.load_weights("{root}/src/Arduino/Models/vae_skip_s.weights.h5")
 
 # KB
-kb_file = 'kb_test.pkl'
+kb_file = 'kb_test'
 
 
 def save_recorded_data(name):
@@ -63,7 +65,7 @@ def save_recorded_data(name):
 def user_save():
     save_recorded_data("user_save")
     with update_lock:
-        adapter.save_weights(f'./Models/deployed_adapter_{prediction_window}.weights.h5')
+        adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
     time.sleep(.5)
 
 
@@ -166,10 +168,10 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 0
+    save_count = 12
     target_count = -1
-    # generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
-    generated_targets = int(run_time * 60 / 10) * [-8, -18]  # crawling gait
+    generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
+    # generated_targets = int(run_time * 60 / 10) * [-8, -18]  # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
@@ -330,11 +332,11 @@ def change_value():
         with update_lock:
             kb[1][current_kb_idx] = adapter.get_weights()
 
-        with open(f'{kb_file}.pkl', 'wb') as f:
+        with open(f'{model_dir}/{kb_file}.pkl', 'wb') as f:
             pickle.dump(kb, f)
 
         plot_counter = [js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts]
-        with open(f"./tmp/plot_counters_adapter_{prediction_window}.pkl", 'wb') as f:
+        with open(f"{root}/src/Arduino/tmp/plot_counters_adapter_{prediction_window}.pkl", 'wb') as f:
             pickle.dump(plot_counter, f)
 
         print(f"\n{len(kb[0])} entries saved in the KB\nClosing `change_value` thread")
@@ -410,8 +412,8 @@ def main():
     global arduino
     arduino = serial.Serial('COM5', 115200)
 
-    keyboard.add_hotkey('ctrl+s', user_save)
-    keyboard.add_hotkey('ctrl+q', lambda: globals().update(running=False))
+    keyboard.add_hotkey('alt+s', user_save)
+    keyboard.add_hotkey('alt+q', lambda: globals().update(running=False))
 
     buffer_lock = threading.Lock()
     update_lock = threading.Lock()
