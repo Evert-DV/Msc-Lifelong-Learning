@@ -16,10 +16,13 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #     'pgf.rcfonts': False,
 # })
 
-file_name = "auto_save_2"
-file = f"Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online/{file_name}.npy"
-compare_dirs = ["Dynamics data/150-50 perforation/PID 150-50/adapter to no adapter",
-                "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained"]
+file_name = "auto_save_19"
+file = f"Dynamics data/150-50 perforation/PID 150-50/KB/wo kb/{file_name}.npy"
+data_folders = [
+    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter",
+    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
+    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained",
+]
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -223,28 +226,27 @@ def make_xls(data_folder, save_folder=None, do_plot=False):
     return excel_file
 
 
-def plot_metrics_evolution(excel_file, save_folder='tmp', compare_excel_file=None):
-    df = pd.read_excel(excel_file)
-    metrics_headers = df["Metric"].tolist()
-    file_names = df.columns[1:]
-    start_t = 5 + 5 * int(file_names[0].split('_')[-1].strip('.npy'))
-    x_ticks = range(start_t, start_t + 5 * len(file_names), 5)
+def plot_metrics_evolution(excel_files, save_folder='tmp'):
+    dfs = [pd.read_excel(file) for file in excel_files]
+    metrics_headers = dfs[0]["Metric"].tolist()
+    file_names = [df.columns[1:] for df in dfs]
+
+    x_ticks_list = []
+    for file_name in file_names:
+        start_t = 5 + 5 * int(file_name[0].split('_')[-1].strip('.npy'))
+        x_ticks = range(start_t, start_t + 5 * len(file_name), 5)
+        x_ticks_list.append(x_ticks)
 
     fig, axes = plt.subplots(len(metrics_headers) // 2 + len(metrics_headers) % 2, 2, figsize=(16, 8), sharex=True)
     axes = axes.flatten()
 
     for ax, header in zip(axes, metrics_headers):
-        ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=colors[0],
-                label='Original')
-        if compare_excel_file is not None:
-            compare_df = pd.read_excel(compare_excel_file)
-            x_ticks_2 = range(start_t, start_t + 5 * len(compare_df.columns[1:]), 5)
-            ax.plot(x_ticks_2, compare_df.loc[compare_df["Metric"] == header].values[0][1:], marker='.', markersize=3,
-                    color=colors[1], label='Comparison')
+        for df, x_ticks, color in zip(dfs, x_ticks_list, colors):
+            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=color)
         ax.set_title(header)
         ax.set_ylabel(header)
         ax.set_xticks(x_ticks[::2])
-        ax.legend()
+        ax.legend([f'Folder {i+1}' for i in range(len(dfs))])
 
     for ax in axes[len(metrics_headers):]:
         fig.delaxes(ax)
@@ -256,12 +258,9 @@ def plot_metrics_evolution(excel_file, save_folder='tmp', compare_excel_file=Non
     # plt.show()
 
 
-def compare_folders(data_folder, save_folder, compare_folder=None):
-    excel_file = make_xls(data_folder)
-    compare_excel_file = None
-    if compare_folder is not None:
-        compare_excel_file = make_xls(compare_folder)
-    plot_metrics_evolution(excel_file, save_folder, compare_excel_file)
+def compare_folders(data_folders, save_folder):
+    excel_files = [make_xls(folder) for folder in data_folders]
+    plot_metrics_evolution(excel_files, save_folder)
 
 
 def compare_refs(data_folder, compare_folder):
@@ -300,8 +299,7 @@ def compare_refs(data_folder, compare_folder):
 
 def main():
     # metrics(file, do_print=True, do_plot=True)
-    compare_folders(compare_dirs[0], "tmp",
-                    compare_folder=None)
+    compare_folders(data_folders, "tmp")
     # compare_refs("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter",
     #              "Dynamics data/150-50 perforation/PID 150-50/EOL w adapter")
 
