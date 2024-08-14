@@ -1,0 +1,56 @@
+% Preamble
+\documentclass{IEEEtran}
+
+% Packages
+\usepackage[mode=buildmissing]{standalone}
+\usepackage[backend=biber, style=apa]{biblatex}
+\usepackage{csquotes}
+\usepackage{wasysym}
+\usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{subcaption}
+\usepackage{etoolbox}
+\usepackage{pgf}
+
+
+% Hook into the figure environment
+\AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure}{\let\sffamily\relax}
+\AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
+
+% easy citing
+\renewcommand{\cite}{\parencite}
+
+\addbibresource{references.bib}
+
+\graphicspath{{figures/}}
+
+
+\title{Lifelong learning for an Origami Robot}
+\author{Evert De Vroey}
+
+% Document
+\begin{document}
+    \maketitle
+    
+    \begin{abstract}
+        \lipsum[1]
+    \end{abstract}
+    
+    \hypertarget{paper-intro}{\section{Introduction}}\label{sec:introduction}
+        \lipsum[2]
+    
+    \section{Background}\label{sec:background}
+        \lipsum[3]
+        \begin{figure}
+            \centering
+            \input{../../src/Arduino/tmp/metrics_evolution.pgf}
+            \caption{Metrics evolution}
+            \label{fig:metrics}
+        \end{figure}
+    
+\end{document}

@@ -1,49 +1,51 @@
-%! Author = evert
-%! Date = 12/08/2024
+% Global package options
+\PassOptionsToPackage{dvipsnames}{xcolor}
+%\PassOptionsToPackage{final}{changes}        % for disabling changes markup
+%\PassOptionsToPackage{disable}{todonotes}   % for disabling todonotes markup
 
 % Preamble
-\documentclass[11pt]{IEEEtran}
+\documentclass[11pt]{tudelft-report}
 
 % Packages
-% Packages
-\usepackage[backend=biber, style=ieee-alphabetic]{biblatex}
+\usepackage{pdfpages}
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
-\usepackage{amsmath}
-\usepackage{tabularx}
-\usepackage{cleveref}
-\usepackage{wasysym}
+\usepackage{standalone}
+\usepackage{hyperref}
 \usepackage{lipsum}
-\usepackage{booktabs}
-\usepackage{xcolor}
-\usepackage{ulem}
-
-
-\addbibresource{Thesis/references.bib}
-
-\graphicspath{{Thesis/figures/}}
-% bold italic notation in math mode
-\newcommand{\bvec}[1]{\mathbfit{#1}}
-
-% student number
-\newcommand{\studentnumber}{4685156}
-
-% easy citing
-\renewcommand{\cite}{\parencite}
-
-% margin setup for todonotes
-\setlength{\headheight}{13.59999pt}
-\setlength{\marginparwidth}{30mm}
-\setlength{\marginparsep}{1mm}
 
 % changes color markup
 \setaddedmarkup{\color{Green}#1}
 \setdeletedmarkup{\textcolor{BrickRed}{\sout{#1}}}
 
+\graphicspath{{./Thesis/figures/}}
+
+\title[tudelft-white]{Lifelong Learning for an Origami Robot}
+\subtitle[tudelft-black]{Supervised learning of target adaptations}
+\author[tudelft-white]{E. De Vroey}
+\newcommand{\studentnumber}{4685156}
+\affiliation{Technische Universiteit Delft}
+\coverimage{tank.jpg}
+\covertext[tudelft-white]{
+    \textbf{Cover Text} \\
+    possibly \\
+    spanning
+    multiple
+    lines
+    \vfill
+%    ISBN 000-00-0000-000-0
+}
 
 % Document
 \begin{document}
+    \frontmatter
+    \makecover
 
-    \cite{Centurelli2022}
+    \input{Thesis/title}
 
-    \printbibliography
+    \input{Thesis/preface}
+
+    \mainmatter
+
+    \includepdf{out/thesis-paper.pdf}
+
 \end{document}

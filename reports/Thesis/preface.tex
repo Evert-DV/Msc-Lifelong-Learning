@@ -1,0 +1,37 @@
+\chapter*{Summary}
+\setheader{Preface}
+
+Origami robots, characterized by their construction using flexible materials and origami techniques, are becoming an attractive alternative to conventional robotics, due to their compliance and adaptability.
+However, these traits also lead to a faster rate of degradation than traditional robots, necessitating the development of adaptive lifelong learning strategies for their effective and sustained operation.
+
+This literature study presents an extensive overview of lifelong learning techniques.
+It provides a foundation for the implementation of lifelong learning in the control of an origami robot.
+However, to review a wide range of possible solutions, the study does not exclusively focus on robotics applications, but rather on the broader domain of lifelong adaptation of an agent to new tasks, environments, and dynamics.
+
+Central to the study is the exploration of the challenges inherent in lifelong learning, notably catastrophic forgetting, efficient memory handling, and the detection of shifts in the data landscape.
+These challenges highlight the importance of an agent's ability to retain previously learned knowledge, efficiently store and retrieve memories, and recognize significant changes in its operational environment or in its own mechanical dynamics.
+
+The study delves into various machine-learning-based methods for managing the evolving dynamics of robots.
+It examines `blackbox' methods, which, despite their lack of interpretability, are able to offer certain benefits in terms of performance for lifelong learning tasks, such as incremental updates or more robust results in uncertain environments.
+These methods are examined in terms of control policies and dynamic models that enable agents to adapt continually to changing conditions.
+
+Further, the study explores dual architectures in lifelong learning, which consist of separate modules tackling different aspects of the challenge.
+This includes policy/control modules combined with knowledge bases, as well as multiple control policies designed to handle varying levels of uncertainty.
+In addition, some methods in which architectures can be expanded to obtain lifelong learning capabilities are explored.
+The composition and maintenance of knowledge bases are also addressed, addressing the diversity in the type and form of knowledge stored, its retrieval, and the strategies for keeping the knowledge base relevant and up to date throughout an agent's lifespan.
+
+The study concludes by identifying a number of promising approaches and unexplored research avenues:
+Data-driven dynamic models are versatile for various settings, and dual architectures provide more interpretable solutions.
+Architectural expansions to existing models allow for lifelong learning without altering the base control method.
+On the other hand, the literature lacks emphasis on real-time applications and often focuses on policies handling discrete changes in tasks and environments.
+The study suggests exploring more flexible architectures and \emph{one-size-fits-all} expansions for a wide range of control policies.
+
+In summary, this literature study provides a foundational perspective on the application of lifelong learning in the field of origami robotics.
+It highlights the necessity and challenges of adaptive learning in this context and outlines potential machine learning and control strategies to address these challenges, laying the groundwork for further research and development in adaptive control and learning for an origami robot.
+
+%\begin{flushright}
+%{\makeatletter\itshape
+%    \@author \\
+%    Delft, November 2023
+%\makeatother}
+%\end{flushright}

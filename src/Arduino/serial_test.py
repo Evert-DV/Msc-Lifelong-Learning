@@ -16,8 +16,8 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
 use_kb = False
-use_adapter = True
-run_time = 60
+use_adapter = False
+run_time = 1
 
 arduino = None
 buffer_lock = None
@@ -35,8 +35,8 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/KB'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/KB/wo kb'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/EOL'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/EOL extra/w adapter'
 print(root)
 
 # Load vanilla model
@@ -49,9 +49,10 @@ adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
-# autoencoder.load_weights("{root}/src/Arduino/Models/vae_skip_s.weights.h5")
+# autoencoder.load_weights(f"{root}/src/Arduino/Models/vae_skip_s.weights.h5")
 
 # KB
+kb = None
 kb_file = 'kb_test'
 
 
@@ -66,6 +67,9 @@ def user_save():
     save_recorded_data("user_save")
     with update_lock:
         adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+    if use_kb:
+        with open(f'{model_dir}/{kb_file}.pkl', 'wb') as f:
+            pickle.dump(kb, f)
     time.sleep(.5)
 
 
@@ -127,6 +131,7 @@ def listen_echo():
 
 # noinspection PyUnboundLocalVariable
 def change_value():
+    global kb
     global target
     global true_target
     global recorded_data
@@ -134,12 +139,12 @@ def change_value():
 
     if use_kb:
         try:
-            with open(f'{kb_file}.pkl', 'rb') as f:
+            with open(f'{model_dir}/{kb_file}.pkl', 'rb') as f:
                 kb = pickle.load(f)
                 reference = None
                 print(f"\n{len(kb[0])} entries loaded from the KB")
         except FileNotFoundError:
-            reference_data = np.load(f"{save_dir}/deployed_adapter_{prediction_window}.npy")
+            reference_data = np.load(f"{save_dir}/../wo kb/auto_save_0.npy")
             x_reference = ops.array(reference_data)[..., [1, 2, 3, 4, 5]].reshape(-1, 5)
             z_mean, z_log_var = autoencoder.dynamics(x_reference)
             cov = sample(z_mean, z_log_var)[1]
@@ -168,8 +173,8 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 12
-    target_count = -1
+    save_count = 42
+    target_count = 0
     generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
     # generated_targets = int(run_time * 60 / 10) * [-8, -18]  # crawling gait
 
@@ -204,6 +209,9 @@ def change_value():
             if use_adapter:
                 with update_lock:
                     adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+            if use_kb:
+                with open(f'{model_dir}/{kb_file}.pkl', 'wb') as f:
+                    pickle.dump(kb, f)
             save_count += 1
             save_t = time.time()
 
