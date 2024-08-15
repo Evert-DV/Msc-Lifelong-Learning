@@ -1,0 +1,133 @@
+\documentclass[noroman, 11pt]{tudelft-report} % Or any other class you prefer
+
+% Packages needed for the custom environment
+\usepackage{multicol}    % For the two columns
+\usepackage{titlesec}    % For customizing sections and subsections
+\usepackage{times}       % For Times New Roman font
+\usepackage{etoolbox}    % For saving and restoring commands
+\usepackage{geometry}    % For setting custom margins
+\usepackage{lipsum}      % For dummy text
+\usepackage{titling}     % For custom title formatting
+\usepackage{fancyhdr}    % For custom headers and footers
+\usepackage{graphicx}    % For including graphics (often used in IEEE papers)
+\usepackage{url}         % For formatting URLs
+
+\newcommand{\studentnumber}{4685156}
+
+% Define a new environment "customenv"
+\newenvironment{customenv}
+{
+% Save current settings
+    \def\oldsec{\thesection}
+    \def\oldsubsec{\thesubsection}
+    \def\oldbfseries{\bfseries}
+    \def\olditshape{\itshape}
+    \def\oldfont{\normalfont}
+    \def\oldtitleformat{\maketitle}
+    \def\oldpagestyle{\pagestyle}
+    \let\oldrmdefault\rmdefault
+    \let\oldsfdefault\sfdefault
+    \let\oldttdefault\ttdefault
+
+    % Change to Times New Roman, 10pt
+    \renewcommand{\rmdefault}{ptm}
+    \fontsize{10pt}{12pt}\selectfont
+
+    % Change section format
+    \renewcommand\thesection{\Roman{section}}
+    \titleformat{\section}
+    {\bfseries\large\uppercase}{\thesection.}{1em}{}
+
+    % Change subsection format
+    \renewcommand\thesubsection{\Alph{subsection}}
+    \titleformat{\subsection}
+    {\itshape}{\thesubsection.}{1em}{}
+
+
+% Custom title format like ieeetran, single-column
+    \newcommand{\customtitle}{%
+        \end{multicols}
+        \begin{center}
+        \Huge\bfseries\thetitle\par
+        \vskip 0.5em
+        \Large\theauthor\par
+        \vskip 0.5em
+        \large\thedate
+        \end{center}
+    \begin{multicols}{2}
+    {}
+    }
+    \renewcommand{\maketitle}{\customtitle}
+
+% Custom header and footer style like ieeetran
+    \pagestyle{fancy}
+    \fancyhf{}
+    \fancyhead[L]{\textit{Author(s)}}
+    \fancyhead[C]{\textbf{Sample Title}}
+    \fancyhead[R]{\textit{\today}}
+    \fancyfoot[C]{\thepage}
+
+% Narrow margins
+    \newgeometry{left=1.5cm, right=1.5cm, top=2cm, bottom=2cm}
+
+% Start two-column layout
+    \begin{multicols}{2}
+    }
+    {
+% End two-column layout
+    \end{multicols}
+
+% Restore old settings
+    \renewcommand{\rmdefault}{\oldrmdefault}
+    \renewcommand{\sfdefault}{\oldsfdefault}
+    \renewcommand{\ttdefault}{\oldttdefault}
+    \renewcommand\thesection{\oldsec}
+    \renewcommand\thesubsection{\oldsubsec}
+    \titleformat{\section}{\oldbfseries}{\thesection.}{1em}{}
+    \titleformat{\subsection}{\olditshape}{\thesubsection.}{1em}{}
+
+% Restore original title format
+    \renewcommand{\maketitle}{\oldtitleformat}
+
+% Restore original page style
+    \pagestyle{plain}
+    \restoregeometry
+}
+
+% Example title setup
+\title{Sample Title}
+\author{Author Name}
+\date{\today}
+
+\begin{document}
+    \frontmatter
+
+    \input{Thesis/title}
+    \input{Thesis/preface}
+
+    \mainmatter
+
+    \begin{customenv}
+        \title{Custom Environment Title}
+        \author{Custom Author}
+        \date{\today}
+        \maketitle
+
+        \section{Custom Section}
+        This section is in the custom environment.
+
+        \lipsum[3-4]
+
+        \subsection{Custom Subsection}
+        This subsection is formatted according to the custom environment.
+
+        \lipsum[5-6]
+    \end{customenv}
+
+
+    \section{Another Regular Section}
+    This is another regular section with default formatting.
+
+    \lipsum[7-8]
+
+\end{document}
