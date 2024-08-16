@@ -83,6 +83,19 @@
     \defbibheading{bibliography}[\bibname]{%
         \section*{##1} % This ensures the heading uses the current environment's font and style
     }
+
+    % Appendix Formatting
+    \newcommand{\appendices}{%
+        \setcounter{section}{0}%
+        \renewcommand{\thesection}{\Alph{section}}%
+        \titleformat{\section}
+        {\centering\large\scshape}{Appendix \thesection}{1em}{\\\normalsize}%
+        \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}%
+        \titleformat{\subsection}
+        {\itshape}{\thesubsection.}{1em}{}
+        \crefname{section}{Appendix}{Appendices}
+    }
+
     % Other formatting settings, like compacting entries
     \setlength{\bibitemsep}{0pt} % Compact the entries
 
@@ -99,7 +112,7 @@
     \renewcommand{\thetable}{\Roman{table}}
 
     \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{\textimes}}
-    \AtBeginEnvironment{tabular}{\textimes\fontsize{10pt}{10pt}\selectfont}
+    \AtBeginEnvironment{tabular}{\textimes\fontsize{8.5pt}{10pt}\selectfont}
 
     % Define a command to set the font and size for captions
     \renewcommand{\captionfont}{\textimes\fontsize{8pt}{10pt}\selectfont}
@@ -118,7 +131,7 @@
     \makepapertitle
 
     \begin{multicols}{2}
-        \fontsize{10pt}{10pt}\selectfont
+        \fontsize{10pt}{11pt}\selectfont
 }
 {
 % End two-column layout
@@ -160,6 +173,7 @@
 
 \mainmatter
 
+\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
 \begin{ieeetranenv}
 \include{Thesis/thesis-paper}
 \end{ieeetranenv}
@@ -167,6 +181,10 @@
 \section{Another Regular Section}
 This is another regular section with default formatting.
 
-\lipsum[7-8]
+\lipsum[7]
+
+\appendix
+\section{An appendix in tudelft report style}
+\lipsum[8]
 
 \end{document}
