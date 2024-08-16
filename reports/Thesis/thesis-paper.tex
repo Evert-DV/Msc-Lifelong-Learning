@@ -6,6 +6,7 @@
 \usepackage{fontspec}
 \usepackage{float}
 \usepackage{cleveref}
+\usepackage{booktabs}
 
 
 \setmainfont{TeX Gyre Termes}
@@ -33,10 +34,25 @@
     \section{Introduction}\label{sec:introduction}
         \lipsum[2]~\cite{Centurelli2022}
     \subsection{Problem Statement}\label{subsec:problem-statement}
-        \lipsum[3]
+        \lipsum[3]~\cref{tab:table}~\Cref{tab:table}
+    \begin{table}[H]
+        \centering
+        \caption{A table to test table setups}
+        \label{tab:table}
+        \begin{tabular}{l|rr}
+            \toprule
+            \textbf{A column} & \textbf{Subheader 1} & \textbf{Subheader 2} \\
+            \midrule
+            Row 1 & 1 & 2 \\
+            Row 2 & 3 & 4 \\
+            \bottomrule
+
+        \end{tabular}
+    \end{table}
+
 
     \section{Background}\label{sec:background}
-        \lipsum[3]~\cref{fig:metrics}
+        \lipsum[4]~\cref{fig:metrics}
         \begin{figure}[H]
             \centering
             \resizebox{1.0\linewidth}{!}{

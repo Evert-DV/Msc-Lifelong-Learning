@@ -93,13 +93,25 @@
     \setlength{\columnsep}{6.2mm} % Adjust column separation
     \setlength{\columnwidth}{8.9cm} % If custom column width is needed
 
+    % Hook into the figure and table environments
+    % Define caption formatting for figures and tables
+    \renewcommand{\thefigure}{\arabic{figure}}
+    \renewcommand{\thetable}{\Roman{table}}
+
+    \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{\textimes}}
+    \AtBeginEnvironment{tabular}{\textimes\fontsize{10pt}{10pt}\selectfont}
+
     % Define a command to set the font and size for captions
     \renewcommand{\captionfont}{\textimes\fontsize{8pt}{10pt}\selectfont}
 
-    % Hook into the figure and table environments
-    \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{\textimes}}
-    \captionsetup[figure]{labelfont={bf},labelsep=period}
-    \captionsetup[table]{labelfont={bf},labelsep=period}
+    \captionsetup[figure]{labelsep=period, name=Fig.}
+    \captionsetup[table]{font+=sc, labelsep=newline, name=TABLE, justification=centering}
+
+    % Ensure references to figures and tables appear correctly
+    \crefname{figure}{fig.}{figs.}
+    \Crefname{figure}{Fig.}{Figs.}
+    \crefname{table}{table}{tables}
+    \Crefname{table}{Table}{Tables}
 
     \textimes
 
