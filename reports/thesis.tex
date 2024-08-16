@@ -58,6 +58,7 @@
     }
     \renewcommand{\maketitle}{}
 
+    % Define the abstract environment
     \newenvironment{abstract}{%
         \bfseries
         {\itshape Abstract\textemdash}%
@@ -73,16 +74,13 @@
     \titleformat{\subsection}
     {\itshape}{\thesubsection.}{1em}{}
 
-% Define caption formatting for figures and tables
-    \renewcommand{\thefigure}{\arabic{figure}}
-    \renewcommand{\thetable}{\arabic{table}}
-
     % Define the heading for the bibliography within this environment
     \renewcommand{\bibname}{References}
     \renewcommand{\bibfont}{\textimes}
     \defbibheading{bibliography}[\bibname]{%
         \section*{##1} % This ensures the heading uses the current environment's font and style
     }
+    \setlength{\bibitemsep}{0pt} % Compact the entries
 
     % Appendix Formatting
     \newcommand{\appendices}{%
@@ -96,27 +94,15 @@
         \crefname{section}{Appendix}{Appendices}
     }
 
-    % Other formatting settings, like compacting entries
-    \setlength{\bibitemsep}{0pt} % Compact the entries
-
-    \pagestyle{plain}
-    \newgeometry{left=1.3cm, right=1.3cm, top=1.9cm, bottom=4.3cm}
-
-    % Start two-column layout
-    \setlength{\columnsep}{6.2mm} % Adjust column separation
-    \setlength{\columnwidth}{8.9cm} % If custom column width is needed
-
     % Hook into the figure and table environments
     % Define caption formatting for figures and tables
     \renewcommand{\thefigure}{\arabic{figure}}
     \renewcommand{\thetable}{\Roman{table}}
-
     \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{\textimes}}
     \AtBeginEnvironment{tabular}{\textimes\fontsize{8.5pt}{10pt}\selectfont}
 
     % Define a command to set the font and size for captions
     \renewcommand{\captionfont}{\textimes\fontsize{8pt}{10pt}\selectfont}
-
     \captionsetup[figure]{labelsep=period, name=Fig.}
     \captionsetup[table]{font+=sc, labelsep=newline, name=TABLE, justification=centering}
 
@@ -126,6 +112,22 @@
     \crefname{table}{table}{tables}
     \Crefname{table}{Table}{Tables}
 
+    % General page layout
+    % Set the page number font to TeX Gyre Termes
+    \fancypagestyle{plain}{
+        \fancyhf{}
+        \fancyfoot[C]{\centering\textimes\fontsize{10pt}{11pt}\selectfont\thepage}
+        \renewcommand{\headrulewidth}{0pt}
+        \renewcommand{\footrulewidth}{0pt}
+    }
+    \pagestyle{plain}
+    \newgeometry{left=1.3cm, right=1.3cm, top=1.9cm, bottom=4.3cm}
+
+    % Start two-column layout
+    \setlength{\columnsep}{6.2mm} % Adjust column separation
+    \setlength{\columnwidth}{8.9cm} % If custom column width is needed
+
+    % setup the start of the environment
     \textimes
 
     \makepapertitle
@@ -173,7 +175,7 @@
 
 \mainmatter
 
-\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
+\title{\thetitle:\makeatletter\@subtitle\makeatother}
 \begin{ieeetranenv}
 \include{Thesis/thesis-paper}
 \end{ieeetranenv}
