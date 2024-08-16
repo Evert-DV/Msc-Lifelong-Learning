@@ -7,16 +7,113 @@
 \documentclass[noroman, 11pt]{tudelft-report}
 
 % Packages
+\usepackage[backend=biber, style=apa]{biblatex}
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
-\usepackage[mode=build]{standalone}
+\usepackage[mode=tex]{standalone}
 \usepackage{lipsum}
+\usepackage{multicol}    % For the two columns
+\usepackage{titlesec}    % For customizing sections and subsections
+\usepackage{etoolbox}    % For saving and restoring commands
+\usepackage{geometry}    % For setting custom margins
+\usepackage{csquotes}
+\usepackage{wasysym}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{cleveref}
+\usepackage{subcaption}
+\usepackage{pgf}
+\usepackage{titling}
+\usepackage{float}
+\usepackage{caption}
 
+\newfontfamily{\textimes}{TeX Gyre Termes}
 
-\newenvironment{abstract}{%
-    \bfseries
-    {\itshape Abstract -~}%
-}{}
+% easy citing
+\renewcommand{\cite}{\parencite}
 
+\addbibresource{Thesis/references.bib}
+
+\setlength{\headheight}{13.59999pt}
+
+% Hook into the figure environment
+\AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure}{\let\sffamily\relax}
+\AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
+
+% Define a new environment "ieeetranenv"
+\newenvironment{ieeetranenv}
+{
+    \bgroup
+
+    % Custom title format like ieeetran, single-column
+    \newcommand{\makepapertitle}{%
+            {
+            \centering
+            \Huge\thetitle\par
+            \vskip 0.5em
+            \large\theauthor\par
+            \vskip 0.5em
+        }
+    }
+    \renewcommand{\maketitle}{}
+
+    \newenvironment{abstract}{%
+        \bfseries
+        {\itshape Abstract\textemdash}%
+        }{}
+
+    % Change section format
+    \renewcommand\thesection{\Roman{section}}
+        \titleformat{\section}
+    {\centering\large\scshape}{\thesection.}{1em}{}
+
+    % Change subsection format
+    \renewcommand\thesubsection{\Alph{subsection}}
+    \titleformat{\subsection}
+    {\itshape}{\thesubsection.}{1em}{}
+
+% Define caption formatting for figures and tables
+    \renewcommand{\thefigure}{\arabic{figure}}
+    \renewcommand{\thetable}{\arabic{table}}
+
+    % Define the heading for the bibliography within this environment
+    \renewcommand{\bibname}{References}
+    \renewcommand{\bibfont}{\textimes}
+    \defbibheading{bibliography}[\bibname]{%
+        \section*{##1} % This ensures the heading uses the current environment's font and style
+    }
+    % Other formatting settings, like compacting entries
+    \setlength{\bibitemsep}{0pt} % Compact the entries
+
+    \pagestyle{plain}
+    \newgeometry{left=1.3cm, right=1.3cm, top=1.9cm, bottom=4.3cm}
+
+    % Start two-column layout
+    \setlength{\columnsep}{6.2mm} % Adjust column separation
+    \setlength{\columnwidth}{8.9cm} % If custom column width is needed
+
+    % Define a command to set the font and size for captions
+    \renewcommand{\captionfont}{\textimes\fontsize{8pt}{10pt}\selectfont}
+
+    % Hook into the figure and table environments
+    \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{\textimes}}
+    \captionsetup[figure]{labelfont={bf},labelsep=period}
+    \captionsetup[table]{labelfont={bf},labelsep=period}
+
+    \textimes
+
+    \makepapertitle
+
+    \begin{multicols}{2}
+        \fontsize{10pt}{10pt}\selectfont
+}
+{
+% End two-column layout
+\end{multicols}
+\restoregeometry
+\egroup
+}
 
 % changes color markup
 \setaddedmarkup{\color{Green}#1}
@@ -25,27 +122,25 @@
 % graphics path
 \graphicspath{{./Thesis/figures/}}
 
-% Title
-\title[tudelft-white]{Lifelong Learning for an Origami Robot}
+% Example title setup
+\title{Lifelong Learning for an Origami Robot}
 \subtitle[tudelft-black]{Supervised learning of target adaptations}
-\author[tudelft-white]{E. De Vroey}
+\author{E. De Vroey}
+\date{\today}
 \newcommand{\studentnumber}{4685156}
 \affiliation{Technische Universiteit Delft}
 \coverimage{tank.jpg}
-\covertext[tudelft-black]{
-\textbf{Cover Text} \\
-possibly \\
-spanning
-multiple
-lines
-\vfill
-}
+%\covertext[tudelft-black]{
+%\textbf{Cover Text} \\
+%possibly \\
+%spanning
+%multiple
+%lines
+%\vfill
+%}
 
-% Document
 \begin{document}
-
 \makecover
-
 \frontmatter
 
 \input{Thesis/title}
@@ -53,6 +148,13 @@ lines
 
 \mainmatter
 
-\input{Thesis/thesis-paper}
+\begin{ieeetranenv}
+\include{Thesis/thesis-paper}
+\end{ieeetranenv}
+
+\section{Another Regular Section}
+This is another regular section with default formatting.
+
+\lipsum[7-8]
 
 \end{document}

@@ -1,53 +1,50 @@
-% Preamble
-\documentclass{IEEEtran}
+\documentclass[a4paper, 10pt]{IEEEtran}
 
-% Packages
 \usepackage[backend=biber, style=apa]{biblatex}
-\usepackage{csquotes}
-\usepackage{wasysym}
 \usepackage{lipsum}
-\usepackage{booktabs}
-\usepackage{multirow}
-\usepackage{tabularx}
-\usepackage{cleveref}
-\usepackage{subcaption}
-\usepackage{etoolbox}
 \usepackage{pgf}
+\usepackage{fontspec}
+\usepackage{float}
+\usepackage{cleveref}
 
+
+\setmainfont{TeX Gyre Termes}
 
 % Hook into the figure environment
 \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure}{\let\sffamily\relax}
 \AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
 
-% easy citing
-\renewcommand{\cite}{\parencite}
-
 \addbibresource{references.bib}
+\graphicspath{{./figures/}}
 
-\graphicspath{{figures/}}
 
+\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
+\author{E. De Vroey}
+\date{\today}
 
-% Document
 \begin{document}
-    \title{Lifelong learning for an Origami Robot}
-    \author{Evert De Vroey}
-    \maketitle
-    
-    \begin{abstract}
-        \lipsum[1]
-    \end{abstract}
+%    \maketitle
+
+%    \begin{abstract}
+%        \lipsum[1]
+%    \end{abstract}
 
     \section{Introduction}\label{sec:introduction}
-        \lipsum[2]
-    
-    \section{Background}\label{sec:background}
+        \lipsum[2]~\cite{Centurelli2022}
+    \subsection{Problem Statement}\label{subsec:problem-statement}
         \lipsum[3]
-        \begin{figure}
+
+    \section{Background}\label{sec:background}
+        \lipsum[3]~\cref{fig:metrics}
+        \begin{figure}[H]
             \centering
-            \input{../../src/Arduino/tmp/metrics_evolution.pgf}
+            \resizebox{1.0\linewidth}{!}{
+                \input{../../src/Arduino/tmp/metrics_evolution.pgf}
+            }
             \caption{Metrics evolution}
             \label{fig:metrics}
         \end{figure}
-    
+
+    \printbibliography
 \end{document}
