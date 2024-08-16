@@ -151,7 +151,8 @@
 
 % Example title setup
 \title{Lifelong Learning for an Origami Robot}
-\subtitle[tudelft-black]{Supervised learning of target adaptations}
+\newcommand{\thesubtitle}{Supervised Learning of Target Adaptations}
+\subtitle[tudelft-black]{\thesubtitle}
 \author{E. De Vroey}
 \date{\today}
 \newcommand{\studentnumber}{4685156}
@@ -175,7 +176,7 @@
 
 \mainmatter
 
-\title{\thetitle:\makeatletter\@subtitle\makeatother}
+\title{\thetitle: \thesubtitle}
 \begin{ieeetranenv}
 \include{Thesis/thesis-paper}
 \end{ieeetranenv}
