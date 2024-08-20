@@ -6,9 +6,9 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = True
+    pretrain = False
     data = np.load(f"../Arduino/Dynamics data/150-50 perforation/PID 150-50"
-                   f"/KB/wo adapter/auto_save_0.npy")
+                   f"/KB/wo adapter/auto_save_19.npy")
     data = data[..., 1:]  # Remove the counter
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
@@ -55,26 +55,31 @@ def train():
 
 
 def compare():
-    autoencoder = keras.saving.load_model(model_location)
+    autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
+    autoencoder.load_weights(f'{model_location}/vae_skip_s.weights.h5')
     autoencoder.eval()
+
+    data_folder = "../Arduino/Dynamics data/150-50 perforation/PID 150-50/KB/w kb"
 
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("../Arduino/Dynamics data/75-75 perforation/vae data"):
-        if file.endswith(".npy"):
-            print(file.title())
-            data = np.load(f"../Arduino/Dynamics data/75-75 perforation/vae data/{file}")
-            features = ops.array(data)[..., [0, 1, 2, 3, 4]]
-            dist_mean, dist_log_var = autoencoder.dynamics(features)
-            samples, cov = sample(dist_mean, dist_log_var)
-            dist = MultivariateNormal(dist_mean, cov)
+    files = [f for f in os.listdir(data_folder) if 'auto' in f and f.endswith(".npy")]
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    for file in files:
+        print(file.title())
+        data = np.load(f"{data_folder}/{file}")
+        data = data[..., 1:]  # Remove the counter
+        features = ops.array(data)[..., [0, 1, 2, 3, 4]]
+        dist_mean, dist_log_var = autoencoder.dynamics(features)
+        samples, cov = sample(dist_mean, dist_log_var)
+        dist = MultivariateNormal(dist_mean, cov)
 
-            # visualize_distribution(dist)
+        # visualize_distribution(dist)
 
-            latent_features.append(samples)
-            distributions.append(dist)
-            filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
+        latent_features.append(samples)
+        distributions.append(dist)
+        filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
     # samples = ops.concatenate(latent_features, axis=0)
@@ -249,8 +254,8 @@ def implement():
 
 
 def main():
-    train()
-    # compare()
+    # train()
+    compare()
     # implement()
 
 

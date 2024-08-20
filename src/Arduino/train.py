@@ -9,7 +9,7 @@ from src.toy_problem.toy_tools import TargetAdapter, prep_data
 
 
 def main():
-    pretrain = False
+    pretrain = True
     # seed = np.random.randint(0, 1000)
     seed = 63
     print(f"Seed: {seed}")
@@ -18,7 +18,7 @@ def main():
     if pretrain:
         torch.manual_seed(16)
 
-    prediction_window = [3, 5, 10, 15, 25]
+    prediction_window = 3  # [3, 5, 10, 15, 25]
 
     model_location = './Models/150-50 perf/PID 150-50/crawling gait/'
     model_name = f'adapter_{prediction_window}.keras'

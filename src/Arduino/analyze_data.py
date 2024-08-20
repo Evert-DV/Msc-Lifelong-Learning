@@ -10,18 +10,20 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # matplotlib.use("pgf")
 # matplotlib.rcParams.update({
 #     "pgf.texsystem": "xelatex",
-#     'font.family': 'serif',
-#     'font.size': 10.,
+#     'font.size': 8,
 #     'text.usetex': True,
 #     'pgf.rcfonts': False,
+#     "pgf.preamble": r"\usepackage{amsmath}"
+#                     r"\usepackage{lmodern}"
 # })
+tex_line_width = 3.48
 
-file_name = "auto_save_19"
-file = f"Dynamics data/150-50 perforation/PID 150-50/KB/wo kb/{file_name}.npy"
+file_name = "auto_save_3"
+file = f"Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter/{file_name}.npy"
 data_folders = [
     "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter",
-    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
-    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained",
+    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter",
+    # "Dynamics data/150-50 perforation/PID 150-50/KB/w kb",
 ]
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
@@ -180,9 +182,11 @@ def plot_file():
         kb_ax[0].set_ylabel("Angle [deg]")
 
         js_lines = kb_ax[1].plot(js_div_counts, js_div_vals, marker='.', markersize=3., lw=1.)
-        for t_update, t_selection, t_trespass in zip(update_counts, selection_counts, trespass_counts):
+        for t_update in update_counts:
             update_lines = kb_ax[1].axvline(t_update, linestyle='-', color=colors[2])
+        for t_selection in selection_counts:
             selection_lines = kb_ax[1].axvline(t_selection, linestyle='--', color=colors[-1])
+        for t_trespass in trespass_counts:
             trespass_lines = kb_ax[1].axvline(t_trespass, linestyle=':', color=colors[-4])
         kb_ax[1].axhline(np.log(2) / 2, alpha=.5, linestyle='--', lw=1., color=colors[-3])
         kb_ax[1].axhline(np.log(2) / 4, alpha=.5, linestyle='--', lw=1., color=colors[-2])
@@ -195,7 +199,7 @@ def plot_file():
         kb_ax[1].set_ylabel("JS divergence [-]")
 
         kb_fig.tight_layout()
-        plt.savefig(f'tmp/kb_{file}.png')
+        plt.savefig(f'tmp/kb_{file_name}.png')
 
     # plt.show()
 
@@ -204,7 +208,8 @@ def make_xls(data_folder, save_folder=None, do_plot=False):
     files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
-    metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]", "IAE [deg]",
+    metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]",
+                       "IAE [deg]",
                        "MAV [deg/s]", "NTV [-]", "MCA [-]"]
     csv_data = {"Metric": metrics_headers}
 
@@ -237,16 +242,20 @@ def plot_metrics_evolution(excel_files, save_folder='tmp'):
         x_ticks = range(start_t, start_t + 5 * len(file_name), 5)
         x_ticks_list.append(x_ticks)
 
-    fig, axes = plt.subplots(len(metrics_headers) // 2 + len(metrics_headers) % 2, 2, figsize=(16, 8), sharex=True)
+    fig, axes = plt.subplots(len(metrics_headers), 1,
+                             figsize=(tex_line_width, len(metrics_headers) * 0.33 * tex_line_width),
+                             sharex=True)
     axes = axes.flatten()
 
     for ax, header in zip(axes, metrics_headers):
         for df, x_ticks, color in zip(dfs, x_ticks_list, colors):
-            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=3, color=color)
-        ax.set_title(header)
-        ax.set_ylabel(header)
+            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=1., marker='.', markersize=3, color=color)
+        # ax.set_title(header)
+        ax.set_ylabel(header, fontsize=7)
         ax.set_xticks(x_ticks[::2])
-        ax.legend([f'Folder {i+1}' for i in range(len(dfs))])
+        ax.tick_params(axis='both', labelsize=6)
+    ax.set_xlabel('Time [min]', fontsize=7)
+    fig.legend([f'Folder {i + 1}' for i in range(len(dfs))], loc='lower left', fontsize=6, frameon=False)
 
     for ax in axes[len(metrics_headers):]:
         fig.delaxes(ax)
@@ -298,8 +307,8 @@ def compare_refs(data_folder, compare_folder):
 
 
 def main():
-    # metrics(file, do_print=True, do_plot=True)
-    compare_folders(data_folders, "tmp")
+    metrics(file, do_print=True, do_plot=True)
+    # compare_folders(data_folders, "tmp")
     # compare_refs("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter",
     #              "Dynamics data/150-50 perforation/PID 150-50/EOL w adapter")
 

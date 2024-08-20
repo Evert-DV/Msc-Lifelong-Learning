@@ -130,14 +130,14 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
     if type(prediction_window) is int:
         window_list = [prediction_window]
     elif prediction_window is None:
-        window_list = [1, 3, 5, 10, 15, 25]
+        window_list = [3, 5, 10, 15, 25]
 
     data = ops.array(data)
     # First sort by target
     if true_target_list is None:
         true_target_list = data[..., -target_size:].tolist()
         # data = data[..., :-target_size]
-    windowed_data = [data[ops.all(ops.array(true_target_list) == ops.array(i), axis=-1)] for i in
+    windowed_data = [data[ops.all(ops.isclose(ops.array(true_target_list), ops.array(i)), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
         ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),

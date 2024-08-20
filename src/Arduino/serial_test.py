@@ -35,17 +35,17 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/EOL'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/EOL extra/w adapter'
+model_dir = f'{root}/src/Arduino/Models/crawling gait/'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter/'
 print(root)
 
 # Load vanilla model
-prediction_window = [3, 5, 10, 15, 25]
+prediction_window = 0  # [3, 5, 10, 15, 25]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -74,6 +74,7 @@ def user_save():
 
 
 def send_value():
+    print("Started send thread.")
     while running:
         arduino.write(f'{target}\n'.encode())
         time.sleep(freq)
@@ -81,6 +82,7 @@ def send_value():
 
 
 def listen_echo():
+    print("Started listen thread.")
     global recorded_data
     global buffer
     global new_state
@@ -131,6 +133,7 @@ def listen_echo():
 
 # noinspection PyUnboundLocalVariable
 def change_value():
+    print("Started target thread.")
     global kb
     global target
     global true_target
@@ -173,17 +176,15 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 42
+    save_count = 0
     target_count = 0
-    generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
-    # generated_targets = int(run_time * 60 / 10) * [-8, -18]  # crawling gait
+    # generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
+    generated_targets = int(run_time * 60 / 10) * [-8, -18] + np.round(
+        np.random.normal(0., .2, int(run_time * 60 / 5)), 3)  # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
         t0 = time.time()
-
-        # if time.time() - start_time > (run_time / 2) * 60:
-        #     use_adapter = not use_adapter
 
         if time.time() - target_t > 5:
             target_count += 1
@@ -355,8 +356,11 @@ def change_value():
 
 
 def update_adapter():
+    print("Started update thread.")
     global adapter
     global buffer
+
+    start_updating = False
 
     # set epoch
     start_time = time.time()
@@ -368,7 +372,9 @@ def update_adapter():
                          loss=keras.losses.MeanAbsoluteError())
 
     while running:
-        if time.time() - train_t > 15 and use_adapter:
+        if time.time() - start_time > 60:
+            start_updating = True
+        if time.time() - train_t > 15 and use_adapter and start_updating:
             torch.cuda.empty_cache()
             print(f"\n{26 * '='}\n||    Updating model    ||\t(buffer: {len(buffer)})\n{26 * '='}")
 
