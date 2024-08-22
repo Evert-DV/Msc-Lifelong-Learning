@@ -18,12 +18,17 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # })
 tex_line_width = 3.48
 
-file_name = "auto_save_3"
-file = f"Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter/{file_name}.npy"
+file_name = "auto_save_4"
+file = f"Dynamics data/250-30 perforation/PID 150-50/EOL/wo adapter/{file_name}.npy"
 data_folders = [
-    "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter",
-    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter",
-    # "Dynamics data/150-50 perforation/PID 150-50/KB/w kb",
+    "Dynamics data/250-30 perforation/PID 150-50/EOL/wo adapter",
+    "Dynamics data/250-30 perforation/PID 150-50/EOL/w adapter",
+    # "Dynamics data/200-50 perforation/PID 150-50/EOL/wo adapter",  # auto_save_10 is filtered here
+    # "Dynamics data/200-50 perforation/PID 150-50/EOL/w adapter",
+    # "Dynamics data/150-50 perforation/PID 150-50/EOL extra/wo adapter",
+    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter",
+    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained",
+    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
 ]
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
@@ -204,8 +209,8 @@ def plot_file():
     # plt.show()
 
 
-def make_xls(data_folder, save_folder=None, do_plot=False):
-    files = [f for f in os.listdir(data_folder) if 'auto_save' in f and f.endswith(".npy")]
+def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'):
+    files = [f for f in os.listdir(data_folder) if file_type in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
     metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]",
@@ -267,50 +272,58 @@ def plot_metrics_evolution(excel_files, save_folder='tmp'):
     # plt.show()
 
 
-def compare_folders(data_folders, save_folder):
-    excel_files = [make_xls(folder) for folder in data_folders]
+def compare_folders(data_folders, save_folder, file_type='auto_save'):
+    excel_files = [make_xls(folder, file_type=file_type) for folder in data_folders]
     plot_metrics_evolution(excel_files, save_folder)
 
 
-def compare_refs(data_folder, compare_folder):
-    files = [f for f in os.listdir(data_folder) if 'ref_minute' in f and f.endswith(".npy")]
-    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
-    labels = [*files]
+def compare_refs(data_folders, file_type='ref_minute'):
+    labels = []
+    all_metrics = []
 
-    vecs1 = np.array([[*metrics(os.path.join(data_folder, f), do_print=False, do_plot=False)] for f in files])
+    for folder in data_folders:
+        files = [f for f in os.listdir(folder) if file_type in f and f.endswith(".npy")]
+        files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+        labels += [os.path.join(folder, file) for file in files]
 
-    files = [f for f in os.listdir(compare_folder) if 'ref_minute' in f and f.endswith(".npy")]
-    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
-    labels += [*files]
+        folder_metrics = np.array([[*metrics(os.path.join(folder, f), do_print=False, do_plot=False)] for f in files])
+        all_metrics.append(folder_metrics)
 
-    vecs2 = np.array([[*metrics(os.path.join(compare_folder, f), do_print=False, do_plot=False)] for f in files])
+    all_metrics = np.concatenate(all_metrics, axis=0)
 
-    distances = np.empty((len(vecs1) + len(vecs2), len(vecs1) + len(vecs2)))
-    for i, metric_vec in enumerate(np.concatenate((vecs1, vecs2), axis=0)):
-        for j, metric_vec2 in enumerate(np.concatenate((vecs1, vecs2), axis=0)):
+    # Find the longest common prefix
+    common_prefix = os.path.commonprefix(labels)
+    short_labels = [label.replace(common_prefix[:-1], '') for label in labels]
+
+    distances = np.empty((len(all_metrics), len(all_metrics)))
+    for i, metric_vec in enumerate(all_metrics):
+        for j, metric_vec2 in enumerate(all_metrics):
             distances[i, j] = np.linalg.norm(metric_vec - metric_vec2, axis=-1)
 
     plt.figure(figsize=(10, 8))
     cax = plt.imshow(distances, vmin=0, cmap='viridis', aspect='auto')
     plt.colorbar(cax, label='metric distance')
 
+    num_rows, num_cols = distances.shape
+    cell_width = 10 / num_cols
+    cell_height = 8 / num_rows
+    font_size = min(min(cell_width, cell_height) * 15, 11)  # Adjust the multiplier as needed
+
     for i in range(distances.shape[0]):
         for j in range(distances.shape[1]):
-            plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white')
+            plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white', fontsize=font_size)
 
-    plt.xticks(np.arange(distances.shape[1]), labels=labels, fontsize=8, rotation=45)
-    plt.yticks(np.arange(distances.shape[0]), labels=labels, fontsize=8)
+    plt.xticks(np.arange(distances.shape[1]), labels=short_labels, fontsize=8, rotation=45, ha='right',
+               rotation_mode='anchor')
+    plt.yticks(np.arange(distances.shape[0]), labels=short_labels, fontsize=8)
     plt.tight_layout()
     plt.show()
 
-    pass
-
 
 def main():
-    metrics(file, do_print=True, do_plot=True)
-    # compare_folders(data_folders, "tmp")
-    # compare_refs("Dynamics data/150-50 perforation/PID 150-50/EOL wo adapter",
-    #              "Dynamics data/150-50 perforation/PID 150-50/EOL w adapter")
+    # metrics(file, do_print=True, do_plot=True)
+    compare_folders(data_folders, "tmp", file_type='auto_save')
+    compare_refs(data_folders, file_type='ref_minute')
 
 
 if __name__ == '__main__':
