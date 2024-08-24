@@ -32,49 +32,29 @@
         \lipsum[1]
     \end{abstract}
 
-
     \section{Introduction}\label{sec:introduction}
-    \lipsum[2]~\cite{Centurelli2022}
-
-    \subsection{Problem Statement}\label{subsec:problem-statement}
-    \lipsum[3]~\cref{fig:metrics}
-    \begin{figure}[hbt]
-        \centering
-        \input{../../src/Arduino/tmp/metrics_evolution.pgf}
-        \caption{Metrics evolution}
-        \label{fig:metrics}
-    \end{figure}
-
+    \input{introduction}
     \FloatBarrier
-
 
     \section{Background}\label{sec:background}
-    \lipsum[4]~\Cref{tab:table}
-    \begin{table}[htb]
-        \centering
-        \caption{A table to test table setups}
-        \label{tab:table}
-        \begin{tabular*}{.8\linewidth}{@{\extracolsep{\fill}}l|cc}
-            \toprule
-            \textbf{A column} & \textbf{Subheader 1} & \textbf{Subheader 2} \\
-            \midrule
-            Row 1             & 1                    & 2                    \\
-            Row 2             & 3                    & 4                    \\
-            \bottomrule
-
-        \end{tabular*}
-    \end{table}
-
+    \input{background}
     \FloatBarrier
+
+    \section{Methodology}\label{sec:methodology}
+    \input{method}
+    \FloatBarrier
+
+    \section{Results}\label{sec:results}
+    \input{results}
+    \FloatBarrier
+
+    \section{Discussion}\label{sec:discussion}
+    \input{discussion}
+    \FloatBarrier
+
     \printbibliography
 
     \appendices
-
-
-    \section{About the author}\label{sec:appendix}
-    \lipsum[5]~\cref{sec:another-appendix}
-
-    \subsection{Another Appendix}\label{sec:another-appendix}
-    \lipsum[6]
+    \input{appendix}
 
 \end{document}

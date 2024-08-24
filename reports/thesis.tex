@@ -39,7 +39,7 @@
 
 \setlength{\headheight}{13.59999pt}
 
-\geometry{showframe}
+%\geometry{showframe}
 % Hook into the figure environment
 \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure}{\let\sffamily\relax}
@@ -194,20 +194,6 @@
 \input{Thesis/thesis-paper}
 \end{ieeetranenv}
 
-\section{Another Regular Section}
-This is another regular section with default formatting.
-\begin{figure}[!htb]
-    \centering
-    \includegraphics[width=0.75\linewidth]{cover.jpg}
-    \caption{some caption}
-    \label{fig:cover-again}
-\end{figure}
-
-
-\lipsum[7]
-
 \appendix
-\section{An appendix in tudelft report style}
-\lipsum[8]
 
 \end{document}
