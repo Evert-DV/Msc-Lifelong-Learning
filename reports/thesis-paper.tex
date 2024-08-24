@@ -1,6 +1,7 @@
 \documentclass[a4paper, 10pt]{IEEEtran}
 
 \usepackage[backend=biber, style=apa]{biblatex}
+\usepackage[mode=tex]{standalone}
 \usepackage{lipsum}
 \usepackage{pgf}
 \usepackage{fontspec}
@@ -17,8 +18,8 @@
 \AtEndEnvironment{figure}{\let\sffamily\relax}
 \AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
 
-\addbibresource{references.bib}
-\graphicspath{{./figures/}}
+\addbibresource{Thesis/library.bib}
+\graphicspath{{./Thesis/figures/}, {../src/Arduino/tmp/}}
 
 
 \title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
@@ -33,28 +34,28 @@
     \end{abstract}
 
     \section{Introduction}\label{sec:introduction}
-    \input{introduction}
+    \input{Thesis/introduction}
     \FloatBarrier
 
     \section{Background}\label{sec:background}
-    \input{background}
+    \input{Thesis/background}
     \FloatBarrier
 
     \section{Methodology}\label{sec:methodology}
-    \input{method}
+    \input{Thesis/method}
     \FloatBarrier
 
     \section{Results}\label{sec:results}
-    \input{results}
+    \input{Thesis/results}
     \FloatBarrier
 
     \section{Discussion}\label{sec:discussion}
-    \input{discussion}
+    \input{Thesis/discussion}
     \FloatBarrier
 
     \printbibliography
 
     \appendices
-    \input{appendix}
+    \input{Thesis/appendix}
 
 \end{document}

@@ -11,10 +11,10 @@
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
 \usepackage[mode=tex]{standalone}
 \usepackage{lipsum}
-\usepackage{multicol}    % For the two columns
-\usepackage{titlesec}    % For customizing sections and subsections
-\usepackage{etoolbox}    % For saving and restoring commands
-\usepackage{geometry}    % For setting custom margins
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{etoolbox}
+\usepackage{geometry}
 \usepackage{csquotes}
 \usepackage{wasysym}
 \usepackage{booktabs}
@@ -35,7 +35,7 @@
 % easy citing
 \renewcommand{\cite}{\parencite}
 
-\addbibresource{Thesis/references.bib}
+\addbibresource{Thesis/library.bib}
 
 \setlength{\headheight}{13.59999pt}
 
@@ -160,7 +160,7 @@
 \setdeletedmarkup{\textcolor{BrickRed}{\sout{#1}}}
 
 % graphics path
-\graphicspath{{./Thesis/figures/}}
+\graphicspath{{./Thesis/figures/}, {../src/Arduino/tmp/}}
 
 % Example title setup
 \title{Lifelong Learning for an Origami Robot}
@@ -191,7 +191,7 @@
 
 \title{\thetitle: \thesubtitle}
 \begin{ieeetranenv}
-\input{Thesis/thesis-paper}
+\input{thesis-paper}
 \end{ieeetranenv}
 
 \appendix

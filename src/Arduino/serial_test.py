@@ -35,17 +35,17 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/crawling gait/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter/'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID soft/'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID soft/w adapter/'
 print(root)
 
 # Load vanilla model
-prediction_window = 0  # [3, 5, 10, 15, 25]
+prediction_window = [3, 5, 10, 15, 25]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -60,7 +60,7 @@ def save_recorded_data(name):
     global recorded_data
     print(f"\n{32 * '='}\n||    Saving recorded data    ||\n{32 * '='}")
     np.save(f"{save_dir}/{name}.npy", recorded_data)
-    recorded_data = []
+    # recorded_data = []
 
 
 def user_save():
@@ -176,11 +176,10 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 0
+    save_count = 18
     target_count = 0
-    # generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
-    generated_targets = int(run_time * 60 / 10) * [-8, -18] + np.round(
-        np.random.normal(0., .2, int(run_time * 60 / 5)), 3)  # crawling gait
+    generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
+    # generated_targets = int(run_time * 60 / 10) * [-8, -18] + np.random.normal(0., .2, int(run_time * 60 / 5)) # crawling gait
 
     print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
     while running:
@@ -207,6 +206,7 @@ def change_value():
 
         if time.time() - save_t > 300:
             save_recorded_data(f"auto_save_{save_count}")
+            recorded_data = []
             if use_adapter:
                 with update_lock:
                     adapter.save_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
@@ -441,14 +441,14 @@ def main():
     # Start threads
     send_thread.start()
     target_thread.start()
-    listen_thread.start()
     update_thread.start()
+    listen_thread.start()
 
     # Ensure the main thread waits for the completion of other threads
     send_thread.join()
     target_thread.join()
-    listen_thread.join()
     update_thread.join()
+    listen_thread.join()
 
 
 if __name__ == "__main__":
@@ -456,7 +456,7 @@ if __name__ == "__main__":
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     # seed = np.random.randint(0, 1000)
-    seed = 42
+    seed = 27
     np.random.seed(seed)
     torch.torch.manual_seed(seed)
     print(f"Seed: {seed}")
