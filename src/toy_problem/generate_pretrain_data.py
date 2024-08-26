@@ -1,6 +1,9 @@
+import os
+
+os.environ["KERAS_BACKEND"] = "torch"
 import numpy as np
 import matplotlib.pyplot as plt
-from toy_tools import PIDController, System
+from src.toy_problem.toy_tools import PIDController, System
 
 
 def main():
@@ -24,12 +27,12 @@ def main():
     system = System(m, k, c, 5)
     system_updates = False
 
-    dt = 1 / 60
-    t = np.arange(0, 1800, dt)
+    dt = 1 / 50
+    t = np.arange(0, 300, dt)
 
     for ti in t:
-        if ti % np.random.choice([7, 8, 9, 10], 1) == 0:
-            target = [np.random.uniform(8, 13), 0.]
+        if ti % 5 == 0:
+            target = [np.random.uniform(5, 15), 0.]
 
         targets.append(target)
         control_action = controller.compute_control(x0, target, dt)
@@ -40,8 +43,8 @@ def main():
         x0 = x
 
     data = np.asarray(data)
-    np.save(f"tmp/train data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy", data)
-    print(f"Data saved in tmp/train data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy")
+    np.save(f"../../tmp/sim data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy", data)
+    print(f"Data saved in tmp/sim data/m{m}k{k}c{c}_{'w-update_' if system_updates else ''}seed{seed}.npy")
 
     signal = np.asarray(signal)
     targets = np.asarray(targets)

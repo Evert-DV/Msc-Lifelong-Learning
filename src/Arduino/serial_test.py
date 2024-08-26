@@ -16,8 +16,8 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
 use_kb = False
-use_adapter = False
-run_time = 1
+use_adapter = True
+run_time = 30
 
 arduino = None
 buffer_lock = None
@@ -35,8 +35,8 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID soft/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID soft/w adapter/'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID barely stable/'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID barely stable/w adapter/'
 print(root)
 
 # Load vanilla model
@@ -176,7 +176,7 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 18
+    save_count = 6
     target_count = 0
     generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time, 5) * 12)).tolist()  # n mins of random targets
     # generated_targets = int(run_time * 60 / 10) * [-8, -18] + np.random.normal(0., .2, int(run_time * 60 / 5)) # crawling gait

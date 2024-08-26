@@ -3,4 +3,5 @@ reports/auxil
 src/toy_problem/tmp
 ../../.pio
 !src/Arduino/Models/*
-src/Arduino/tmp
+tmp
+/tmp/

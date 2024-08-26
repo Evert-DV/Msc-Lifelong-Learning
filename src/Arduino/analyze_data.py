@@ -2,13 +2,13 @@ import os
 import pickle
 import pandas as pd
 import numpy as np
-import matplotlib
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 
 plt.style.use('tableau-colorblind10')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-# matplotlib.use("pgf")
-# matplotlib.rcParams.update({
+# mpl.use("pgf")
+# mpl.rcParams.update({
 #     "pgf.texsystem": "xelatex",
 #     'font.size': 8,
 #     'text.usetex': True,
@@ -18,24 +18,49 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # })
 tex_line_width = 3.48
 
-file_name = "auto_save_4"
-file = f"Dynamics data/250-30 perforation/PID 150-50/EOL/wo adapter/{file_name}.npy"
+root = os.getcwd() + '\\..\\..\\'
 data_folders = [
-    "Dynamics data/250-30 perforation/PID 150-50/EOL/wo adapter",
-    "Dynamics data/250-30 perforation/PID 150-50/EOL/w adapter",
-    # "Dynamics data/200-50 perforation/PID 150-50/EOL/wo adapter",  # auto_save_10 is filtered here
-    # "Dynamics data/200-50 perforation/PID 150-50/EOL/w adapter",
-    # "Dynamics data/150-50 perforation/PID 150-50/EOL extra/wo adapter",
-    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/wo adapter",
-    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter pretrained",
-    # "Dynamics data/150-50 perforation/PID 150-50/crawling gait/w adapter online",
+    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
+    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # auto_save_10 is filtered here
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter 2",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\post 240 mins\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\post 240 mins\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",
+    # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
+    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",  # auto_save_4 accidentally cut short
+    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
+    "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
+    # "Dynamics data\\25-25 perfration\\PID 150-50\\wo adapter",
+    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",
+    # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL wo adapter",
+    # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL w adapter",
 ]
+file_name = "auto_save_0"
+file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
 
 try:
-    with open('./tmp/plot_counters_adapter.pkl', 'rb') as f:
+    with open(f'{root}\\tmp\\plot_counters_adapter.pkl', 'rb') as f:
         plot_counters = pickle.load(f)
     js_div_vals, js_div_counts, selection_counts, trespass_counts, update_counts = plot_counters
     kb_plot = True
@@ -141,7 +166,8 @@ def metrics(file, do_print=True, do_plot=True):
 def plot_file():
     global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca
 
-    signal_fig, signal_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+    signal_fig, signal_ax = plt.subplots(3, 1, figsize=(
+        tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
     signal_ax[0].plot(count, targets, '--', color=colors[-1], label="Adapted target")
     signal_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
@@ -157,9 +183,10 @@ def plot_file():
     signal_ax[2].set_ylabel("Control action [-]")
 
     signal_fig.tight_layout()
-    plt.savefig(f'tmp/signal_{file_name}.pgf')
+    plt.savefig(f'{root}\\tmp\\signal.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
-    ise_fig, ise_ax = plt.subplots(3, 1, figsize=(12, 8), sharex=True)
+    ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
+        tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
     ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
     ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
@@ -176,10 +203,11 @@ def plot_file():
     ise_ax[2].set_ylabel("Integral of absolute error [deg]")
 
     ise_fig.tight_layout()
-    plt.savefig(f'tmp/ise_{file_name}.pgf')
+    plt.savefig(f'{root}\\tmp\\ise.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     if kb_plot:
-        kb_fig, kb_ax = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
+        kb_fig, kb_ax = plt.subplots(2, 1, figsize=(
+            tex_line_width, 0.5 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 6), sharex=True)
 
         kb_ax[0].plot(count, beta, marker='.', markersize=3, label="System response")
         kb_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
@@ -204,7 +232,7 @@ def plot_file():
         kb_ax[1].set_ylabel("JS divergence [-]")
 
         kb_fig.tight_layout()
-        plt.savefig(f'tmp/kb_{file_name}.png')
+        plt.savefig(f'{root}\\tmp\\kb_{file_name}.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     # plt.show()
 
@@ -236,7 +264,7 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
     return excel_file
 
 
-def plot_metrics_evolution(excel_files, save_folder='tmp'):
+def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
     dfs = [pd.read_excel(file) for file in excel_files]
     metrics_headers = dfs[0]["Metric"].tolist()
     file_names = [df.columns[1:] for df in dfs]
@@ -260,24 +288,31 @@ def plot_metrics_evolution(excel_files, save_folder='tmp'):
         ax.set_xticks(x_ticks[::2])
         ax.tick_params(axis='both', labelsize=6)
     ax.set_xlabel('Time [min]', fontsize=7)
-    fig.legend([f'Folder {i + 1}' for i in range(len(dfs))], loc='lower left', fontsize=6, frameon=False)
+
+    # Find the longest common prefix
+    common_prefix = os.path.commonpath(excel_files)
+    short_labels = [
+        file.replace(common_prefix, '').replace('\\', ' ').replace('metrics_summary.xlsx', '').replace('_', ' ').strip(
+            '.npy') for file in excel_files]
+
+    fig.legend(short_labels, loc='lower left', fontsize=6, frameon=False)
 
     for ax in axes[len(metrics_headers):]:
         fig.delaxes(ax)
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, "metrics_evolution.pgf")
+    plot_file = os.path.join(save_folder, f'metrics_evolution.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     plt.savefig(plot_file)
     # plt.show()
 
 
-def compare_folders(data_folders, save_folder, file_type='auto_save'):
+def compare_metrics(data_folders, save_folder, file_type='auto_save'):
     excel_files = [make_xls(folder, file_type=file_type) for folder in data_folders]
     plot_metrics_evolution(excel_files, save_folder)
 
 
-def compare_refs(data_folders, file_type='ref_minute'):
+def metrics_similarity(data_folders, file_type='ref_minute'):
     labels = []
     all_metrics = []
 
@@ -290,40 +325,48 @@ def compare_refs(data_folders, file_type='ref_minute'):
         all_metrics.append(folder_metrics)
 
     all_metrics = np.concatenate(all_metrics, axis=0)
+    # all_metrics /= np.max(all_metrics, axis=0)
+    all_metrics /= [5, 5, 25, 25, len(all_metrics) * 25, 8 * 60, 1800 / 1.9, 1800]
 
     # Find the longest common prefix
-    common_prefix = os.path.commonprefix(labels)
-    short_labels = [label.replace(common_prefix[:-1], '') for label in labels]
+    common_prefix = os.path.commonpath(labels)
+    short_labels = [label.replace(common_prefix, '').replace('\\', ' ').replace('_', ' ').strip('.npy') for label in
+                    labels]
 
     distances = np.empty((len(all_metrics), len(all_metrics)))
     for i, metric_vec in enumerate(all_metrics):
         for j, metric_vec2 in enumerate(all_metrics):
             distances[i, j] = np.linalg.norm(metric_vec - metric_vec2, axis=-1)
 
-    plt.figure(figsize=(10, 8))
+    fig = plt.figure(figsize=(tex_line_width, 0.8 * tex_line_width) if mpl.get_backend() == 'pgf' else (10, 8))
     cax = plt.imshow(distances, vmin=0, cmap='viridis', aspect='auto')
-    plt.colorbar(cax, label='metric distance')
+    cbar = fig.colorbar(cax, label='metric distance')
+    cbar.ax.tick_params(labelsize=6)
+    cbar.ax.yaxis.label.set_size(6)
 
     num_rows, num_cols = distances.shape
-    cell_width = 10 / num_cols
-    cell_height = 8 / num_rows
-    font_size = min(min(cell_width, cell_height) * 15, 11)  # Adjust the multiplier as needed
+    cell_width = fig.get_size_inches()[0] / num_cols
+    cell_height = fig.get_size_inches()[1] / num_rows
+    font_size = min(min(cell_width, cell_height) * 15, 9)  # Adjust the multiplier as needed
 
     for i in range(distances.shape[0]):
         for j in range(distances.shape[1]):
             plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white', fontsize=font_size)
 
-    plt.xticks(np.arange(distances.shape[1]), labels=short_labels, fontsize=8, rotation=45, ha='right',
+    plt.xticks(np.arange(distances.shape[1]), labels=short_labels, fontsize=6, rotation=45, ha='right',
                rotation_mode='anchor')
-    plt.yticks(np.arange(distances.shape[0]), labels=short_labels, fontsize=8)
+    plt.yticks(np.arange(distances.shape[0]), labels=short_labels, fontsize=6, ha='right')
+
     plt.tight_layout()
-    plt.show()
+
+    plt.savefig(f'{root}\\tmp\\metrics_similarity.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    # plt.show()
 
 
 def main():
     # metrics(file, do_print=True, do_plot=True)
-    compare_folders(data_folders, "tmp", file_type='auto_save')
-    compare_refs(data_folders, file_type='ref_minute')
+    compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
+    # metrics_similarity(data_folders, file_type='auto_save')
 
 
 if __name__ == '__main__':
