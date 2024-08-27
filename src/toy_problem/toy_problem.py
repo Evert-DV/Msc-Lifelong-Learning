@@ -8,7 +8,7 @@ from src.toy_problem.toy_tools import *
 
 
 def main():
-    pretrain = True
+    pretrain = False
     incremental_updates = True
 
     seed = np.random.randint(0, 1000)
@@ -19,12 +19,12 @@ def main():
     if pretrain:
         torch.manual_seed(16)
 
-    system = System(5, 10, 3, 5)
+    system = System(5, 20, 0.5, 5)
     controller = PIDController(350, 107.5, 1257)
     reference_controller = PIDController(350, 107.5, 1257)
 
     prediction_window = 10
-    adapter = TargetAdapter(state_size=2, target_size=1)
+    adapter = TargetAdapter(state_size=2, target_size=2)
 
     model_location = '../../tmp/target_adapter.weights.h5'
     if not pretrain:
@@ -37,7 +37,7 @@ def main():
 
     if pretrain:
         pretrain_data = np.load("../../tmp/sim data/m5k10c3_seed358.npy")
-        train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, target_size=1, val_split=0.2)
+        train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, target_size=2, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
@@ -68,6 +68,7 @@ def main():
     t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
+    true_target_list = []
     x0_reference = [9.9, 0]
 
     if not pretrain:
@@ -75,7 +76,8 @@ def main():
             if ti % 15 == 0 and ti != 0:
                 adapter.optimizer.lr = 1.e-3
                 buffer = ops.array(buffer)
-                features, labels = prep_data(buffer, prediction_window, state_size=2, target_size=1)
+                features, labels = prep_data(buffer, prediction_window, state_size=2, target_size=2,
+                                             true_target_list=true_target_list)
                 ref_prediction = adapter.predict(features, verbose=0)
                 predicted_targets += ref_prediction[:, 0].ravel().tolist()
                 predicted_targets += prediction_window * [float('nan')]
@@ -104,12 +106,13 @@ def main():
                                 )
 
                 buffer = []
+                true_target_list = []
 
             if ti % 5 == 0:
                 # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
                 target = [np.random.uniform(5, 15), 0.]
                 # target = [np.random.rand() * 6 + 7, 0.]
-
+            true_target_list.append(target)
             targets.append(target)
 
             predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
@@ -138,28 +141,29 @@ def main():
         predicted_targets = np.asarray(predicted_targets).ravel()
         adapted_controls = np.asarray(adapted_controls)
 
-        fig, ax = plt.subplots(3, 1, sharex=True)
+        plt.style.use('tableau-colorblind10')
+        fig, ax = plt.subplots(2, 1, sharex=True)
 
-        ax[0].plot(t, reference_signal[:, 0], color='lightgrey', label="Reference controller")
-        ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-        ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
-        ax[0].set_xlim(10, 80)
+        ax[0].plot(t, reference_signal[:, 0], lw=1., marker='.', markersize=3., label="Reference controller")
+        ax[0].plot(t, targets[:, 0], '--', lw=1., label="Target position")
+        ax[0].plot(t, signal[:, 0], lw=1., marker='.', markersize=3., label="Adaptive controller")
+        # ax[0].set_xlim(10, 80)
         ax[0].invert_yaxis()
         ax[0].legend(fontsize=8, loc='upper left')
 
-        ax[1].plot(t, reference_controls, color='lightgrey', label="Reference control actions")
-        ax[1].plot(t, adapted_controls, color='tab:blue', label="Adapted control actions")
+        ax[1].plot(t, reference_controls, lw=1., label="Reference control actions")
+        ax[1].plot(t, adapted_controls, lw=1., label="Adapted control actions")
         ax[1].legend(fontsize=8, loc='upper left')
 
-        ax[2].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-        ax[2].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
-        ax[2].plot(t[:-15 * 50], predicted_targets, ':', color='tab:orange', label="Predicted targets")
-        ax[2].invert_yaxis()
-        ax[2].legend(fontsize=8, loc='upper left')
+        # ax[2].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
+        # ax[2].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
+        # ax[2].plot(t[:-15 * 50], predicted_targets, ':', color='tab:orange', label="Predicted targets")
+        # ax[2].invert_yaxis()
+        # ax[2].legend(fontsize=8, loc='upper left')
 
         fig.tight_layout()
-        if not os.path.exists("tmp"):
-            os.makedirs("tmp")
+        # if not os.path.exists("tmp"):
+        #     os.makedirs("tmp")
         # fig.savefig("tmp/plot.png", dpi=300)
         plt.show()
 
