@@ -45,7 +45,7 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
     "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
-    "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID barely stable\\test",
     # "Dynamics data\\25-25 perfration\\PID 150-50\\wo adapter",
     # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",
@@ -53,8 +53,8 @@ data_folders = [
     # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL w adapter",
 ]
-file_name = "auto_save_0"
-file = f"{data_folders[0]}/{file_name}.npy"
+file_name = "user_save"
+file = f"{data_folders[1]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -364,7 +364,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 
 def main():
-    # metrics(file, do_print=True, do_plot=True)
+    metrics(file, do_print=True, do_plot=True)
     compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
     # metrics_similarity(data_folders, file_type='auto_save')
 
