@@ -7,16 +7,16 @@ from keras import optimizers, losses
 
 def train():
     pretrain = False
-    data = np.load(f"tmp/train data/m5k20c3_seed879.npy")
+    data = np.load(f"../Arduino/Dynamics data/150-50 perforation/PID 150-50"
+                   f"/KB/wo adapter/auto_save_19.npy")
+    data = data[..., 1:]  # Remove the counter
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
 
-    if pretrain:
-        autoencoder = VariationalAutoEncoder(input_shape=5)
-        # autoencoder = get_autoencoder(input_shape=5, latent_dim=3, skip_connections=True)
-        # autoencoder.encoder.layers[1].adapt(features)
-    else:
-        autoencoder = keras.models.load_model(model_location)
+    autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
+    # autoencoder.encoder.layers[1].adapt(features)
+    if not pretrain:
+        autoencoder.load_weights(f'{model_location}/vae_skip_s.weights.h5')
 
     optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
@@ -29,7 +29,13 @@ def train():
     train_dataloader = DataLoader(train_set, batch_size=256, shuffle=False)
     val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
-    callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss',
+    callbacks = [keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                   factor=0.1,
+                                                   patience=7,
+                                                   min_lr=5e-5,
+                                                   min_delta=1e-3,
+                                                   verbose=0),
+                 keras.callbacks.EarlyStopping(monitor='val_loss',
                                                mode='min',
                                                min_delta=1e-4,
                                                patience=7,
@@ -42,32 +48,38 @@ def train():
                     validation_data=val_dataloader,
                     )
 
-    keras.saving.save_model(autoencoder, model_location)
+    # keras.saving.save_model(autoencoder, model_location)
+    autoencoder.save_weights(f'{model_location}/vae_skip_s.weights.h5')
 
     print("model saved")
 
 
 def compare():
-    autoencoder = keras.saving.load_model(model_location)
+    autoencoder = VariationalAutoEncoder(input_shape=5, state_size=2)
+    autoencoder.load_weights(f'{model_location}/vae_skip_s.weights.h5')
     autoencoder.eval()
+
+    data_folder = "../Arduino/Dynamics data/150-50 perforation/PID 150-50/KB/w kb"
 
     latent_features = []
     distributions = []
     filenames = []
-    for file in os.listdir("tmp/train data"):
-        if file.endswith(".npy"):
-            print(file.title())
-            data = np.load(f"tmp/train data/{file}")
-            features = ops.array(data)[..., [0, 1, 2, 3, 4]]
-            dist_mean, dist_log_var = autoencoder.dynamics(features)
-            samples, cov = sample(dist_mean, dist_log_var)
-            dist = MultivariateNormal(dist_mean, cov)
+    files = [f for f in os.listdir(data_folder) if 'auto' in f and f.endswith(".npy")]
+    files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    for file in files:
+        print(file.title())
+        data = np.load(f"{data_folder}/{file}")
+        data = data[..., 1:]  # Remove the counter
+        features = ops.array(data)[..., [0, 1, 2, 3, 4]]
+        dist_mean, dist_log_var = autoencoder.dynamics(features)
+        samples, cov = sample(dist_mean, dist_log_var)
+        dist = MultivariateNormal(dist_mean, cov)
 
-            # visualize_distribution(dist)
+        # visualize_distribution(dist)
 
-            latent_features.append(samples)
-            distributions.append(dist)
-            filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
+        latent_features.append(samples)
+        distributions.append(dist)
+        filenames.append(file.split('_')[0] + "_w/update" if "update" in file else file.split('_')[0])
 
     scores = ops.empty((len(latent_features), len(latent_features)))
     # samples = ops.concatenate(latent_features, axis=0)
@@ -77,7 +89,7 @@ def compare():
 
     scores_np = ops.convert_to_numpy(scores)
     plt.figure(figsize=(10, 8))
-    cax = plt.imshow(scores_np, cmap='viridis', aspect='auto')
+    cax = plt.imshow(scores_np, vmin=0, vmax=np.log(2), cmap='viridis', aspect='auto')
     plt.colorbar(cax, label='KL-Divergence')
 
     for i in range(scores_np.shape[0]):
@@ -91,7 +103,7 @@ def compare():
     plt.yticks(np.arange(scores_np.shape[0]), labels=filenames, fontsize=8)
     plt.tight_layout()
     plt.show()
-    plt.savefig('tmp/kb_compare.png', dpi=250)
+    # plt.savefig('../tmp/kb_compare.png', dpi=250)
 
 
 def implement():
@@ -243,17 +255,17 @@ def implement():
 
 def main():
     # train()
-    # compare()
-    implement()
+    compare()
+    # implement()
 
 
 if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = 'tmp/varautoencoder.keras'
-    seed = np.random.randint(0, 1000)
-    # seed = 267
+    model_location = '../Arduino/Models'
+    # seed = np.random.randint(0, 1000)
+    seed = 267
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 

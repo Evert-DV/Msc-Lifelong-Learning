@@ -2,13 +2,13 @@ import os
 
 os.environ["KERAS_BACKEND"] = "torch"
 import matplotlib.pyplot as plt
-from keras.saving import load_model
+from keras.api.saving import load_model
 from torch.utils.data import DataLoader
-from toy_tools import *
+from src.toy_problem.toy_tools import *
 
 
 def main():
-    pretrain = False
+    pretrain = True
     incremental_updates = True
 
     seed = np.random.randint(0, 1000)
@@ -24,11 +24,11 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     prediction_window = 10
-    adapter = TargetAdapter()
+    adapter = TargetAdapter(state_size=2, target_size=1)
 
-    model_location = 'tmp/target_adapter.keras'
+    model_location = '../../tmp/target_adapter.weights.h5'
     if not pretrain:
-        adapter = load_model(model_location)
+        adapter.load_weights(model_location)
         # adapter.regularizer.add(RMSERegularizer(weight=.75))
 
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
@@ -36,8 +36,8 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
-        pretrain_data = np.load("tmp/pretrain_data.npy")
-        train_set, val_set = prep_data(pretrain_data, prediction_window, interval=10, val_split=0.2)
+        pretrain_data = np.load("../../tmp/sim data/m5k10c3_seed358.npy")
+        train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, target_size=1, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
 
@@ -54,9 +54,9 @@ def main():
                     validation_data=val_dataloader,
                     )
 
-        adapter.save(model_location)
+        adapter.save_weights(model_location)
 
-    dt = 1 / 60
+    dt = 1 / 50
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     signal = []
     reference_signal = []
@@ -65,7 +65,7 @@ def main():
     reference_controls = []
     adapted_controls = []
     predicted_targets = []
-    t = np.arange(0, 360, dt)
+    t = np.arange(0, 300, dt)
     target = np.array([11., 0.])
     buffer = []
     x0_reference = [9.9, 0]
@@ -75,7 +75,7 @@ def main():
             if ti % 15 == 0 and ti != 0:
                 adapter.optimizer.lr = 1.e-3
                 buffer = ops.array(buffer)
-                features, labels = prep_data(buffer, prediction_window, interval=15)
+                features, labels = prep_data(buffer, prediction_window, state_size=2, target_size=1)
                 ref_prediction = adapter.predict(features, verbose=0)
                 predicted_targets += ref_prediction[:, 0].ravel().tolist()
                 predicted_targets += prediction_window * [float('nan')]
@@ -105,8 +105,9 @@ def main():
 
                 buffer = []
 
-            if ti % 15 == 0:
-                target = [7, 0.] if ti % 2 == 0 else [13, 0.]
+            if ti % 5 == 0:
+                # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
+                target = [np.random.uniform(5, 15), 0.]
                 # target = [np.random.rand() * 6 + 7, 0.]
 
             targets.append(target)
@@ -152,7 +153,7 @@ def main():
 
         ax[2].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
         ax[2].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
-        ax[2].plot(t[:-15 * 60], predicted_targets, ':', color='tab:orange', label="Predicted targets")
+        ax[2].plot(t[:-15 * 50], predicted_targets, ':', color='tab:orange', label="Predicted targets")
         ax[2].invert_yaxis()
         ax[2].legend(fontsize=8, loc='upper left')
 

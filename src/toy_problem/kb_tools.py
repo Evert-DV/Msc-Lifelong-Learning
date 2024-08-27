@@ -39,10 +39,11 @@ def sample(z_mean, z_log_var, samples_per_centroid=1):
 
 
 class VariationalAutoEncoder(keras.Model):
-    def __init__(self, input_shape, *args, **kwargs):
+    def __init__(self, input_shape, state_size=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # define encoder
         self.input_shape = input_shape
+        self.state_size = state_size
         inputs = layers.Input(shape=(input_shape,))
         # x = layers.Normalization()(inputs)
         x = layers.Dense(32, activation='softplus')(inputs)
@@ -75,9 +76,13 @@ class VariationalAutoEncoder(keras.Model):
         d_mean, d_log_var = self.dynamics(inputs)
         _, d_covariance = sample(d_mean, d_log_var)
 
-        #   -- Skip connection
+        #   -- Skip connection (choose)
         in_slice = layers.concatenate(
-            [inputs[..., :2], ops.zeros_like(inputs[..., 2:3]), inputs[..., 3:]])  # provide s, s', but not a
+            [inputs[..., :self.state_size], ops.zeros_like(inputs[..., 0:1]),
+             inputs[..., -self.state_size:]])  # provide s, s', but not a
+        # in_slice = layers.concatenate(
+        #     [ops.zeros_like(inputs[..., :self.state_size]), inputs[..., self.state_size:-self.state_size],
+        #      ops.zeros_like(inputs[..., :self.state_size])])  # provide a but not s, s'
         reconstructed = layers.add([in_slice, reconstructed])
 
         # Add KL divergence regularization loss.
@@ -192,7 +197,6 @@ def update(self: torch.distributions.multivariate_normal, new_mean, new_cov, wei
 
 MultivariateNormal.copy = copy
 MultivariateNormal.update = update
-
 
 # def k_means_cluster(x, k, iters=10, use_clusters_from_x=False):
 #     pca_x = PCA(x, n_components=2).pca_data

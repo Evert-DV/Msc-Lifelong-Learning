@@ -63,26 +63,37 @@ class PIDController:
 
 
 class TargetAdapter(keras.Model):
-    def __init__(self, state_size=2, **kwargs):
+    def __init__(self, state_size=2, target_size=1, **kwargs):
         super().__init__(**kwargs)
         self.state_size = state_size
-        self.dense1 = layers.Dense(32, activation='sigmoid')
-        self.dense2 = layers.Dense(32, activation='leaky_relu')
-        self.dense3 = layers.Dense(2)
+        self.target_size = target_size
+
+        inputs = layers.Input(shape=(2 * state_size,))
+        x = layers.Dense(32, activation='sigmoid',
+                         kernel_initializer=keras.initializers.GlorotUniform(),
+                         bias_initializer='zeros'
+                         )(inputs)
+        x = layers.Dense(32, activation='leaky_relu',
+                         kernel_initializer=keras.initializers.HeNormal(),
+                         bias_initializer='zeros'
+                         )(x)
+        y = layers.Dense(target_size,
+                         kernel_initializer=keras.initializers.RandomNormal(mean=0.0, stddev=1e-2),
+                         bias_initializer='zeros'
+                         )(x)
+        self.adapter = keras.Model(inputs=inputs, outputs=y)
 
         self.regularizer = keras.Sequential([
             layers.Lambda(lambda x: x)  # dummy pass-through
-            ])
+        ])
 
     def call(self, inputs):
-        x = self.dense1(inputs)
-        x = self.dense2(x)
-        target = self.dense3(x)
+        target = self.adapter(inputs)
 
-        reg_input = ops.concatenate([inputs[..., :self.state_size], inputs[..., self.state_size:] + target], axis=-1)
+        reg_input = ops.concatenate(
+            [inputs[..., :self.state_size], ops.pad(target, [[0, 0], [0, self.state_size - self.target_size]])],
+            axis=-1)
         self.regularizer(reg_input)
-
-        # target = layers.Lambda(lambda x: x[..., -self.state_size:])(reg_out)
 
         return target
 
@@ -113,17 +124,27 @@ class EpochLogger(keras.callbacks.Callback):
             print(f"\r", end="")
 
 
-def prep_data(data, prediction_window, interval=15, val_split=None):
+def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_target_list=None,
+              val_split=None):
+    window_list = prediction_window
+    if type(prediction_window) is int:
+        window_list = [prediction_window]
+    elif prediction_window is None:
+        window_list = [3, 5, 10, 15, 25]
+
+    data = ops.array(data)
     # First sort by target
-    windowed_data = ops.array(
-        [data[i:i + interval * 60] for i in range(0, len(data) - interval * 60 + 1)[::interval * 60]])
+    if true_target_list is None:
+        true_target_list = data[..., -target_size:].tolist()
+        # data = data[..., :-target_size]
+    windowed_data = [data[ops.all(ops.isclose(ops.array(true_target_list), ops.array(i)), axis=-1)] for i in
+                     np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
-        (windowed_data[..., :-prediction_window, [0, 1]], windowed_data[..., prediction_window:, [0, 1]]),
-        axis=-1).reshape(-1, 4)  # state transitions
-    # labels = ops.array([windowed_data[j, i:i + prediction_window, 2] for j in range(windowed_data.shape[0]) for i in
-    #                     range(windowed_data.shape[1] - prediction_window)])  # control actions as labels
-    labels = ops.array([windowed_data[j, i + prediction_window, -2:] - windowed_data[j, i + prediction_window, 3:5] for j in range(windowed_data.shape[0]) for i in
-                        range(windowed_data.shape[1] - prediction_window)])  # target - future states as labels
+        ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
+                        axis=-1) for array in windowed_data for window in window_list)
+    labels = ops.concatenate(
+        array[..., window:, -target_size:] - array[..., window:, :1] for array in
+        windowed_data for window in window_list)
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)

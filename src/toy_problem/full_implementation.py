@@ -1,5 +1,8 @@
-from kb_tools import *
-from toy_tools import *
+import os
+
+os.environ["KERAS_BACKEND"] = "torch"
+from src.toy_problem.kb_tools import *
+from src.toy_problem.toy_tools import *
 import pickle
 import keras
 from keras import optimizers, losses
@@ -8,15 +11,14 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def main():
     # Load 'vanilla' adapter model (or included in KB)
-    adapter = keras.models.load_model("tmp/target_adapter.keras")
-    adapter.regularizer.add(RMSERegularizer(weight=.5))
-    prediction_window = 10
+    prediction_window = [3, 5, 10, 15, 25]
+    adapter = TargetAdapter(state_size=2, target_size=1)
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
     loss_fn = keras.losses.MeanSquaredError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     # Load VAE model
-    autoencoder = keras.models.load_model("tmp/varautoencoder.keras")
+    autoencoder = VariationalAutoEncoder(5, 2)
     optimizer = optimizers.Adam(learning_rate=1.e-4)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
@@ -31,7 +33,7 @@ def main():
     reference_controller = PIDController(350, 107.5, 1257)
 
     # Setup KB
-    use_kb = True
+    use_kb = False
     if not use_kb:
         reference_data = np.load(f"tmp/train data/m5k10c3_seed951.npy")
         x_reference = ops.array(reference_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
