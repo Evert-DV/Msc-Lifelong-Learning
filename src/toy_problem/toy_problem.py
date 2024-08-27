@@ -20,8 +20,8 @@ def main():
         torch.manual_seed(16)
 
     system = System(5, 20, 0.5, 5)
-    controller = PIDController(350, 107.5, 1257)
-    reference_controller = PIDController(350, 107.5, 1257)
+    controller = PIDController(700, 50, 1000)
+    reference_controller = PIDController(700, 50, 1000)
 
     prediction_window = 10
     adapter = TargetAdapter(state_size=2, target_size=2)
@@ -36,7 +36,7 @@ def main():
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
-        pretrain_data = np.load("../../tmp/sim data/m5k10c3_seed358.npy")
+        pretrain_data = np.load("../../tmp/sim data/m5k20c0.5_seed329.npy")
         train_set, val_set = prep_data(pretrain_data, prediction_window, state_size=2, target_size=2, val_split=0.2)
         train_dataloader = DataLoader(train_set, batch_size=256, shuffle=True)
         val_dataloader = DataLoader(val_set, batch_size=256, shuffle=False)
@@ -73,10 +73,14 @@ def main():
 
     if not pretrain:
         for ti in t:
+            if ti > 60:
+                buffer.pop(0)
+                true_target_list.pop(0)
+
             if ti % 15 == 0 and ti != 0:
                 adapter.optimizer.lr = 1.e-3
-                buffer = ops.array(buffer)
-                features, labels = prep_data(buffer, prediction_window, state_size=2, target_size=2,
+                buffer_array = ops.array(buffer)
+                features, labels = prep_data(buffer_array, prediction_window, state_size=2, target_size=2,
                                              true_target_list=true_target_list)
                 ref_prediction = adapter.predict(features, verbose=0)
                 predicted_targets += ref_prediction[:, 0].ravel().tolist()
@@ -105,8 +109,6 @@ def main():
                                 verbose=0,
                                 )
 
-                buffer = []
-                true_target_list = []
 
             if ti % 5 == 0:
                 # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
@@ -142,11 +144,22 @@ def main():
         adapted_controls = np.asarray(adapted_controls)
 
         plt.style.use('tableau-colorblind10')
+        colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        # mpl.use("pgf")
+        # mpl.rcParams.update({
+        #     "pgf.texsystem": "xelatex",
+        #     'font.size': 8,
+        #     'text.usetex': True,
+        #     'pgf.rcfonts': False,
+        #     "pgf.preamble": r"\usepackage{amsmath}"
+        #                     r"\usepackage{lmodern}"
+        # })
+        tex_line_width = 3.48
         fig, ax = plt.subplots(2, 1, sharex=True)
 
-        ax[0].plot(t, reference_signal[:, 0], lw=1., marker='.', markersize=3., label="Reference controller")
+        ax[0].plot(t, reference_signal[:, 0], lw=1., label="Reference controller")
         ax[0].plot(t, targets[:, 0], '--', lw=1., label="Target position")
-        ax[0].plot(t, signal[:, 0], lw=1., marker='.', markersize=3., label="Adaptive controller")
+        ax[0].plot(t, signal[:, 0], lw=1., label="Adaptive controller")
         # ax[0].set_xlim(10, 80)
         ax[0].invert_yaxis()
         ax[0].legend(fontsize=8, loc='upper left')
