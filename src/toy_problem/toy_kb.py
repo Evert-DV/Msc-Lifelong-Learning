@@ -6,9 +6,8 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = False
-    data = np.load(f"../Arduino/Dynamics data/150-50 perforation/PID 150-50"
-                   f"/KB/wo adapter/auto_save_19.npy")
+    pretrain = True
+    data = np.load(f"../../tmp/sim data/m5k20c0.5_seed329.npy")
     data = data[..., 1:]  # Remove the counter
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]
@@ -254,8 +253,8 @@ def implement():
 
 
 def main():
-    # train()
-    compare()
+    train()
+    # compare()
     # implement()
 
 
@@ -263,7 +262,7 @@ if __name__ == '__main__':
     print("Using backend " + keras.backend.backend())
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
-    model_location = '../Arduino/Models'
+    model_location = '../../tmp/'
     # seed = np.random.randint(0, 1000)
     seed = 267
     print(f"Seed: {seed}")

@@ -32,7 +32,7 @@ def main():
         # adapter.regularizer.add(RMSERegularizer(weight=.75))
 
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
-    loss_fn = keras.losses.MeanSquaredError()
+    loss_fn = keras.losses.MeanAbsoluteError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     if pretrain:
@@ -82,9 +82,9 @@ def main():
                 buffer_array = ops.array(buffer)
                 features, labels = prep_data(buffer_array, prediction_window, state_size=2, target_size=2,
                                              true_target_list=true_target_list)
-                ref_prediction = adapter.predict(features, verbose=0)
-                predicted_targets += ref_prediction[:, 0].ravel().tolist()
-                predicted_targets += prediction_window * [float('nan')]
+                # ref_prediction = adapter.predict(features, verbose=0)
+                # predicted_targets += ref_prediction[:, 0].ravel().tolist()
+                # predicted_targets += prediction_window * [float('nan')]
 
                 if incremental_updates:
                     print("\nFitting model...")
@@ -100,10 +100,16 @@ def main():
                                                                patience=5,
                                                                restore_best_weights=True,
                                                                verbose=1),
+                                 keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                                   factor=0.1,
+                                                                   patience=7,
+                                                                   min_lr=5e-5,
+                                                                   min_delta=1e-3,
+                                                                   verbose=0),
                                  EpochLogger()
                                  ]
                     adapter.fit(train_dataloader,
-                                epochs=100,
+                                epochs=1000,
                                 callbacks=callbacks,
                                 validation_data=val_dataloader,
                                 verbose=0,
@@ -121,14 +127,14 @@ def main():
             adapted_targets.append(predicted_target)
             control_action = controller.compute_control(x0, target + predicted_target, dt)
             adapted_controls.append(control_action)
-            x = system.response(x0, control_action, do_update=True)
+            x = system.response(x0, control_action, do_update=False)
             signal.append(x)
             x0 = x
 
             # Reference control loop
             reference_control = reference_controller.compute_control(x0_reference, target, dt)
             reference_controls.append(reference_control)
-            x_reference = system.response(x0_reference, reference_control, do_update=True)
+            x_reference = system.response(x0_reference, reference_control, do_update=False)
             reference_signal.append(x_reference)
             x0_reference = x_reference
 
@@ -140,7 +146,7 @@ def main():
         reference_signal = np.asarray(reference_signal)
         targets = np.asarray(targets)
         adapted_targets = np.asarray(adapted_targets)
-        predicted_targets = np.asarray(predicted_targets).ravel()
+        # predicted_targets = np.asarray(predicted_targets).ravel()
         adapted_controls = np.asarray(adapted_controls)
 
         plt.style.use('tableau-colorblind10')
@@ -158,6 +164,7 @@ def main():
         fig, ax = plt.subplots(2, 1, sharex=True)
 
         ax[0].plot(t, reference_signal[:, 0], lw=1., label="Reference controller")
+        ax[0].plot(t, targets[:, 0] + adapted_targets[:, 0], lw=1., label="Adapted target")
         ax[0].plot(t, targets[:, 0], '--', lw=1., label="Target position")
         ax[0].plot(t, signal[:, 0], lw=1., label="Adaptive controller")
         # ax[0].set_xlim(10, 80)
