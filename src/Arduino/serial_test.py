@@ -35,12 +35,12 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID barely stable/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID barely stable/test/'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/3 step/'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/3 step model/'
 print(root)
 
 # Load vanilla model
-prediction_window = [1, 2, 3]
+prediction_window = [1, 2, 3, 5, 10, 15, 25]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
@@ -199,9 +199,11 @@ def change_value():
             target_t = time.time()
 
         if use_adapter:
+            index = 2  # np.random.choice(prediction_window)
+            old_pos, old_vel = buffer[-index][:2] if index < len(buffer) else (new_state, new_omega)
             # to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
             to_reach = true_target
-            adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
+            adapter_input = ops.array([old_pos, old_vel, new_state, new_omega, to_reach, 0.])[None]
             delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
             target = true_target + delta_target
 
