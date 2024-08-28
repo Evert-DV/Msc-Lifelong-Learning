@@ -24,14 +24,18 @@ data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # auto_save_10 is filtered here
     # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter 2",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\post 240 mins\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\post 240 mins\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
@@ -44,8 +48,8 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",  # auto_save_4 accidentally cut short
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
-    "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
-    "Dynamics data\\150-50 perforation\\PID barely stable\\test",
+    # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID barely stable\\test",
     # "Dynamics data\\25-25 perfration\\PID 150-50\\wo adapter",
     # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",
@@ -53,8 +57,8 @@ data_folders = [
     # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL w adapter",
 ]
-file_name = "user_save"
-file = f"{data_folders[1]}/{file_name}.npy"
+file_name = "auto_save_11"
+file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -169,16 +173,16 @@ def plot_file():
     signal_fig, signal_ax = plt.subplots(3, 1, figsize=(
         tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
-    signal_ax[0].plot(count, targets, '--', color=colors[-1], label="Adapted target")
-    signal_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
-    signal_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
+    signal_ax[0].plot(count, targets, '--', color=colors[-1], lw=1., label="Adapted target")
+    signal_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, lw=1., label="System response")
+    signal_ax[0].plot(count, true_targets, '--', color=colors[6], lw=1., label="True target")
     signal_ax[0].legend(fontsize=8, loc='upper left')
     signal_ax[0].set_ylabel("Angle [deg]")
 
-    signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=3)
+    signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=3, lw=1.)
     signal_ax[1].set_ylabel("Angular velocity [deg/s]")
 
-    signal_ax[2].plot(count, control_action, color=colors[5], marker='.', markersize=3)
+    signal_ax[2].plot(count, control_action, color=colors[5], marker='.', markersize=3, lw=1.)
     signal_ax[2].set_xlabel("Count")
     signal_ax[2].set_ylabel("Control action [-]")
 
@@ -188,17 +192,17 @@ def plot_file():
     ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
         tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
-    ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
-    ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
+    ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, lw=1., label="System response")
+    ise_ax[0].plot(count, true_targets, '--', color=colors[6], lw=1., label="True target")
     ise_ax[0].legend(fontsize=8, loc='upper left')
     ise_ax[0].set_ylabel("Angle [deg]")
 
-    ise_ax[1].plot(count, ae, color=colors[5], label='Error')
-    ise_ax[1].plot(count, cae, color=colors[1], label='Moving average')
+    ise_ax[1].plot(count, ae, color=colors[5], lw=1., label='Error')
+    ise_ax[1].plot(count, cae, color=colors[1], lw=1., label='Moving average')
     ise_ax[1].legend(fontsize=8, loc='upper left')
     ise_ax[1].set_ylabel("Absolute error [deg]")
 
-    ise_ax[2].plot(count[1:], iae, color=colors[5])
+    ise_ax[2].plot(count[1:], iae, color=colors[5], lw=1.)
     ise_ax[2].set_xlabel("Count")
     ise_ax[2].set_ylabel("Integral of absolute error [deg]")
 
@@ -364,9 +368,9 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 
 def main():
-    metrics(file, do_print=True, do_plot=True)
+    # metrics(file, do_print=True, do_plot=True)
     compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
-    # metrics_similarity(data_folders, file_type='auto_save')
+    metrics_similarity(data_folders, file_type='ref_minute')
 
 
 if __name__ == '__main__':

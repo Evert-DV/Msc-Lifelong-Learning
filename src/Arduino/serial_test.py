@@ -16,8 +16,8 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
 use_kb = False
-use_adapter = True
-run_time = 30
+use_adapter = False
+run_time = 1
 
 arduino = None
 buffer_lock = None
@@ -35,17 +35,17 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID barely stable/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID barely stable/test/'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/EOL/'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/EOL extra 2/w adapter/'
 print(root)
 
 # Load vanilla model
-prediction_window = [1, 2, 3]
+prediction_window = [3, 5, 10, 15, 25]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -176,7 +176,7 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 6
+    save_count = 18
     target_count = 0
     generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time,
                                                                                    5) * 12)).tolist()  # n mins of random targets
