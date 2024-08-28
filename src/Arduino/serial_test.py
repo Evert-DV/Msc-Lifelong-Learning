@@ -40,12 +40,12 @@ save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/3 st
 print(root)
 
 # Load vanilla model
-prediction_window = [1, 2, 3, 5, 10, 15, 25]
+prediction_window = [2, 3, 5, 10, 15]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -199,7 +199,7 @@ def change_value():
             target_t = time.time()
 
         if use_adapter:
-            index = 2  # np.random.choice(prediction_window)
+            index = np.random.choice(prediction_window)
             old_pos, old_vel = buffer[-index][:2] if index < len(buffer) else (new_state, new_omega)
             # to_reach = max(true_target, new_state - 13) if true_target < new_state else min(true_target, new_state + 17)
             to_reach = true_target
