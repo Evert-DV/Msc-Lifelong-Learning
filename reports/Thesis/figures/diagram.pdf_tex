@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{562.47811385bp}%
+    \setlength{\unitlength}{288.27050156bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,18 +50,19 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.15778431)%
+  \begin{picture}(1,0.17633121)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{diagram.pdf}}%
-    \put(0.24883194,0.06861693){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}adapter\end{tabular}}}}%
+    \put(0.24772156,0.09028712){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}adapter\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{diagram.pdf}}%
-    \put(0.56065111,0.06685044){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}controller\end{tabular}}}}%
-    \put(0.8104748,0.06685044){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}robot\end{tabular}}}}%
-    \put(-0.01583082,0.08602287){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target\end{tabular}}}}%
-    \put(-0.01551569,0.05503311){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state\end{tabular}}}}%
-    \put(0.39097292,0.09571013){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
-    \put(0.95028525,0.09571013){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state*\end{tabular}}}}%
-    \put(0.48944331,0.09571013){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+\end{tabular}}}}%
+    \put(0.54838754,0.06453056){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}controller\end{tabular}}}}%
+    \put(0.78582723,0.06453056){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}robot\end{tabular}}}}%
+    \put(-0.00112424,0.10691049){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target\end{tabular}}}}%
+    \put(-0.00082318,0.07731371){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state\end{tabular}}}}%
+    \put(0.38347238,0.1161622){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
+    \put(0.91763983,0.09209275){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state*\end{tabular}}}}%
+    \put(0.47751591,0.1161622){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{diagram.pdf}}%
   \end{picture}%
 \endgroup%
