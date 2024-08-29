@@ -16,7 +16,7 @@ from torch.utils.data import TensorDataset, DataLoader, random_split
 
 running = True
 use_kb = False
-use_adapter = False
+use_adapter = True
 run_time = 30
 
 arduino = None
@@ -36,11 +36,11 @@ buffer = []
 
 root = os.getcwd()
 model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID 150-50/3 step/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/3 step model/wo adapter'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID 150-50/3 step model/w adapter'
 print(root)
 
 # Load vanilla model
-prediction_window = 0  # [2, 3, 5, 10, 15]
+prediction_window = [2, 3, 5, 10, 15]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
@@ -176,7 +176,7 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 12
+    save_count = 6
     target_count = 0
     generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time,
                                                                                    5) * 12)).tolist()  # n mins of random targets

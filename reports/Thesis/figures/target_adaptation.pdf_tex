@@ -57,7 +57,7 @@
     \put(0.15223687,0.00773497){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}$x_{t}$\end{tabular}}}}%
     \put(0.50440576,0.31366131){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t + \textit{window}}$\end{tabular}}}}%
     \put(0.50440576,0.51838767){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\text{target}_{t + \textit{window}}$\end{tabular}}}}%
-    \put(0.59250215,0.42799149){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\bigr\{Delta \textit{(label)}$\end{tabular}}}}%
+    \put(0.59250215,0.42799149){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\bigr\}\Delta$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{target_adaptation.pdf}}%
   \end{picture}%
 \endgroup%
