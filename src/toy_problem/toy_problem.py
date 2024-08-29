@@ -28,7 +28,8 @@ def main():
 
     model_location = '../../tmp/target_adapter.weights.h5'
     if not pretrain:
-        adapter.load_weights(model_location)
+        pass
+        # adapter.load_weights(model_location)
         # adapter.regularizer.add(RMSERegularizer(weight=.75))
 
     optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
@@ -123,12 +124,13 @@ def main():
             true_target_list.append(target)
             targets.append(target)
 
-            predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+            predicted_target = adapter.predict(ops.array([*x0, *target, *target])[None], verbose=0)[0]
             adapted_targets.append(predicted_target)
             control_action = controller.compute_control(x0, target + predicted_target, dt)
             adapted_controls.append(control_action)
             x = system.response(x0, control_action, do_update=False)
             signal.append(x)
+            buffer.append([*x0, control_action, *x, *(target + predicted_target)])
             x0 = x
 
             # Reference control loop
@@ -138,7 +140,6 @@ def main():
             reference_signal.append(x_reference)
             x0_reference = x_reference
 
-            buffer.append([*x0, control_action, *x, *(target + predicted_target)])
 
         # adapter.save(model_location)
 

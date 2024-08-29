@@ -144,7 +144,7 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
                          array[..., 2 * window:, :state_size]),
                         axis=-1) for array in windowed_data for window in window_list)
     labels = ops.concatenate(
-        array[..., 2 * window:, -target_size:] - array[..., 2 * window:, :1] for array in
+        array[..., :-2 * window, -target_size:] - array[..., 2 * window:, :target_size] for array in
         windowed_data for window in window_list)
 
     if val_split is not None:
