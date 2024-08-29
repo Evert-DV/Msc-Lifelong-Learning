@@ -176,7 +176,7 @@ def change_value():
     kb_t = start_time
     update_t = start_time
 
-    save_count = 6
+    save_count = 12
     target_count = 0
     generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time,
                                                                                    5) * 12)).tolist()  # n mins of random targets
