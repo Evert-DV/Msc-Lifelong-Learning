@@ -6,7 +6,7 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.35, -.3, .0); // Initialize the PID controller (default)
+PidController controller(-.35, -.3, -.001); // Initialize the PID controller (default)
 //PidController controller(-.45, -.4, .0); // Initialize the PID controller (barely stable)
 //PidController controller(-.6, -.45, .00); // Initialize the PID controller (hard)
 //PidController controller(-.15, -.15, .0); // Initialize the PID controller (soft)
