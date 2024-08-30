@@ -12,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def main():
     # Load 'vanilla' adapter model (or included in KB)
-    prediction_window = 10
+    prediction_window = 5
     adapter = TargetAdapter(state_size=2, target_size=2)
     # adapter.load_weights('../../tmp/target_adapter.weights.h5')
     optimizer = keras.optimizers.Adam(learning_rate=1.e-3)
@@ -91,9 +91,7 @@ def main():
 
         # Target selection
         if ti % 5 == 0:
-            # target = [7, 0.] if ti % 2 == 0 else [13, 0.]
             target = [np.random.uniform(5, 15), 0.]
-        # target = [2 * np.sin(2 * np.pi * ti / 60) + 11, 0.]
         targets.append(target)
         true_target_list.append(target)
 
@@ -338,8 +336,8 @@ if __name__ == '__main__':
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     model_location = 'tmp/varautoencoder.keras'
-    seed = np.random.randint(0, 1000)
-    # seed = 42
+    # seed = np.random.randint(0, 1000)
+    seed = 7
     print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
