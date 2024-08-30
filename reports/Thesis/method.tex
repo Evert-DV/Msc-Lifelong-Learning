@@ -1,10 +1,13 @@
 \subsection{Target Adaptations}\label{subsec:target-adaptations}
-The method proposed in this paper aims to provide a way of
+The method proposed in this paper aims to provide a way of improving a given controller's performance as well as fortifying it against evolving system dynamics \emph{without} having access to the inner workings of the controller itself.
+In other words, provided that the most base assumptions of a controller hold true—i.e.~it requires a state and a target as input and yields a control action—the method can be completely agnostic of the controller that is used.
+The advantage of such a method is that it could be applied to any system
+
 \begin{figure}[htb]
     \centering
     \def\svgwidth{0.67\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/target_adaptation.pdf_tex}
-    \caption{}
+    \caption{The target adaptation problem: Based on the current $x_t$ and the state some prediction window later $x_{t + \text{window}}$, the model learns to predict the target the controllers is trying to reach by representing it as a $\Delta$ to be added to $x_{t+\text{window}}$.}
     \label{fig:target-adaptation}
 \end{figure}
 
@@ -12,7 +15,7 @@ The method proposed in this paper aims to provide a way of
     \centering
     \def\svgwidth{0.67\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/model_train.pdf_tex}
-    \caption{}
+    \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target and state $x_{t + \text{window}}$.}
     \label{fig:adapter-train}
 \end{figure}
 
@@ -20,7 +23,7 @@ The method proposed in this paper aims to provide a way of
     \centering
     \def\svgwidth{\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/diagram.pdf_tex}
-    \caption{}
+    \caption{Schematic overview of the full implementation: The adapter is used to offset the given target before yielding it to the controller, essentially \emph{lying} to the controller in order to improve its performance.}
     \label{fig:diagram}
 \end{figure}
 
@@ -28,7 +31,7 @@ The method proposed in this paper aims to provide a way of
     \centering
     \def\svgwidth{0.67\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/target_adaption_deploy.pdf_tex}
-    \caption{}
+    \caption{Target adaptation during deployment: By supplying the model with the controller's target as $x_{t + \text{window}}$ it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
     \label{fig:deployed}
 \end{figure}
 

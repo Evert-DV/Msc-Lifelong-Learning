@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{445.01406692bp}%
+    \setlength{\unitlength}{252.32494444bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,13 +50,13 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.5462267)%
+  \begin{picture}(1,0.54474153)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{model_train.pdf}}%
-    \put(0.34352246,0.28470707){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target adapter\end{tabular}}}}%
-    \put(0.69903018,0.49728409){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}inputs: state pairs\end{tabular}}}}%
-    \put(0.68964267,0.13980574){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}outputs:  predicted $\Delta$\end{tabular}}}}%
-    \put(0.68964267,0.03468245){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}labels:  true $\Delta$\end{tabular}}}}%
+    \put(0.34334758,0.28394403){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target adapter\end{tabular}}}}%
+    \put(0.6989498,0.4961465){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}inputs: state pairs\end{tabular}}}}%
+    \put(0.68955981,0.13929792){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}outputs:  predicted $\Delta$\end{tabular}}}}%
+    \put(0.68955981,0.03435978){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}labels:  true $\Delta$\end{tabular}}}}%
   \end{picture}%
 \endgroup%
