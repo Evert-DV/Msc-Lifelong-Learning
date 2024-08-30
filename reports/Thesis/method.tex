@@ -1,22 +1,56 @@
 \subsection{Target Adaptations}\label{subsec:target-adaptations}
 The method proposed in this paper aims to provide a way of improving a given controller's performance as well as fortifying it against evolving system dynamics \emph{without} having access to the inner workings of the controller itself.
-In other words, provided that the most base assumptions of a controller hold true—i.e.~it requires a state and a target as input and yields a control action—the method can be completely agnostic of the controller that is used.
-The advantage of such a method is that it could be applied to any system
+In other words, as long as the fundamental assumptions of a controller are satisfied—i.e.~it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
+In addition, the aim is not to replace the controller entirely but to introduce an additional module to the control scheme that enables lifelong robustness to evolving system dynamics.
+The advantage of such a method is that it could be applied to any system as a \emph{plug-and-play} module.
+
+The manner in which this will be achieved is by \emph{target adaptation}.
+An \emph{adapter} module modifies the target used by the controller to improve its performance.
+Consider a scenario where a controller yields a control action $A$ to reach a certain reach target state $T$.
+As the system dynamics evolve, suppose this action $A$ is now insufficient to reach the target.
+In response, the adapter module \emph{lies} to the controller about reaching $T$ and instead provides it with $T+\Delta$, for which the controller yields a larger action $A^{*}$ that \emph{does} result in the system reaching state $T$.
+
+The \emph{adapter} module is implemented as a feedforward neural network.
+To train this model to learn suitable target adaptations, interactions of the controller with the system are recorded.
+The model is then provided with pairs of system states, spaced by a certain time window $x_t$ and $x_{t+\text{window}}$, that are obtained from these recordings.
+From these pairs, the model infers the target it `believes' the controller aims to reach.
+However, instead of predicting the target directly, the model learns the difference $\Delta$ between the target and the latter state in the pair (\cref{fig:target-adaptation,fig:adapter-train}).
 
 \begin{figure}[htb]
     \centering
-    \def\svgwidth{0.67\linewidth}
-    \footnotesize\selectfont\input{Thesis/figures/target_adaptation.pdf_tex}
-    \caption{The target adaptation problem: Based on the current $x_t$ and the state some prediction window later $x_{t + \text{window}}$, the model learns to predict the target the controllers is trying to reach by representing it as a $\Delta$ to be added to $x_{t+\text{window}}$.}
-    \label{fig:target-adaptation}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \def\svgwidth{0.67\linewidth}
+        \footnotesize\selectfont\input{Thesis/figures/target_adaptation.pdf_tex}
+        \caption{The target adaptation problem: Based on the current $x_t$ and the state some prediction window later $x_{t + \textit{window}}$, the model learns to predict the target the controller is trying to reach by representing it as a $\Delta$ to be added to $x_{t+\textit{window}}$.}
+        \label{fig:target-adaptation}
+        \vspace*{1em}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \def\svgwidth{0.67\linewidth}
+        \footnotesize\selectfont\input{Thesis/figures/model_train.pdf_tex}
+        \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target and state $x_{t + \textit{window}}$.}
+        \label{fig:adapter-train}
+    \end{subfigure}
+    \caption{Target adaptation during the training phase}
+    \label{fig:target-adaptation-and-training}
 \end{figure}
 
+The model is trained in a supervised manner (\cref{fig:adapter-train}) and then deployed.
+During deployment, it is presented with the current state $x_t$ but cannot be presented with $x_{t+\textit{window}}$ (since this state cannot be known yet).
+Instead, the second state in the pair is set to the desired target.
+To the model, this represents a situation in which the desired target was reached from the current state within the specified time window.
+The idea is now that the trained model will produce a $\Delta$ that, when added to the latter state in the pair (i.e., the desired target), results in an adapted target (\cref{fig:deployed}) for which the controller will produce a control action.
+In short, given a current state $x_t$ and a future state $x_{t+\text{window}}$, the model learned to produce the desired target.
+Thus, when presented with $x_t$ and $x_{t+\textit{window}}=\textit{target}$ (supposedly reached within the time window) it provides the (adapted) target that would \emph{push} the controller toward that result.
+
 \begin{figure}[htb]
     \centering
-    \def\svgwidth{0.67\linewidth}
-    \footnotesize\selectfont\input{Thesis/figures/model_train.pdf_tex}
-    \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target and state $x_{t + \text{window}}$.}
-    \label{fig:adapter-train}
+    \def\svgwidth{0.75\linewidth}
+    \footnotesize\selectfont\input{Thesis/figures/target_adaption_deploy.pdf_tex}
+    \caption{Target adaptation during deployment: By supplying the model with the controller's target as $x_{t + \textit{window}}$ it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
+    \label{fig:deployed}
 \end{figure}
 
 \begin{figure}[htb]
@@ -27,19 +61,10 @@ The advantage of such a method is that it could be applied to any system
     \label{fig:diagram}
 \end{figure}
 
-\begin{figure}[htb]
-    \centering
-    \def\svgwidth{0.67\linewidth}
-    \footnotesize\selectfont\input{Thesis/figures/target_adaption_deploy.pdf_tex}
-    \caption{Target adaptation during deployment: By supplying the model with the controller's target as $x_{t + \text{window}}$ it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
-    \label{fig:deployed}
-\end{figure}
-
 \subsection{Toy Problem}\label{subsec:toy-problem}\
 To explore the proposed method, a toy problem is considered first.
 The toy problem consists of a simulation of a simple 1D mass-spring-damper system and an imperfectly tuned PID controller.
 With intervals of 5 seconds, a series of random targets are generated for the controller to reach and maintain.
 As the simulation progresses, the parameters of the dynamic system are slowly changed to simulate a degradation in the system.
-
 
 \subsection{Preliminary Results}\label{subsec:preliminary-results}
