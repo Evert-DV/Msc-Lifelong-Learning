@@ -6,9 +6,9 @@ The advantage of such a method is that it could be applied to any system as a \e
 
 The manner in which this will be achieved is by \emph{target adaptation}.
 An \emph{adapter} module modifies the target used by the controller to improve its performance.
-Consider a scenario where a controller yields a control action $A$ to reach a certain reach target state $T$.
-As the system dynamics evolve, suppose this action $A$ is now insufficient to reach the target.
-In response, the adapter module \emph{lies} to the controller about reaching $T$ and instead provides it with $T+\Delta$, for which the controller yields a larger action $A^{*}$ that \emph{does} result in the system reaching state $T$.
+Consider a scenario where a controller yields a control action $u$ to reach a certain desired target state $x_d$.
+As the system dynamics evolve, suppose this action $u$ is now insufficient to reach the target.
+In response, the adapter module \emph{lies} to the controller about reaching $x_d$ and instead provides it with $x_d+\Delta$, for which the controller yields a larger action $u^*$ that \emph{does} result in the system reaching state $x_d$.
 
 The \emph{adapter} module is implemented as a feedforward neural network.
 To train this model to learn suitable target adaptations, interactions of the controller with the system are recorded.
@@ -43,7 +43,7 @@ Instead, the second state in the pair is set to the desired target.
 To the model, this represents a situation in which the desired target was reached from the current state within the specified time window.
 The idea is now that the trained model will produce a $\Delta$ that, when added to the latter state in the pair (i.e., the desired target), results in an adapted target (\cref{fig:deployed}) for which the controller will produce a control action.
 In short, given a current state $x_t$ and a future state $x_{t+\textit{window}}$, the model learned to produce the desired target.
-Thus, when presented with $x_t$ and $x_{t+\textit{window}}=\textit{target}$ (supposedly reached within the time window) it provides the (adapted) target that would \emph{push} the controller toward that result.
+Thus, when presented with $x_t$ and $x_{t+\textit{window}}=x_d$ (supposedly reached within the time window) it provides the (adapted) target that would \emph{push} the controller toward that result.
 A full overview is presented in \cref{fig:deployed,fig:diagram}.
 
 \begin{figure}[htb]
@@ -76,31 +76,31 @@ The toy problem consists of a simulation of a simple 1D mass-spring-damper syste
 With intervals of 5 seconds, a series of random targets are generated for the controller to reach and maintain.
 As the simulation progresses, the parameters of the dynamic system are slowly changed to simulate a degradation in the system.
 
-\begin{algorithm}
-%    \small\selectfont
+\begin{algorithm}[htb]
     \SetAlgoLined
     \caption{Toy problem target adaptation}
     \label{alg:toy-problem}
 
-    \KwData{system state $x_0$, target $T$, adaption $\Delta_T$, control action $A$}
+    \KwData{system state $x_0$, target $x_d$, adaption $\Delta$, control action $u$}
 
     Initialize model:  \textit{adapter}\;
     Initialize buffer: $\textit{buffer} \gets []$\;
     \For{each timestep $t_i$}{
         \If{len(buffer) > threshold}{
-            Remove the oldest element in the buffer \;
+            Remove the oldest element in the buffer\;
         }
         \If{$t_i \mod target\_interval = 0$}{
-            $T \gets random\_target()$\;
+            $x_d \gets random\_target()$\;
         }
         \If{$t_i \mod update\_interval = 0$}{
             $(\textit{features, labels}) \gets \textit{prep\_data(buffer, window)}$\;
             $\textit{adapter.fit(features, labels)}$\;
         }
 
-        $\Delta_{T} \gets adapter.predict([x_0, T])$\;
-        $A \gets controller.compute\_control(x_0, T + \Delta_{T})$\;
+        $\Delta \gets adapter.predict([x_0, x_d])$\;
+        $u \gets controller.compute\_control(x_0, x_d + \Delta)$\;
         Simulate the system response $x$\;
-        Append $[x_0, A, x, T + \Delta_T]$ to \textit{buffer}\;
+        Update system parameters\;
+        Append $[x_0, u, x, x_d + \Delta]$ to \textit{buffer}\;
     }
 \end{algorithm}

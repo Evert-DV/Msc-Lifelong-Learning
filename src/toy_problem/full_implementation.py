@@ -5,6 +5,7 @@ from src.toy_problem.kb_tools import *
 from src.toy_problem.toy_tools import *
 import pickle
 import keras
+import matplotlib as mpl
 from keras import optimizers, losses
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -13,20 +14,20 @@ def main():
     # Load 'vanilla' adapter model (or included in KB)
     prediction_window = 10
     adapter = TargetAdapter(state_size=2, target_size=2)
-    adapter.load_weights('../../tmp/target_adapter.weights.h5')
-    optimizer = keras.optimizers.Adam(learning_rate=5.e-3)
-    loss_fn = keras.losses.MeanSquaredError()
+    # adapter.load_weights('../../tmp/target_adapter.weights.h5')
+    optimizer = keras.optimizers.Adam(learning_rate=1.e-3)
+    loss_fn = keras.losses.MeanAbsoluteError()
     adapter.compile(optimizer=optimizer, loss=loss_fn)
 
     # Load VAE model
     autoencoder = VariationalAutoEncoder(5, 2)
     autoencoder.load_weights('../../tmp/vae_skip_s.weights.h5')
-    optimizer = optimizers.Adam(learning_rate=1.e-4)
+    optimizer = optimizers.Adam(learning_rate=5.e-3)
     loss_fn = losses.MeanSquaredError()
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    system = System(5, 20, .5, 5)
+    system = System(5, 20, 1, 5)
 
     # Define controller
     controller = PIDController(700, 50, 1000)
@@ -54,7 +55,7 @@ def main():
 
     # Setup simulation loop
     dt = 1 / 50
-    t_end = 300
+    t_end = 120
     t = np.arange(0, t_end, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -64,7 +65,7 @@ def main():
     train_interval = 15
     update_interval = 60
     kb_step = 5
-    t_change = np.random.randint(update_interval, t_end - update_interval)
+    t_change = np.random.randint(train_interval, t_end - train_interval)
 
     # Setup plotting lists
     signal = []
@@ -84,7 +85,7 @@ def main():
     # Simulation loop
     for ti in t:
         print(f"\rt =  {ti:.0f}", end="")
-        if ti > 60:
+        if ti > 30:
             buffer.pop(0)
             true_target_list.pop(0)
 
@@ -107,7 +108,7 @@ def main():
             system.l0 /= 3
 
         # Control loop
-        delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
+        delta_target = adapter.predict(ops.array([*x0, *target, *target])[None], verbose=0)[0]
         predicted_target = target + delta_target
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
@@ -145,6 +146,12 @@ def main():
                                                        patience=5,
                                                        restore_best_weights=True,
                                                        verbose=1),
+                         keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                           factor=0.1,
+                                                           patience=7,
+                                                           min_lr=5e-5,
+                                                           min_delta=1e-3,
+                                                           verbose=0),
                          EpochLogger()
                          ]
             adapter.fit(train_dataloader,
@@ -262,6 +269,21 @@ def main():
     reference_signal = np.asarray(reference_signal)
     targets = np.asarray(targets)
     adapted_targets = np.asarray(adapted_targets)
+    reference_controls = np.asarray(reference_controls)
+    adapted_controls = np.asarray(adapted_controls)
+
+    plt.style.use('seaborn-v0_8-colorblind')
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    # mpl.use("pgf")
+    # mpl.rcParams.update({
+    #     "pgf.texsystem": "xelatex",
+    #     'font.size': 8,
+    #     'text.usetex': True,
+    #     'pgf.rcfonts': False,
+    #     "pgf.preamble": r"\usepackage{amsmath}"
+    #                     r"\usepackage{lmodern}"
+    # })
+    tex_line_width = 3.48
 
     fig, ax = plt.subplots(3 if use_kb else 2, 1, figsize=(16, 8 if use_kb else 6), sharex=True)
 
@@ -277,14 +299,18 @@ def main():
                 ax_i.axvline(t_tres, color='tab:red', linestyle=':')
             ax_i.axvline(t_change, color='r', linestyle='-')
 
-    ax[0].plot(t, reference_signal[:, 0], color='tab:blue', alpha=0.33, label="Reference controller")
-    ax[0].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-    ax[0].plot(t, signal[:, 0], color='tab:blue', label="Adaptive controller")
+    ax[0].plot(t, reference_signal[:, 0], color=colors[1], alpha=0.33, label="Reference controller")
+    ax[0].plot(t, adapted_targets[:, 0], '--',  color=colors[0], alpha=0.33, label="Adapted targets")
+    ax[0].plot(t, targets[:, 0], '--', color=colors[0], label="Target position")
+    ax[0].plot(t, signal[:, 0], color=colors[1], label="Adaptive controller")
     ax[0].legend(fontsize=8, loc='upper left')
+    ax[0].set_ylabel("Position [m]")
 
-    ax[1].plot(t, targets[:, 0], '--', color='tab:gray', label="Target position")
-    ax[1].plot(t, adapted_targets[:, 0], color='tab:blue', label="Adapted targets")
+    ax[1].plot(t, reference_controls, '--', color=colors[2], alpha=0.33, label="Reference control actions")
+    ax[1].plot(t, adapted_controls, color=colors[2], label="Adapted control actions")
     ax[1].legend(fontsize=8, loc='upper left')
+    ax[1].set_ylabel("Force [N]")
+    ax[1].set_xlabel("Time [s]")
 
     if use_kb:
         selection_lines = ax[2].plot(t_reference_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
