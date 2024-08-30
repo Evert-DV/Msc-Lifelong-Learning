@@ -108,7 +108,7 @@ def main():
             system.l0 /= 3
 
         # Control loop
-        delta_target = adapter.predict(ops.array([*x0, *target, *target])[None], verbose=0)[0]
+        delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
         predicted_target = target + delta_target
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)

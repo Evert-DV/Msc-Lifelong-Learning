@@ -124,7 +124,7 @@ def main():
             true_target_list.append(target)
             targets.append(target)
 
-            predicted_target = adapter.predict(ops.array([*x0, *target, *target])[None], verbose=0)[0]
+            predicted_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
             adapted_targets.append(predicted_target)
             control_action = controller.compute_control(x0, target + predicted_target, dt)
             adapted_controls.append(control_action)

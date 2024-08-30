@@ -68,7 +68,7 @@ class TargetAdapter(keras.Model):
         self.state_size = state_size
         self.target_size = target_size
 
-        inputs = layers.Input(shape=(3 * state_size,))
+        inputs = layers.Input(shape=(2 * state_size,))
         x = layers.Dense(32, activation='sigmoid',
                          kernel_initializer=keras.initializers.GlorotUniform(),
                          bias_initializer='zeros'
@@ -140,11 +140,10 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
     windowed_data = [data[ops.all(ops.isclose(ops.array(true_target_list), ops.array(i)), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
     features = ops.concatenate(
-        ops.concatenate((array[..., :-2 * window, :state_size], array[..., window:-window, :state_size],
-                         array[..., 2 * window:, :state_size]),
+        ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
                         axis=-1) for array in windowed_data for window in window_list)
     labels = ops.concatenate(
-        array[..., :-2 * window, -target_size:] - array[..., 2 * window:, :target_size] for array in
+        array[..., :-window, -target_size:] - array[..., :-window, :target_size] for array in
         windowed_data for window in window_list)
 
     if val_split is not None:
