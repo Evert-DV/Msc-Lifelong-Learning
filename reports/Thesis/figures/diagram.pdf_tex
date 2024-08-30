@@ -61,7 +61,7 @@
     \put(-0.00112414,0.10691037){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target\end{tabular}}}}%
     \put(-0.00082315,0.07731362){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state\end{tabular}}}}%
     \put(0.3834731,0.11616207){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
-    \put(0.91763995,0.09209264){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state*\end{tabular}}}}%
+    \put(0.91763995,0.09209264){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state$^*$\end{tabular}}}}%
     \put(0.47751652,0.11616207){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{diagram.pdf}}%
   \end{picture}%
