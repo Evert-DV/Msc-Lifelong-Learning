@@ -21,7 +21,7 @@ However, instead of predicting the target directly, the model learns the differe
     \begin{subfigure}[t]{\linewidth}
         \centering
         \def\svgwidth{0.67\linewidth}
-        \footnotesize\selectfont\input{Thesis/figures/target_adaptation.pdf_tex}
+        \footnotesize\selectfont\input{Thesis/figures/method/target_adaptation.pdf_tex}
         \caption{The target adaptation problem: Based on the current $x_t$ and the state some prediction window later $x_{t + \textit{window}}$, the model learns to predict the target the controller is trying to reach by representing it as a $\Delta$ to be added to $x_{t+\textit{window}}$.}
         \label{fig:target-adaptation}
         \vspace*{1em}
@@ -29,7 +29,7 @@ However, instead of predicting the target directly, the model learns the differe
     \begin{subfigure}[b]{\linewidth}
         \centering
         \def\svgwidth{0.67\linewidth}
-        \footnotesize\selectfont\input{Thesis/figures/model_train.pdf_tex}
+        \footnotesize\selectfont\input{Thesis/figures/method/model_train.pdf_tex}
         \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target and state $x_{t + \textit{window}}$.}
         \label{fig:adapter-train}
     \end{subfigure}
@@ -51,7 +51,7 @@ A full overview is presented in \cref{fig:deployed,fig:diagram}.
     \begin{subfigure}[t]{\linewidth}
         \centering
         \def\svgwidth{0.75\linewidth}
-        \footnotesize\selectfont\input{Thesis/figures/target_adaption_deploy.pdf_tex}
+        \footnotesize\selectfont\input{Thesis/figures/method/target_adaption_deploy.pdf_tex}
         \caption{Target adaptation during deployment: By supplying the model with the controller's target as $x_{t + \textit{window}}$ it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
         \label{fig:deployed}
         \vspace*{1em} % Add white space between figures
@@ -59,7 +59,7 @@ A full overview is presented in \cref{fig:deployed,fig:diagram}.
     \begin{subfigure}[t]{\linewidth}
         \centering
         \def\svgwidth{\linewidth}
-        \footnotesize\selectfont\input{Thesis/figures/diagram.pdf_tex}
+        \footnotesize\selectfont\input{Thesis/figures/method/diagram.pdf_tex}
         \caption{Schematic overview of the full implementation: The adapter is used to offset the given target before yielding it to the controller, essentially \emph{lying} to the controller in order to improve its performance.}
         \label{fig:diagram}
     \end{subfigure}
@@ -75,6 +75,15 @@ To explore the proposed method, a toy problem is considered first.
 The toy problem consists of a simulation of a simple 1D mass-spring-damper system and an imperfectly tuned PID controller (in this case, it is too aggressive).
 With intervals of 5 seconds, a series of random targets are generated for the controller to reach and maintain.
 As the simulation progresses, the parameters of the dynamic system are slowly changed to simulate a degradation in the system.
+
+\begin{figure}[htb]
+    \centering
+    \def\svgwidth{0.33\linewidth}
+    \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
+    \caption{}
+    \label{fig:toy-setup}
+    \vspace*{1em} % Add white space between figures
+\end{figure}
 
 \begin{algorithm}[htb]
     \SetAlgoLined
@@ -104,3 +113,11 @@ As the simulation progresses, the parameters of the dynamic system are slowly ch
         Append $[x_0, u, x, x_d + \Delta]$ to \textit{buffer}\;
     }
 \end{algorithm}
+
+\begin{figure}[htb]
+    \centering
+    \input{Thesis/figures/method/toy_plot.pgf}
+    \caption{}
+    \label{fig:toy-plot}
+    \vspace*{1em} % Add white space between figures
+\end{figure}
