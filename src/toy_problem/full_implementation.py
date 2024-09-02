@@ -55,7 +55,7 @@ def main():
 
     # Setup simulation loop
     dt = 1 / 50
-    t_end = 120
+    t_end = 60
     t = np.arange(0, t_end, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -270,20 +270,21 @@ def main():
     reference_controls = np.asarray(reference_controls)
     adapted_controls = np.asarray(adapted_controls)
 
-    plt.style.use('seaborn-v0_8-colorblind')
+    plt.style.use('tableau-colorblind10')
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    # mpl.use("pgf")
-    # mpl.rcParams.update({
-    #     "pgf.texsystem": "xelatex",
-    #     'font.size': 8,
-    #     'text.usetex': True,
-    #     'pgf.rcfonts': False,
-    #     "pgf.preamble": r"\usepackage{amsmath}"
-    #                     r"\usepackage{lmodern}"
-    # })
+    mpl.use("pgf")
+    mpl.rcParams.update({
+        "pgf.texsystem": "xelatex",
+        'font.size': 8,
+        'text.usetex': True,
+        'pgf.rcfonts': False,
+        "pgf.preamble": r"\usepackage{amsmath}"
+                        r"\usepackage{lmodern}"
+    })
     tex_line_width = 3.48
+    tex_text_width = 7.17
 
-    fig, ax = plt.subplots(3 if use_kb else 2, 1, figsize=(16, 8 if use_kb else 6), sharex=True)
+    fig, ax = plt.subplots(3 if use_kb else 2, 1, figsize=(tex_line_width, 0.67*tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8), sharex=True)
 
     if use_kb:
         for ax_i in ax:
@@ -297,18 +298,20 @@ def main():
                 ax_i.axvline(t_tres, color='tab:red', linestyle=':')
             ax_i.axvline(t_change, color='r', linestyle='-')
 
-    ax[0].plot(t, reference_signal[:, 0], color=colors[1], alpha=0.33, label="Reference controller")
-    ax[0].plot(t, adapted_targets[:, 0], '--',  color=colors[0], alpha=0.33, label="Adapted targets")
-    ax[0].plot(t, targets[:, 0], '--', color=colors[0], label="Target position")
-    ax[0].plot(t, signal[:, 0], color=colors[1], label="Adaptive controller")
-    ax[0].legend(fontsize=8, loc='upper left')
-    ax[0].set_ylabel("Position [m]")
+    ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=1)
+    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], '--',  color=colors[3], alpha=0.5, linewidth=1)
+    ref_target, = ax[0].plot(t, targets[:, 0], '--', color=colors[3], linewidth=1)
+    sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=1)
+    # ax[0].legend(fontsize=8, loc='upper left')
+    ax[0].set_ylabel("Position [m]", fontsize=7)
+    ax[0].tick_params(axis='both', labelsize=6)
 
-    ax[1].plot(t, reference_controls, '--', color=colors[2], alpha=0.33, label="Reference control actions")
-    ax[1].plot(t, adapted_controls, color=colors[2], label="Adapted control actions")
-    ax[1].legend(fontsize=8, loc='upper left')
-    ax[1].set_ylabel("Force [N]")
-    ax[1].set_xlabel("Time [s]")
+    ref_u, = ax[1].plot(t, reference_controls, '--', color=colors[5], alpha=0.5, linewidth=1)
+    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=1)
+#     ax[1].legend(fontsize=8, loc='upper left')
+    ax[1].set_ylabel("Force [N]", fontsize=7)
+    ax[1].set_xlabel("Time [s]", fontsize=7)
+    ax[1].tick_params(axis='both', labelsize=6)
 
     if use_kb:
         selection_lines = ax[2].plot(t_reference_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
@@ -324,11 +327,13 @@ def main():
         ax[2].legend(fontsize=8, loc='upper right',
                      handles=js_loss_lines, labels=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
 
+    fig.legend(handles=[ref_target, adapted_target, ref_sig, sig, ref_u, u],
+               labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control", "Control"],
+               loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.13))
     fig.tight_layout()
-    if not os.path.exists("tmp"):
-        os.makedirs("tmp")
-    # fig.savefig("tmp/plot.png", dpi=300)
-    plt.show()
+    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+                dpi=300, bbox_inches='tight')
+    # plt.show()
 
 
 if __name__ == '__main__':
@@ -336,9 +341,9 @@ if __name__ == '__main__':
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     model_location = 'tmp/varautoencoder.keras'
-    # seed = np.random.randint(0, 1000)
-    seed = 7
-    print(f"Seed: {seed}")
+    seed = np.random.randint(0, 1000)
+    seed = 585
+    # print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
     if torch.cuda.is_available():
