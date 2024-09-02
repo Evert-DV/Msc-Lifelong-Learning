@@ -299,15 +299,16 @@ def main():
             ax_i.axvline(t_change, color='r', linestyle='-')
 
     ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=1)
-    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], '--',  color=colors[3], alpha=0.5, linewidth=1)
-    ref_target, = ax[0].plot(t, targets[:, 0], '--', color=colors[3], linewidth=1)
+    ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1)
+    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)),  color=colors[3], linewidth=.75)
     sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=1)
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]", fontsize=7)
     ax[0].tick_params(axis='both', labelsize=6)
+    ax[0].set_xlim(44.5, 58)
 
-    ref_u, = ax[1].plot(t, reference_controls, '--', color=colors[5], alpha=0.5, linewidth=1)
-    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=1)
+    ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (3, 1)), color=colors[5], alpha=0.5, linewidth=1)
+    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.75)
 #     ax[1].legend(fontsize=8, loc='upper left')
     ax[1].set_ylabel("Force [N]", fontsize=7)
     ax[1].set_xlabel("Time [s]", fontsize=7)
@@ -329,9 +330,9 @@ def main():
 
     fig.legend(handles=[ref_target, adapted_target, ref_sig, sig, ref_u, u],
                labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control", "Control"],
-               loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.13))
+               loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.12))
     fig.tight_layout()
-    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
                 dpi=300, bbox_inches='tight')
     # plt.show()
 

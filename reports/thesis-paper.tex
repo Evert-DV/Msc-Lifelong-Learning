@@ -20,6 +20,10 @@
 \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure}{\let\sffamily\relax}
 \AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
+% Hook into the figure* environment
+\AtBeginEnvironment{figure*}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure*}{\let\sffamily\relax}
+\AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
 
 \addbibresource{Thesis/library.bib}
 \graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}}
