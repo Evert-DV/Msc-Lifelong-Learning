@@ -12,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def main():
     # Load 'vanilla' adapter model (or included in KB)
-    prediction_window = 10
+    prediction_window = [3, 5, 10, 15, 25]
     adapter = TargetAdapter(state_size=2, target_size=2)
     # adapter.load_weights('../../tmp/target_adapter.weights.h5')
     optimizer = keras.optimizers.Adam(learning_rate=1.e-3)
@@ -37,7 +37,7 @@ def main():
 
     # Define reference controller
     reference_controller = PIDController(2500, 100, 10200)
-#     controller = PIDController(300, 10, 50)
+    #     controller = PIDController(300, 10, 50)
     # reference_controller = PIDController(300, 40, 5)
     # Setup KB
     use_kb = False
@@ -138,7 +138,8 @@ def main():
             t_train.append(ti)
             adapter.optimizer.lr = 1.e-3
             buffer_array = ops.array(buffer)
-            features, labels = prep_data(buffer_array, prediction_window, state_size=2, target_size=2, true_target_list=true_target_list)
+            features, labels = prep_data(buffer_array, prediction_window, state_size=2, target_size=2,
+                                         true_target_list=true_target_list)
 
             print("\nFitting model...")
             train_dataset, val_dataset = random_split(TensorDataset(features, labels),
@@ -195,7 +196,7 @@ def main():
 
             # Post-60 seconds
             # Update running distribution
-            running_distribution.update(z_mean, cov, weight=kb_step/(update_interval-kb_step))
+            running_distribution.update(z_mean, cov, weight=kb_step / (update_interval - kb_step))
 
             # KL losses
             kl_updated_dist = js_divergence(updated_reference, running_distribution)
@@ -293,7 +294,8 @@ def main():
     tex_text_width = 7.17
 
     fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [3, 2]},
-                           figsize=(tex_line_width, 0.67*tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8), sharex=True)
+                           figsize=(tex_line_width, 0.67 * tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
+                           sharex=True)
 
     if use_kb:
         for ax_i in ax:
@@ -309,7 +311,7 @@ def main():
 
     ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=.75)
     ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1)
-    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)),  color=colors[3], linewidth=.5)
+    adapted_target, = ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)), color=colors[3], linewidth=.5)
     sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=.75)
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]", fontsize=7)
@@ -319,7 +321,7 @@ def main():
 
     ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (2, 2)), color=colors[1], linewidth=1)
     u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.5)
-#     ax[1].legend(fontsize=8, loc='upper left')
+    #     ax[1].legend(fontsize=8, loc='upper left')
     ax[1].set_ylabel("Force [N]", fontsize=7)
     ax[1].set_xlabel("Time [s]", fontsize=7)
     ax[1].tick_params(axis='both', labelsize=6)
@@ -339,7 +341,8 @@ def main():
                      handles=js_loss_lines, labels=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
 
     fig.legend(handles=[ref_target, adapted_target, ref_sig, sig, ref_u, u],
-               labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control", "Control"],
+               labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control",
+                       "Control"],
                loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.12))
     fig.tight_layout()
     # fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",

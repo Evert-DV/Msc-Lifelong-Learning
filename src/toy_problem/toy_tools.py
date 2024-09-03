@@ -141,12 +141,23 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
         # data = data[..., :-target_size]
     windowed_data = [data[ops.all(ops.isclose(ops.array(true_target_list), ops.array(i)), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
+    n = 3  # Number of points to average around the window step point
+
     features = ops.concatenate(
-        ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
-                        axis=-1) for array in windowed_data for window in window_list)
+        ops.concatenate(
+            (array[..., i:i+1, :state_size],
+             ops.mean(array[..., i+window-n:i+window+n+1, :state_size], axis=-2, keepdims=True)),
+            axis=-1)
+        for array in windowed_data for window in window_list for i in range(array.shape[-2] - window))
+    # features = ops.concatenate(
+    #     ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
+    #                     axis=-1) for array in windowed_data for window in window_list)
     labels = ops.concatenate(
-        array[..., :-window, -target_size:] - array[..., window:, :target_size] for array in
-        windowed_data for window in window_list)
+        array[..., i:i+1, -target_size:] - ops.mean(array[..., i+window-n:i+window+n+1, :target_size], axis=-2, keepdims=True)
+        for array in windowed_data for window in window_list for i in range(array.shape[-2] - window))
+    # labels = ops.concatenate(
+    #     array[..., :-window, -target_size:] - array[..., window:, :target_size] for array in
+    #     windowed_data for window in window_list)
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
