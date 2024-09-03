@@ -1,0 +1,77 @@
+\documentclass[a4paper, 10pt]{IEEEtran}
+
+\usepackage[backend=biber, style=apa]{biblatex}
+\usepackage[mode=tex]{standalone}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{pgf}
+\usepackage{fontspec}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage[section]{placeins}
+\usepackage[ruled]{algorithm2e}
+\usepackage{cleveref}
+
+
+\setmainfont{TeX Gyre Termes}
+
+% Hook into the figure environment
+\AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure}{\let\sffamily\relax}
+\AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
+% Hook into the figure* environment
+\AtBeginEnvironment{figure*}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure*}{\let\sffamily\relax}
+\AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
+
+\addbibresource{Thesis/library.bib}
+\graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}}
+
+
+\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
+\author{E. De Vroey}
+\date{\today}
+
+\begin{document}
+    \maketitle
+
+    \begin{abstract}
+        \lipsum[1]
+    \end{abstract}
+
+    \section{Introduction}\label{sec:introduction}
+    \input{Thesis/introduction}
+    \FloatBarrier
+
+    \section{Background}\label{sec:background}
+    \input{Thesis/background}
+    \FloatBarrier
+
+    \section{Methodology}\label{sec:methodology}
+    \input{Thesis/method}
+    \FloatBarrier
+
+    \section{A Kresling Origami Robot}\label{sec:origami-robot}
+    \input{Thesis/robot}
+    \FloatBarrier
+
+    \section{Experiments and Results}\label{sec:results}
+    \input{Thesis/results}
+    \FloatBarrier
+
+    \section{Improved Model}\label{sec:improvements}
+    \input{Thesis/improvements}
+    \FloatBarrier
+
+    \section{Discussion}\label{sec:discussion}
+    \input{Thesis/discussion}
+    \FloatBarrier
+
+    \printbibliography
+
+    \appendices
+    \input{Thesis/appendix}
+
+\end{document}
