@@ -129,19 +129,21 @@ The pseudo algorithm for the implementation can be found in~\cref{alg:toy-proble
 The toy problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend.  % TODO: cite python and packages?
 The simulation ran for 60 seconds at 50 Hz.
 The target was changed Every 5 seconds, and the adapter was trained fully online, updating every 15 seconds.
-A prediction window of 5 timesteps was set for the adapter, meaning that it's input features during training consisted of $[x_t, x_{t+5}]$.
+A prediction window of 10 timesteps was set for the adapter, meaning that it's input features during training consisted of $[x_t, x_{t+10}]$.
 The buffer's budget corresponded to the past 30 seconds of data.
-For reference, a second controller and system where also simulated, identical to the described simulation, but without the ddition of an adapter.
+For reference, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
 
+\subsubsection{A case where the controller is too aggressive}
+For a first simulation, a combination of a system and controller was chosen where the controller's gains were tuned too high.
 In~\cref{fig:toy-plot}, the result of the simulation can be observed.
 At the start, and due to the near-zero initialization of the adapter's parameters, the response signal of the system controlled by the adapted controller is indistinguishable from that of the reference controller.
 However, as soon as the adapter has trained on the buffer, the changes to the target become visible.
 The effects of the adaptation can be more clearly observed in~\cref{fig:toy-plot-closeup}.
 
-\begin{figure*}[htb]
+\begin{figure*}
     \centering
     \input{Thesis/figures/method/toy_plot.pgf}
-    \caption{The full minute simulation of the toy problem. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
+    \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
     Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
     During the first 15 seconds (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
     \label{fig:toy-plot}
@@ -150,30 +152,45 @@ The effects of the adaptation can be more clearly observed in~\cref{fig:toy-plot
 
 Since the reference controller is too aggressive, the reference signal overshoots and oscillates significantly before settling.
 In contrast, the adapter counters this by bringing the target closer to the current state.
-This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target\footnote{Rather, the labeled $\Delta = x_d - x_{t+5}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+5}$.
-Therefore, upon receiving the input feature $[x_t, x_d]$ (representing $x_d$ being reached from $x_t$ within 5 timesteps), it produces and adapted target in between $x_t$ and $x_d$.
-As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, gently guiding the system towards this desired state.
+This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target\footnote{Rather, the labeled $\Delta = x_d - x_{t+10}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+5}$.
+Therefore, upon receiving the input feature $[x_t, x_d]$ (representing $x_d$ being reached from $x_t$ within 10 timesteps), it produces and adapted target in between $x_t$ and $x_d$.
+As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \small\selectfont\input{Thesis/figures/method/toy_plot_closeup.pgf}
-    \caption{}
+    \caption{A close-up of the second to last target in the one-minute simulation. The effects of the adapter can be more clearly observed: The overshoot (seen in the reference signal) is countered by bringing the target closer to the current state.}
     \label{fig:toy-plot-closeup}
     \vspace*{1em} % Add white space between figures
 \end{figure}
 
-\begin{figure}[htb]
+\subsubsection{A case where the controller is under-responsive}
+For a second simulation, the system and controller were designed such that the controller was more \emph{conservative} or \emph{under-responsive}.
+Additionally, the signal produced by the reference controller has a clear steady-state error.
+The result of the simulation can be found in~\cref{fig:toy-plot-damped}.
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/method/toy_plot_damped.pgf}
+    \caption{The full minute simulation of the system with an uner-responsive controller. Top: The system response and target of the adapted controller, alongside the response and target of the unadapted reference controller.
+    Bottom: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered reference control inputs.}
+    \label{fig:toy-plot-damped}
+    \vspace*{1em} % Add white space between figures
+\end{figure*}
+
+Once more, the adapter is able to improve the controller's performance after just a single update.
+In~\cref{fig:toy-plot-damped-closeup} it can be seen that the adapted target is adjusted away from the current state.
+This is because input features created from the data in the buffer frequently include state pairs $x_t,\, x_{t+10}$ where the target $x_d$ is positioned further from $x_t$ than it is from $x_{t+10}$.
+As a result, the adapter learns to predict adaptations that would move $x_d$ farther from $x_t$, making the controller more aggressive.
+Another effect of the adapter is the consistent offset applied to the target:
+In the training features, the adapter regularly encounters pairs $x_t, \, x_{t+10} = x_t$, which appear to represent the target state being reached, even though $x_{t+10}\neq x_d$.
+These features are the result of the steady-state error present in the signal, leading the adapter to learn to apply an offset to the target to counteract this.
+
+\begin{figure}
     \centering
     \small\selectfont\input{Thesis/figures/method/toy_plot_damped_closeup.pgf}
-    \caption{}
+    \caption{A close-up of the second to last target in the one-minute simulation. Noteable observations: The target is initially moved further from the current state to `pull' it towards the desired state in a shorter period. In addition, the adapted target is offset from the esired state as to counter the steady-state error seen in the reference signal.}
     \label{fig:toy-plot-damped-closeup}
     \vspace*{1em} % Add white space between figures
 \end{figure}
 
-\begin{figure*}[htb]
-    \centering
-    \input{Thesis/figures/method/toy_plot_damped.pgf}
-    \caption{}
-    \label{fig:toy-plot-damped}
-    \vspace*{1em} % Add white space between figures
-\end{figure*}
