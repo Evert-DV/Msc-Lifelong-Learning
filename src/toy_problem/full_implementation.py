@@ -28,13 +28,16 @@ def main():
 
     # Define system
     # system = System(5, 20, 87, 5)
-    system = System(5, 20, 10, 5)
+    # system = System(5, 20, 10, 5)
+    system = System(1, 5000, 1, 5)
     # Define controller
-    controller = PIDController(300, 10, 50)
+    controller = PIDController(2500, 100, 10200)
+    # controller = PIDController(300, 10, 50)
     # controller = PIDController(300, 40, 5)
 
     # Define reference controller
-    reference_controller = PIDController(300, 10, 50)
+    reference_controller = PIDController(2500, 100, 10200)
+#     controller = PIDController(300, 10, 50)
     # reference_controller = PIDController(300, 40, 5)
     # Setup KB
     use_kb = False
@@ -66,7 +69,7 @@ def main():
     train_interval = 15
     update_interval = 60
     kb_step = 5
-    t_change = np.random.randint(train_interval, t_end - train_interval)
+    # t_change = np.random.randint(train_interval, t_end - train_interval)
 
     # Setup plotting lists
     signal = []
@@ -107,8 +110,8 @@ def main():
         #     system.l0 /= 3
 
         # Control loop
-        noise = np.random.normal([0, 0], [0.0, 0], 2)
-        noise2 = np.random.normal([0, 0], [0.0, 0], 2)
+        noise = np.random.normal([0, 0], [0.025, 0], 2)
+        noise2 = np.random.normal([0, 0], [0.025, 0], 2)
         x0 += noise
         delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
         predicted_target = target + delta_target
@@ -277,19 +280,19 @@ def main():
 
     plt.style.use('tableau-colorblind10')
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    mpl.use("pgf")
-    mpl.rcParams.update({
-        "pgf.texsystem": "xelatex",
-        'font.size': 8,
-        'text.usetex': True,
-        'pgf.rcfonts': False,
-        "pgf.preamble": r"\usepackage{amsmath}"
-                        r"\usepackage{lmodern}"
-    })
+    # mpl.use("pgf")
+    # mpl.rcParams.update({
+    #     "pgf.texsystem": "xelatex",
+    #     'font.size': 8,
+    #     'text.usetex': True,
+    #     'pgf.rcfonts': False,
+    #     "pgf.preamble": r"\usepackage{amsmath}"
+    #                     r"\usepackage{lmodern}"
+    # })
     tex_line_width = 3.48
     tex_text_width = 7.17
 
-    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [2, 1]},
+    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [3, 2]},
                            figsize=(tex_line_width, 0.67*tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8), sharex=True)
 
     if use_kb:
@@ -311,8 +314,8 @@ def main():
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]", fontsize=7)
     ax[0].tick_params(axis='both', labelsize=6)
-    ax[0].set_xlim(49, 56)
-    ax[0].set_ylim(5)
+    # ax[0].set_xlim(49, 56)
+    # ax[0].set_ylim(5)
 
     ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (2, 2)), color=colors[1], linewidth=1)
     u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.5)
@@ -339,8 +342,8 @@ def main():
                labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control", "Control"],
                loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.12))
     fig.tight_layout()
-    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
-                dpi=300, bbox_inches='tight')
+    # fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+    #             dpi=300, bbox_inches='tight')
     # plt.show()
 
 

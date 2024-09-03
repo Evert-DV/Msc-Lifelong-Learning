@@ -17,6 +17,7 @@ colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 #                     r"\usepackage{lmodern}"
 # })
 tex_line_width = 3.48
+tex_text_width = 7.17
 
 root = os.getcwd() + '\\..\\..\\'
 data_folders = [
@@ -24,45 +25,42 @@ data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # auto_save_10 is filtered here
     # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",             # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",              # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",       # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",        # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",       # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",        # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter 2",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\wo adapter",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\wo adapter",      # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",     # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <--
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",  # auto_save_4 accidentally cut short
+    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <--
+    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- (auto_save_4 accidentally cut short)
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",
-    # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL wo adapter",
-    # "Dynamics data\\125-75 perforation\\PID 75-75\\EOL w adapter",
+    # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",       # <--
+    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",        # <--
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <--
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <--
 ]
 file_name = "auto_save_0"
-file = f"{data_folders[1]}/{file_name}.npy"
+file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -283,8 +281,8 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
         x_ticks = range(start_t, start_t + 5 * len(file_name), 5)
         x_ticks_list.append(x_ticks)
 
-    fig, axes = plt.subplots(len(metrics_headers), 1,
-                             figsize=(tex_line_width, len(metrics_headers) * 0.33 * tex_line_width),
+    fig, axes = plt.subplots(len(metrics_headers) // 2, 2,
+                             figsize=(tex_text_width, len(metrics_headers) * 0.33 * tex_line_width / 2),
                              sharex=True)
     axes = axes.flatten()
 
@@ -297,16 +295,16 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
         ax.tick_params(axis='both', labelsize=6)
     ax.set_xlabel('Time [min]', fontsize=7)
 
+    # for ax in axes[len(metrics_headers):]:
+    #     fig.delaxes(ax)
+
     # Find the longest common prefix
     common_prefix = os.path.commonpath(excel_files)
     short_labels = [
         file.replace(common_prefix, '').replace('\\', ' ').replace('metrics_summary.xlsx', '').replace('_', ' ').strip(
             '.npy') for file in excel_files]
 
-    fig.legend(short_labels, loc='lower left', fontsize=6, frameon=False)
-
-    for ax in axes[len(metrics_headers):]:
-        fig.delaxes(ax)
+    fig.legend(short_labels, loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
 
     fig.tight_layout()
     plot_file = os.path.join(save_folder, f'metrics_evolution.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
@@ -372,9 +370,9 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 
 def main():
-    # metrics(file, do_print=True, do_plot=True)
-    compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
-    metrics_similarity(data_folders, file_type='ref_minute')
+    metrics(file, do_print=True, do_plot=True)
+    # compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
+    # metrics_similarity(data_folders, file_type='ref_minute')
 
 
 if __name__ == '__main__':
