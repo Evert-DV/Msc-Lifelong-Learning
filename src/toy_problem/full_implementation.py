@@ -12,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def main():
     # Load 'vanilla' adapter model (or included in KB)
-    prediction_window = 5
+    prediction_window = 10
     adapter = TargetAdapter(state_size=2, target_size=2)
     # adapter.load_weights('../../tmp/target_adapter.weights.h5')
     optimizer = keras.optimizers.Adam(learning_rate=1.e-3)
@@ -27,14 +27,15 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    system = System(5, 20, 1, 5)
-
+    # system = System(5, 20, 87, 5)
+    system = System(5, 20, 10, 5)
     # Define controller
-    controller = PIDController(700, 50, 1000)
+    controller = PIDController(300, 10, 50)
+    # controller = PIDController(300, 40, 5)
 
     # Define reference controller
-    reference_controller = PIDController(700, 50, 1000)
-
+    reference_controller = PIDController(300, 10, 50)
+    # reference_controller = PIDController(300, 40, 5)
     # Setup KB
     use_kb = False
     load_kb = False
@@ -95,30 +96,34 @@ def main():
         targets.append(target)
         true_target_list.append(target)
 
-        # Hard change for testing
-        if ti == t_change:
-            print("\n\nHARD CHANGE\n"
-                  f"k: {system.k:.1f}\t -> {system.k + 10:.1f}\n"
-                  f"c: {system.c:.1f}\t -> {system.c + 10:.1f}\n"
-                  f"l0: {system.l0:.1f}\t -> {system.l0 / 3:.1f}")
-            system.k += 10
-            system.c += 3
-            system.l0 /= 3
+        # # Hard change for testing
+        # if ti == t_change:
+        #     print("\n\nHARD CHANGE\n"
+        #           f"k: {system.k:.1f}\t -> {system.k + 10:.1f}\n"
+        #           f"c: {system.c:.1f}\t -> {system.c + 10:.1f}\n"
+        #           f"l0: {system.l0:.1f}\t -> {system.l0 / 3:.1f}")
+        #     system.k += 10
+        #     system.c += 3
+        #     system.l0 /= 3
 
         # Control loop
+        noise = np.random.normal([0, 0], [0.0, 0], 2)
+        noise2 = np.random.normal([0, 0], [0.0, 0], 2)
+        x0 += noise
         delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
         predicted_target = target + delta_target
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
-        x = system.response(x0, control_action, do_update=True)
+        x = system.response(x0, control_action, do_update=True) + noise2
         signal.append(x)
         x0 = x
 
         # Reference control loop
+        x0_reference += noise
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
-        x_reference = system.response(x0_reference, reference_control, do_update=True)
+        x_reference = system.response(x0_reference, reference_control, do_update=True) + noise2
         reference_signal.append(x_reference)
         x0_reference = x_reference
 
@@ -284,7 +289,8 @@ def main():
     tex_line_width = 3.48
     tex_text_width = 7.17
 
-    fig, ax = plt.subplots(3 if use_kb else 2, 1, figsize=(tex_line_width, 0.67*tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8), sharex=True)
+    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [2, 1]},
+                           figsize=(tex_line_width, 0.67*tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8), sharex=True)
 
     if use_kb:
         for ax_i in ax:
@@ -298,17 +304,18 @@ def main():
                 ax_i.axvline(t_tres, color='tab:red', linestyle=':')
             ax_i.axvline(t_change, color='r', linestyle='-')
 
-    ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=1)
+    ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=.75)
     ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1)
-    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)),  color=colors[3], linewidth=.75)
-    sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=1)
+    adapted_target, =ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)),  color=colors[3], linewidth=.5)
+    sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=.75)
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]", fontsize=7)
     ax[0].tick_params(axis='both', labelsize=6)
-    ax[0].set_xlim(44.5, 58)
+    ax[0].set_xlim(49, 56)
+    ax[0].set_ylim(5)
 
-    ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (3, 1)), color=colors[5], alpha=0.5, linewidth=1)
-    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.75)
+    ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (2, 2)), color=colors[1], linewidth=1)
+    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.5)
 #     ax[1].legend(fontsize=8, loc='upper left')
     ax[1].set_ylabel("Force [N]", fontsize=7)
     ax[1].set_xlabel("Time [s]", fontsize=7)
@@ -343,7 +350,7 @@ if __name__ == '__main__':
 
     model_location = 'tmp/varautoencoder.keras'
     seed = np.random.randint(0, 1000)
-    seed = 585
+    seed = 869
     # print(f"Seed: {seed}")
     keras.utils.set_random_seed(seed)
 
