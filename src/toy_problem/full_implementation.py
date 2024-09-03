@@ -355,9 +355,10 @@ if __name__ == '__main__':
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     model_location = 'tmp/varautoencoder.keras'
-    seed = np.random.randint(0, 1000)
-    seed = 869
-    # print(f"Seed: {seed}")
+    # seed = np.random.randint(0, 1000)
+    seed = 709
+    print(f"Seed: {seed}")
+    np.random.seed(seed)
     keras.utils.set_random_seed(seed)
 
     if torch.cuda.is_available():
