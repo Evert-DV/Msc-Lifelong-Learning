@@ -50,12 +50,12 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.98845191)%
+  \begin{picture}(1,0.99182005)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{toy_setup.pdf}}%
-    \put(0.11572711,0.67568346){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x^+$\end{tabular}}}}%
+    \put(0.11572711,0.6790516){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x^+$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{toy_setup.pdf}}%
-    \put(0.50872997,0.01526578){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$u^+$\end{tabular}}}}%
+    \put(0.4005503,0.01863392){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$u^+$, $F_g$\end{tabular}}}}%
   \end{picture}%
 \endgroup%

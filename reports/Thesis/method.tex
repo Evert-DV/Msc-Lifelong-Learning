@@ -30,27 +30,27 @@ However, instead of predicting the target directly, the model learns the differe
         \centering
         \def\svgwidth{0.67\linewidth}
         \footnotesize\selectfont\input{Thesis/figures/method/model_train.pdf_tex}
-        \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target and state $x_{t + \textit{window}}$.}
+        \caption{The training process of the target adapter: recorded states spaced by a specified prediction window are paired up and provided as features to the adapter, which learns to predict a $\Delta$, being the difference between the target $x_d$ and state $x_{t + \textit{window}}$.}
         \label{fig:adapter-train}
     \end{subfigure}
     \caption{Target adaptation during the training phase}
     \label{fig:target-adaptation-training}
 \end{figure}
 
-The model is trained in a supervised manner (\cref{fig:adapter-train}) and then deployed.
+The model can be trained in a supervised manner (\cref{fig:adapter-train}) and then deployed.
 During deployment, it is presented with the current state $x_t$ but cannot be presented with $x_{t+\textit{window}}$ (since this state is not known yet).
 Instead, the second state in the pair is set to the desired target.
 To the model, this represents a situation in which the desired target was reached from the current state within the specified time window.
 The idea is now that the trained model will produce a $\Delta$ that, when added to the latter state in the pair (i.e., the desired target), results in an adapted target (\cref{fig:deployed}) for which the controller will produce a control action.
 In short, given a current state $x_t$ and a future state $x_{t+\textit{window}}$, the model learned to produce the desired target.
 Thus, when presented with $x_t$ and $x_{t+\textit{window}}=x_d$ (supposedly reached within the time window) it provides the (adapted) target that would \emph{push} the controller toward that result.
-A full overview is presented in \cref{fig:deployed,fig:diagram}.
+A full overview is presented in~\cref{fig:deployed,fig:diagram}.
 
 \begin{figure}[htb]
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \def\svgwidth{0.75\linewidth}
+        \def\svgwidth{0.85\linewidth}
         \footnotesize\selectfont\input{Thesis/figures/method/target_adaption_deploy.pdf_tex}
         \caption{Target adaptation during deployment: By supplying the model with the controller's target as $x_{t + \textit{window}}$ it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
         \label{fig:deployed}
@@ -60,7 +60,7 @@ A full overview is presented in \cref{fig:deployed,fig:diagram}.
         \centering
         \def\svgwidth{\linewidth}
         \footnotesize\selectfont\input{Thesis/figures/method/diagram.pdf_tex}
-        \caption{Schematic overview of the full implementation: The adapter is used to offset the given target before yielding it to the controller, essentially \emph{lying} to the controller in order to improve its performance.}
+        \caption{Schematic overview of the full implementation: The adapter is used to offset the given target before presenting it to the controller, essentially \emph{lying} to the controller in order to improve its performance.}
         \label{fig:diagram}
     \end{subfigure}
     \caption{Target adaptation during deployment.}
@@ -68,22 +68,32 @@ A full overview is presented in \cref{fig:deployed,fig:diagram}.
 \end{figure}
 
 The reason for predicting the difference $\Delta$ between the state $x_{t+\textit{window}}$ and the desired target, rather than a direct prediction of the target, can also be clarified now:
-By designing the model's output to be a $\Delta$, the model can be initialized with parameters all close to zero (essentially leaving the desired target unchanged) and then steadily improve online as interactions of the controller and system are recorded.
+By designing the model's output to be a $\Delta$, the model can be initialized with parameters all close to zero (essentially leaving the desired target unchanged) and then steadily improve online as interactions of the controller and system are recorded, without the need for a pretraining phase.
 
 \subsection{Toy Problem}\label{subsec:toy-problem}\
 To explore the proposed method, a toy problem is considered first.
-The toy problem consists of a simulation of a simple 1D mass-spring-damper system and an imperfectly tuned PID controller (in this case, it is too aggressive).
-With intervals of 5 seconds, a series of random targets are generated for the controller to reach and maintain.
-As the simulation progresses, the parameters of the dynamic system are slowly changed to simulate a degradation in the system.
+The toy problem consists of a simulation of a simple 1D mass-spring-damper system (\cref{fig:toy-setup}) and an imperfectly tuned PID controller.
+The mass is suspended in a hanging position with gravity acting on it continuously.
 
 \begin{figure}[htb]
     \centering
     \def\svgwidth{0.33\linewidth}
     \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
-    \caption{}
+    \caption{Setup of the mass-spring-damper system in the toy problem with positive directions indicated.}
     \label{fig:toy-setup}
-    \vspace*{1em} % Add white space between figures
+    \vspace*{1em}
 \end{figure}
+
+At regular intervals, a random target position $x_d$ is generated for the controller to reach and maintain.
+Each timestep, the adapter calculates the required $\Delta$, and the controller computes the control action base on the current state and the adapted target.
+The system's response to this control input is simulated and the tuple $(x_0, u, x, x_d+\Delta)$ is added to the buffer.
+This buffer stores a limited number of tuples corresponding to a specified window of the most recent data.
+Once capacity is reached, the oldest element is removed at every timestep.
+At regular update intervals, the adapter is trained on the data in the buffer.
+It is important that the tuples in the training data always contain the target that was actually provided to the controller, i.e., $x_d + \Delta$, and not the \emph{true} desired target $x_d$.
+As the simulation progresses, the parameters of the dynamic system are gradually altered to simulate system degradation.
+%In addition, at a random point in time, a hard shift the system's parameters is introduced.
+The pseudo algorithm for the implementation can be found in~\cref{alg:toy-problem}.
 
 \begin{algorithm}[htb]
     \SetAlgoLined
@@ -111,8 +121,38 @@ As the simulation progresses, the parameters of the dynamic system are slowly ch
         Simulate the system response $x$\;
         Update system parameters\;
         Append $[x_0, u, x, x_d + \Delta]$ to \textit{buffer}\;
+        $x_0 \gets x$\;
     }
 \end{algorithm}
+
+\subsection{Preliminary Results}\label{subsec:preliminary-results}
+The toy problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend.  % TODO: cite python and packages?
+The simulation ran for 60 seconds at 50 Hz.
+The target was changed Every 5 seconds, and the adapter was trained fully online, updating every 15 seconds.
+A prediction window of 5 timesteps was set for the adapter, meaning that it's input features during training consisted of $[x_t, x_{t+5}]$.
+The buffer's budget corresponded to the past 30 seconds of data.
+For reference, a second controller and system where also simulated, identical to the described simulation, but without the ddition of an adapter.
+
+In~\cref{fig:toy-plot}, the result of the simulation can be observed.
+At the start, and due to the near-zero initialization of the adapter's parameters, the response signal of the system controlled by the adapted controller is indistinguishable from that of the reference controller.
+However, as soon as the adapter has trained on the buffer, the changes to the target become visible.
+The effects of the adaptation can be more clearly observed in~\cref{fig:toy-plot-closeup}.
+
+\begin{figure*}[htb]
+    \centering
+    \input{Thesis/figures/method/toy_plot.pgf}
+    \caption{The full minute simulation of the toy problem. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
+    Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
+    During the first 15 seconds (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
+    \label{fig:toy-plot}
+    \vspace*{1em} % Add white space between figures
+\end{figure*}
+
+Since the reference controller is too aggressive, the reference signal overshoots and oscillates significantly before settling.
+In contrast, the adapter counters this by bringing the target closer to the current state.
+This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target\footnote{Rather, the labeled $\Delta = x_d - x_{t+5}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+5}$.
+Therefore, upon receiving the input feature $[x_t, x_d]$ (representing $x_d$ being reached from $x_t$ within 5 timesteps), it produces and adapted target in between $x_t$ and $x_d$.
+As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, gently guiding the system towards this desired state.
 
 \begin{figure}[htb]
     \centering
@@ -122,10 +162,18 @@ As the simulation progresses, the parameters of the dynamic system are slowly ch
     \vspace*{1em} % Add white space between figures
 \end{figure}
 
+\begin{figure}[htb]
+    \centering
+    \small\selectfont\input{Thesis/figures/method/toy_plot_damped_closeup.pgf}
+    \caption{}
+    \label{fig:toy-plot-damped-closeup}
+    \vspace*{1em} % Add white space between figures
+\end{figure}
+
 \begin{figure*}[htb]
     \centering
-    \input{Thesis/figures/method/toy_plot.pgf}
+    \input{Thesis/figures/method/toy_plot_damped.pgf}
     \caption{}
-    \label{fig:toy-plot}
+    \label{fig:toy-plot-damped}
     \vspace*{1em} % Add white space between figures
 \end{figure*}
