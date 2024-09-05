@@ -27,18 +27,20 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    # system = System(5, 20, 87, 5)
+    # system = System(1, 5000, 1, 5)
     # system = System(5, 20, 10, 5)
-    system = System(1, 5000, 1, 5)
+    system = System(5, 20, 87, 5)
+
     # Define controller
-    controller = PIDController(2500, 100, 10200)
-    # controller = PIDController(300, 10, 50)
-    # controller = PIDController(300, 40, 5)
+    # controller = PIDController(2500, 100, 10200)
+#     controller = PIDController(300, 10, 50)
+    controller = PIDController(300, 40, 5)
 
     # Define reference controller
-    reference_controller = PIDController(2500, 100, 10200)
-    #     controller = PIDController(300, 10, 50)
-    # reference_controller = PIDController(300, 40, 5)
+    # reference_controller = PIDController(2500, 100, 10200)
+#     reference_controller = PIDController(300, 10, 50)
+    reference_controller = PIDController(300, 40, 5)
+
     # Setup KB
     use_kb = False
     load_kb = False
@@ -281,15 +283,15 @@ def main():
 
     plt.style.use('tableau-colorblind10')
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    # mpl.use("pgf")
-    # mpl.rcParams.update({
-    #     "pgf.texsystem": "xelatex",
-    #     'font.size': 8,
-    #     'text.usetex': True,
-    #     'pgf.rcfonts': False,
-    #     "pgf.preamble": r"\usepackage{amsmath}"
-    #                     r"\usepackage{lmodern}"
-    # })
+    mpl.use("pgf")
+    mpl.rcParams.update({
+        "pgf.texsystem": "xelatex",
+        'font.size': 8,
+        'text.usetex': True,
+        'pgf.rcfonts': False,
+        "pgf.preamble": r"\usepackage{amsmath}"
+                        r"\usepackage{lmodern}"
+    })
     tex_line_width = 3.48
     tex_text_width = 7.17
 
@@ -316,8 +318,8 @@ def main():
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]", fontsize=7)
     ax[0].tick_params(axis='both', labelsize=6)
-    # ax[0].set_xlim(49, 56)
-    # ax[0].set_ylim(5)
+    ax[0].set_xlim(49, 56)
+    ax[0].set_ylim(8, 12)
 
     ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (2, 2)), color=colors[1], linewidth=1)
     u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.5)
@@ -325,6 +327,9 @@ def main():
     ax[1].set_ylabel("Force [N]", fontsize=7)
     ax[1].set_xlabel("Time [s]", fontsize=7)
     ax[1].tick_params(axis='both', labelsize=6)
+
+    if mpl.get_backend() != 'pgf':
+        fig.suptitle(f"{seed}")
 
     if use_kb:
         selection_lines = ax[2].plot(t_reference_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
@@ -345,8 +350,8 @@ def main():
                        "Control"],
                loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.12))
     fig.tight_layout()
-    # fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
-    #             dpi=300, bbox_inches='tight')
+    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_damped_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+                dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -356,7 +361,7 @@ if __name__ == '__main__':
 
     model_location = 'tmp/varautoencoder.keras'
     # seed = np.random.randint(0, 1000)
-    seed = 709
+    seed = 921
     print(f"Seed: {seed}")
     np.random.seed(seed)
     keras.utils.set_random_seed(seed)
