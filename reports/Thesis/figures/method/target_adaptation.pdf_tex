@@ -54,11 +54,12 @@
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{target_adaptation.pdf}}%
-    \put(0.32841945,0.00742943){\color[rgb]{0,0,0}\makebox(0,0)[t]{\lineheight{1.25}\smash{\begin{tabular}[t]{c}$x_{t}$\end{tabular}}}}%
+    \put(0.32841945,0.00742943){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t}$\end{tabular}}}}%
     \put(0.66667677,0.30127089){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t + \textit{window}}$\end{tabular}}}}%
     \put(-0,0.45657114){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{target}\end{tabular}}}}%
-    \put(0.75129313,0.41108475){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\bigr\}\Delta$\end{tabular}}}}%
+    \put(0.291497,0.40427076){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Bigr\}\Delta$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{target_adaptation.pdf}}%
     \put(-0,0.01301578){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{signal}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=3]{target_adaptation.pdf}}%
   \end{picture}%
 \endgroup%

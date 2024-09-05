@@ -126,7 +126,7 @@ The pseudo algorithm for the implementation can be found in~\cref{alg:toy-proble
 \end{algorithm}
 
 \subsection{Preliminary Results}\label{subsec:preliminary-results}
-The toy problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend.  % TODO: cite python and packages?
+The toy problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend. % TODO: cite python and packages?
 The simulation ran for 60 seconds at 50 Hz.
 The target was changed Every 5 seconds, and the adapter was trained fully online, updating every 15 seconds.
 A prediction window of 10 timesteps was set for the adapter, meaning that it's input features during training consisted of $[x_t, x_{t+10}]$.
@@ -180,7 +180,7 @@ The result of the simulation can be found in~\cref{fig:toy-plot-damped}.
 
 Once more, the adapter is able to improve the controller's performance after just a single update.
 In~\cref{fig:toy-plot-damped-closeup} it can be seen that the adapted target is adjusted away from the current state.
-This is because input features created from the data in the buffer frequently include state pairs $x_t,\, x_{t+10}$ where the target $x_d$ is positioned further from $x_t$ than it is from $x_{t+10}$.
+This is because training features created from the data in the buffer frequently include state pairs $x_t,\, x_{t+10}$ where the target $x_d$ is positioned further from $x_t$ than it is from $x_{t+10}$.
 As a result, the adapter learns to predict adaptations that would move $x_d$ farther from $x_t$, making the controller more aggressive.
 Another effect of the adapter is the consistent offset applied to the target:
 In the training features, the adapter regularly encounters pairs $x_t, \, x_{t+10} = x_t$, which appear to represent the target state being reached, even though $x_{t+10}\neq x_d$.
