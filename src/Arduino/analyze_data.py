@@ -37,9 +37,9 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter 2",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\wo adapter",      # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\wo adapter",      # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",     # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",     # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
@@ -48,6 +48,7 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <--
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
+    "Dynamics data\\150-50 perforation\\",
     # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <--
     # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- (auto_save_4 accidentally cut short)
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",

@@ -27,18 +27,20 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    # system = System(5, 20, 87, 5)
-    # system = System(5, 20, 10, 5)
     system = System(1, 5000, 1, 5)
+    # system = System(5, 20, 10, 5)
+    # system = System(5, 20, 87, 5)
+
     # Define controller
     controller = PIDController(2500, 100, 10200)
-    # controller = PIDController(300, 10, 50)
-    # controller = PIDController(300, 40, 5)
+#     controller = PIDController(300, 10, 50)
+#     controller = PIDController(300, 40, 5)
 
     # Define reference controller
     reference_controller = PIDController(2500, 100, 10200)
-    #     controller = PIDController(300, 10, 50)
-    # reference_controller = PIDController(300, 40, 5)
+#     reference_controller = PIDController(300, 10, 50)
+#     reference_controller = PIDController(300, 40, 5)
+
     # Setup KB
     use_kb = False
     load_kb = False
@@ -66,8 +68,10 @@ def main():
     true_target_list = []
     x0 = [9.9, 0]  # 9.9 was found to be the steady state
     x0_reference = [9.9, 0]
-    train_interval = 15
+    train_interval = 5
     update_interval = 60
+    buffer_budget = 15
+    start_updating = False
     kb_step = 5
     # t_change = np.random.randint(train_interval, t_end - train_interval)
 
@@ -89,7 +93,8 @@ def main():
     # Simulation loop
     for ti in t:
         print(f"\rt =  {ti:.0f}", end="")
-        if ti > 30:
+        if ti >= buffer_budget:
+            start_updating = True
             buffer.pop(0)
             true_target_list.pop(0)
 
@@ -110,15 +115,13 @@ def main():
         #     system.l0 /= 3
 
         # Control loop
-        noise = np.random.normal([0, 0], [0.025, 0], 2)
-        noise2 = np.random.normal([0, 0], [0.025, 0], 2)
-        x0 += noise
+        noise = np.random.normal([0, 0], [0.02, 0], 2)
         delta_target = adapter.predict(ops.array([*x0, *target])[None], verbose=0)[0]
         predicted_target = target + delta_target
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
-        x = system.response(x0, control_action, do_update=True) + noise2
+        x = system.response(x0, control_action, do_update=True) + noise
         signal.append(x)
         x0 = x
 
@@ -126,7 +129,7 @@ def main():
         x0_reference += noise
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
-        x_reference = system.response(x0_reference, reference_control, do_update=True) + noise2
+        x_reference = system.response(x0_reference, reference_control, do_update=True) + noise
         reference_signal.append(x_reference)
         x0_reference = x_reference
 
@@ -134,7 +137,7 @@ def main():
         buffer.append([*x0, control_action, *x, *predicted_target])
 
         # Adapter update step
-        if ti % train_interval == 0 and ti != 0:
+        if ti % train_interval == 0 and ti != 0 and start_updating:
             t_train.append(ti)
             adapter.optimizer.lr = 1.e-3
             buffer_array = ops.array(buffer)
@@ -297,17 +300,17 @@ def main():
                            figsize=(tex_line_width, 0.67 * tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
                            sharex=True)
 
-    if use_kb:
-        for ax_i in ax:
-            for t_trn in t_train:
-                ax_i.axvline(t_trn, color='tab:gray', linestyle=':', alpha=0.33)
-            for t_update in t_updates:
-                ax_i.axvline(t_update, color='lightgrey', linestyle='-')
-            for t_kb in t_kb_selection:
-                ax_i.axvline(t_kb, color='tab:green', linestyle='--')
-            for t_tres in t_trespassing:
-                ax_i.axvline(t_tres, color='tab:red', linestyle=':')
-            ax_i.axvline(t_change, color='r', linestyle='-')
+    # if use_kb:
+    #     for ax_i in ax:
+    #         for t_trn in t_train:
+    #             ax_i.axvline(t_trn, color='tab:gray', linestyle=':', alpha=0.33)
+    #         for t_update in t_updates:
+    #             ax_i.axvline(t_update, color='lightgrey', linestyle='-')
+    #         for t_kb in t_kb_selection:
+    #             ax_i.axvline(t_kb, color='tab:green', linestyle='--')
+    #         for t_tres in t_trespassing:
+    #             ax_i.axvline(t_tres, color='tab:red', linestyle=':')
+    #         ax_i.axvline(t_change, color='r', linestyle='-')
 
     ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=.75)
     ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1)
@@ -355,8 +358,8 @@ if __name__ == '__main__':
     os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
     model_location = 'tmp/varautoencoder.keras'
-    # seed = np.random.randint(0, 1000)
-    seed = 709
+    seed = np.random.randint(0, 1000)
+    # seed = 802
     print(f"Seed: {seed}")
     np.random.seed(seed)
     keras.utils.set_random_seed(seed)
