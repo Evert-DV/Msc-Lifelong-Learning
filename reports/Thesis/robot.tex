@@ -1,0 +1,45 @@
+As mentioned in \cref{sec:background}\todo{discuss this in \cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
+To evaluate the method described in \cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
+\Cref{fig:nomenclature,fig:robot} provide important nomenclature for reference.
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \missingfigure[figwidth=0.9\linewidth]{Outside view of the robot with nomenclature labels}
+        \begin{multicols}{2}
+            \begin{enumerate}
+                \hypertarget{kos}{\item KOS}
+                \item \hypertarget{actuation}{actuation unit}
+                \item link
+                \item servo
+            \end{enumerate}
+        \end{multicols}
+        \caption{}
+        \label{fig:nomenclature}
+        \vspace*{1em}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \missingfigure[figwidth=0.9\linewidth]{Inside view of the robot with nomenclature labels}
+        \begin{multicols}{2}
+            \begin{enumerate}
+              \setcounter{enumi}{4}
+              \item some other part
+            \end{enumerate}
+        \end{multicols}
+        \caption{}
+        \label{fig:robot}
+    \end{subfigure}
+    \caption{}
+    \label{fig:robot-overview}
+\end{figure}
+
+The robot is a simple crawler consisting of two \hyperlink{kos}{Kresling origami springs (KOS)} that are mirror images of each other, connected in series, with the \hyperlink{actuation}{actuation unit} in between.
+Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet''.
+For the purpose of demonstrating target adaptation, however, the movement of the robot as a whole is not very interesting.
+Rather, the state of the KOSs is the state that will be controlled.
+Since, a KOS can be actuated both by linear motion (pushing or pulling) and by rotational motion (twisting), and the two motions are directly related (\cref{subsec:kresling-origami})\todo{\cref{subsec:kresling-origami}}, a contracting or expanding motion can be measured as the angle of the KOS' twist.
+
+
+

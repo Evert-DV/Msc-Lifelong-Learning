@@ -6,14 +6,16 @@
 \usepackage{amsmath}
 \usepackage{bm}
 \usepackage{graphicx}
+\usepackage{multicol}
 \usepackage{lipsum}
 \usepackage{pgf}
 \usepackage{fontspec}
 \usepackage{subcaption}
 \usepackage{float}
 \usepackage{booktabs}
-\usepackage[section]{placeins}
+\usepackage{placeins}
 \usepackage[ruled]{algorithm2e}
+\usepackage{hyperref}
 \usepackage{cleveref}
 
 
@@ -28,11 +30,14 @@
 \AtEndEnvironment{figure*}{\let\sffamily\relax}
 \AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
 
+\setlength{\marginparwidth}{1.1cm}
+
 \addbibresource{Thesis/library.bib}
 \graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}}
 
 
-\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
+\title{Lifelong Learning for a Kresling-Origami Robot:\\
+{\LARGE A Plug-and-play Module for Supervised Learning of Target Adaptations}}
 \author{E. De Vroey}
 \date{\today}
 
@@ -40,36 +45,36 @@
     \maketitle
 
     \begin{abstract}
-        \lipsum[1]
+        \ldots
     \end{abstract}
 
     \section{Introduction}\label{sec:introduction}
     \input{Thesis/introduction}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{Background}\label{sec:background}
     \input{Thesis/background}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{Methodology}\label{sec:methodology}
     \input{Thesis/method}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{A Kresling Origami Robot}\label{sec:origami-robot}
     \input{Thesis/robot}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{Experiments and Results}\label{sec:results}
     \input{Thesis/results}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{Limitations}\label{sec:limitations}
     \input{Thesis/improvements}
-    \FloatBarrier
+%    \FloatBarrier
 
     \section{Discussion}\label{sec:discussion}
     \input{Thesis/discussion}
-    \FloatBarrier
+%    \FloatBarrier
 
     \printbibliography
 
