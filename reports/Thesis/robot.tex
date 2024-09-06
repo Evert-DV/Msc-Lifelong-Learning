@@ -1,45 +1,66 @@
 As mentioned in \cref{sec:background}\todo{discuss this in \cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
 To evaluate the method described in \cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
-\Cref{fig:nomenclature,fig:robot} provide important nomenclature for reference.
+\Cref{fig:robot-overview} provides important nomenclature for reference.
 
 \begin{figure}
+    \newcounter{annotations}
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
         \missingfigure[figwidth=0.9\linewidth]{Outside view of the robot with nomenclature labels}
         \begin{multicols}{2}
+            \small
             \begin{enumerate}
-                \hypertarget{kos}{\item KOS}
-                \item \hypertarget{actuation}{actuation unit}
-                \item link
-                \item servo
+                \item KOS               \label{item:kos}
+                \item Actuation module  \label{item:actuation}
+                \item Actuation arm     \label{item:arm}
+                \item Connecting link   \label{item:link}
+                \item Eye screw         \label{item:eye}
+                \item Arduino           \label{item:arduino}
+                \setcounter{annotations}{\value{enumi}}
             \end{enumerate}
         \end{multicols}
-        \caption{}
-        \label{fig:nomenclature}
+        \caption{The Kresling origami robot.}
+        \label{fig:nomen-robot}
         \vspace*{1em}
     \end{subfigure}
     \begin{subfigure}[b]{\linewidth}
         \centering
         \missingfigure[figwidth=0.9\linewidth]{Inside view of the robot with nomenclature labels}
         \begin{multicols}{2}
+            \small
             \begin{enumerate}
-              \setcounter{enumi}{4}
-              \item some other part
+                \setcounter{enumi}{\value{annotations}}
+                \item Servo motor   \label{item:servo}
+                \item Servo arm     \label{item:servo-arm}
+                \item Metal spring  \label{item:spring}
+                \item Actuation arm
+                \item Angle sensor  \label{item:sensor}
+                \item Magnet        \label{item:magnet}
             \end{enumerate}
         \end{multicols}
-        \caption{}
-        \label{fig:robot}
+        \caption{Actuation mechanism.}
+        \label{fig:nomen-actuation}
     \end{subfigure}
-    \caption{}
+    \caption{Annotated views of the robot and its most important actuation mechanisms}
     \label{fig:robot-overview}
 \end{figure}
 
-The robot is a simple crawler consisting of two \hyperlink{kos}{Kresling origami springs (KOS)} that are mirror images of each other, connected in series, with the \hyperlink{actuation}{actuation unit} in between.
+The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation module (\ref{item:actuation}) in between.
 Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet''.
-For the purpose of demonstrating target adaptation, however, the movement of the robot as a whole is not very interesting.
+To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
 Rather, the state of the KOSs is the state that will be controlled.
-Since, a KOS can be actuated both by linear motion (pushing or pulling) and by rotational motion (twisting), and the two motions are directly related (\cref{subsec:kresling-origami})\todo{\cref{subsec:kresling-origami}}, a contracting or expanding motion can be measured as the angle of the KOS' twist.
 
+A KOS can be actuated both by linear motion (pushing or pulling) and by rotational motion (twisting).
+Since the two motions are directly related (\cref{subsec:kresling-origami})\todo{\cref{subsec:kresling-origami}}, a contracting or expanding motion can be measured as the angle of the KOS' twist.
+The twist is induced by turning a rotating arm (\ref{item:arm}) which is connected to the ends of the KOSs by two links (\ref{item:link}) that hook into eye-screws (\ref{item:eye}).
+To turn the arm, a micro servo motor (\ref{item:servo}) is employed.
+In the toy problem, the controller yields a force to exert on the system in order to reach the target position.
+However, most micro servo's come with a near perfect position controller built-in, which cannot be accessed or changed.
+Therefore, to bridge the gap between the simulation and the real-world implementation, the position output of the servo is converted to a force output by the use of a small, metal spring (\ref{item:spring}).
+The servo thus does not directly act on the actuation arm, but rotates a servo arm (\ref{item:servo-arm}) instead, which pulls the spring and thereby exerts a force on the actuation arm.
+As previously mentioned, the state of the KOS can be measured as the angle of twist, since it is directly related to its contraction.
+Likewise, assuming perfectly rigid links with negligible clearance between the hooks and eye-screws, the angle of twist is directly related to the angle of the actuation arm.
+This angle is measured using a contactless sensor (\ref{item:sensor}) that can measure the on-axis rotation of a small magnet (\ref{item:magnet}) attached to the actuation arm.
 
 
