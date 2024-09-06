@@ -7,12 +7,13 @@ To evaluate the method described in \cref{sec:methodology}, a robot was designed
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \missingfigure[figwidth=0.9\linewidth]{Outside view of the robot with nomenclature labels}
+        \def\svgwidth{0.9\linewidth}
+        \scriptsize\selectfont\input{Thesis/figures/robot/full_robot.pdf_tex}
+%        \missingfigure[figwidth=0.9\linewidth]{Outside view of the robot with nomenclature labels}
         \begin{multicols}{2}
             \small
             \begin{enumerate}
                 \item KOS               \label{item:kos}
-                \item Actuation module  \label{item:actuation}
                 \item Actuation arm     \label{item:arm}
                 \item Connecting link   \label{item:link}
                 \item Eye screw         \label{item:eye}
@@ -26,7 +27,9 @@ To evaluate the method described in \cref{sec:methodology}, a robot was designed
     \end{subfigure}
     \begin{subfigure}[b]{\linewidth}
         \centering
-        \missingfigure[figwidth=0.9\linewidth]{Inside view of the robot with nomenclature labels}
+        \def\svgwidth{0.9\linewidth}
+        \scriptsize\selectfont\input{Thesis/figures/robot/actuation.pdf_tex}
+%        \missingfigure[figwidth=0.9\linewidth]{Inside view of the robot with nomenclature labels}
         \begin{multicols}{2}
             \small
             \begin{enumerate}
@@ -34,7 +37,6 @@ To evaluate the method described in \cref{sec:methodology}, a robot was designed
                 \item Servo motor   \label{item:servo}
                 \item Servo arm     \label{item:servo-arm}
                 \item Metal spring  \label{item:spring}
-                \item Actuation arm
                 \item Angle sensor  \label{item:sensor}
                 \item Magnet        \label{item:magnet}
             \end{enumerate}
@@ -46,7 +48,7 @@ To evaluate the method described in \cref{sec:methodology}, a robot was designed
     \label{fig:robot-overview}
 \end{figure}
 
-The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation module (\ref{item:actuation}) in between.
+The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation mechanism in between.
 Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet''.
 To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
 Rather, the state of the KOSs is the state that will be controlled.
