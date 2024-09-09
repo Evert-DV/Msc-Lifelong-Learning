@@ -16,7 +16,7 @@ The model is then provided with pairs of system states, spaced by a certain time
 From these pairs, the model infers the target it `believes' the controller aims to reach.
 However, instead of predicting the target directly, the model learns the difference $\bm{\Delta}$ between the target and the latter state in the pair (\cref{fig:target-adaptation,fig:adapter-train}).
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
@@ -46,7 +46,7 @@ In short, given a current state $\mathbf{x}_t$ and a future state $\mathbf{x}_{t
 Thus, when presented with $\mathbf{x}_t$ and $\mathbf{x}_{t+\textit{window}}=\mathbf{x}_d$ (supposedly reached within the time window) it provides the (adapted) target that would ``push'' the controller toward that result.
 A full overview is presented in~\cref{fig:deployed,fig:diagram}.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
@@ -75,7 +75,7 @@ To explore the proposed method, a toy problem is considered first.
 The toy problem consists of a simulation of a simple 1D mass-spring-damper system (\cref{fig:toy-setup}) and an imperfectly tuned PID controller.
 The mass is suspended in a hanging position with gravity acting on it continuously.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \def\svgwidth{0.33\linewidth}
     \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
@@ -97,7 +97,7 @@ As the simulation progresses, the parameters of the dynamic system are gradually
 %In addition, at a random point in time, a hard shift the system's parameters is introduced.
 The pseudo algorithm for the implementation can be found in~\cref{alg:toy-problem}.
 
-\begin{algorithm}[htb]
+\begin{algorithm}
     \SetAlgoLined
     \caption{Toy problem target adaptation}
     \label{alg:toy-problem}
@@ -137,7 +137,7 @@ For reference, a second controller and system were also simulated, identical to 
 To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
 
 \subsubsection{A case where the controller is too aggressive}
-\begin{figure*}[!htb]
+\begin{figure*}
     \centering
     \input{Thesis/figures/method/toy_plot.pgf}
     \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
