@@ -26,6 +26,11 @@ In this case, the servo's neutral position corresponds to a value of \SI{540}{\m
 It might thus be confusing to see the control input, the angle of the servo arm, denoted in a unit of time.
 For convenience, the \SI{540}{\micro\second} value relates to 0 degrees, and the \SI{1800}{\micro\second} limit corresponds to 125 degrees.
 
+Finally, during the experiments, the Arduino initialized a \emph{counter} value to include in the tuple sent to the computer.
+This counter starts at 0 and simply increments by 1 with each iteration of the Arduino's loop.
+Since the interactions between the Arduino and computer, as well as between the several threads on the computer, are independent of timing (i.e., the modules do not have to ``wait for each other''), the counter's value is essential to accurately plot the several signals recorded during the experiments.
+As a result, the elapsed time is unitless, but can be approximated by the fact that all modules aim to operate at \SI{50}{\hertz}, and an increment of 1 to the counter thus relates to approximately \SI{0.02}{\second}.
+
 \subsection{Experimental Setup}\label{subsec:experimental-setup}
 
 \subsection{Performance Metrics}\label{subsec:metrics}
