@@ -1,3 +1,33 @@
 %The \emph{Servo} \todo{cite} % TODO: cite
 %Arduino library uses the \texttt{writeMicroseconds(value)} function to write to the servo, which maps a servo's reach to a value between 700 and 2300 depending on the servo's manufacturer.  % TODO: have a subsection in experiments and results dedicated to clarifying values and units instead
 %In this case, the servo's datum corresponds to a value of 540 and the maximum mechanical limit (\cref{subsec:mechanical-details}) corresponds to approximately 1800.  \todo{ref \cref{subsec:mechanical-details} mechanical limit for arm and servo}  % TODO: ref mechanical limit for arm and servo
+
+
+\subsection{Sign Conventions and Unit Clarification}\label{subsec:sign-unit}
+Before the experiments and results can be properly understood, it is necessary to clarify certain sign and unit conventions.
+Most importantly, the contactless magnetic sensor denotes a clockwise rotation (as viewed from the top) w.r.t.~the datum as a positive angle, and likewise, a counterclockwise rotation as a decrement in the angle.\todo{cite arduino library}  % cite arduino library
+In practice, this means that a positive control input from the servo (i.e.~a positive angle) results in a decrement in $\theta$.
+The operational range of the actuation arm is thus fully in the negative domain.
+\Cref{fig:schematic} illustrates the servo arm and actuation arm in a configuration representative of a typical scenario during the experiments, with the signs of the angles indicated.
+
+\begin{figure}[htb]
+    \centering
+    \def\svgwidth{0.5\linewidth}
+    \footnotesize\selectfont\input{Thesis/figures/robot/schematic.pdf_tex}
+    \caption{Nominal signs of the angles for the servo and actuation arm during operation.}
+    \label{fig:schematic}
+\end{figure}
+
+In addition, The \emph{Servo} Arduino library uses the \texttt{writeMicroseconds(\emph{value})} function to write to the servo, which maps a servo's range to a value between 700 and \SI{2300}{\micro\second} depending on the servo's manufacturer.
+As such, \texttt{writeMicroseconds} provides more `resolution' than the common \texttt{write(\emph{angle})}, which works with integer values of angles in degrees. \todo{cite Servo library} % TODO: cite
+Note that the term \emph{microseconds} in this context does not refer to the angular unit of measurement \emph{arcseconds}.
+Instead, it relates to the pulse width in microseconds of the signal that the Arduino sends to the servo motor.
+In this case, the servo's neutral position corresponds to a value of \SI{540}{\micro\second} and the maximum mechanical limit (as discussed in \Cref{subsec:mechanical-details}) corresponds to approximately \SI{1800}{\micro\second}.
+It might thus be confusing to see the control input, the angle of the servo arm, denoted in a unit of time.
+For convenience, the \SI{540}{\micro\second} value relates to 0 degrees, and the \SI{1800}{\micro\second} limit corresponds to 125 degrees.
+
+\subsection{Experimental Setup}\label{subsec:experimental-setup}
+
+\subsection{Performance Metrics}\label{subsec:metrics}
+
+% a subsec per experiment

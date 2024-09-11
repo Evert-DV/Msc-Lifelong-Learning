@@ -8,7 +8,9 @@
 \usepackage[backend=biber, style=apa]{biblatex}
 \usepackage[mode=tex]{standalone}
 \usepackage[todonotes={textwidth=15mm, textsize=scriptsize}]{changes}
+\usepackage{siunitx}
 \usepackage{amsmath}
+\usepackage{etoolbox}
 \usepackage{bm}
 \usepackage{graphicx}
 \usepackage{multicol}
@@ -34,8 +36,6 @@
 \AtBeginEnvironment{figure*}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure*}{\let\sffamily\relax}
 \AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
-
-\AtBeginEnvironment{texttt}{\small}
 
 \setlength{\marginparwidth}{1.1cm}
 
@@ -81,11 +81,13 @@
 
     \section{Discussion}\label{sec:discussion}
     \input{Thesis/discussion}
-%    \FloatBarrier
 
     \printbibliography
+    \FloatBarrier
 
     \appendices
+    \renewcommand{\thefigure}{\Alph{section}.\arabic{figure}}
+    \preto\section{\setcounter{figure}{0}}
     \input{Thesis/appendix}
 
 \end{document}
