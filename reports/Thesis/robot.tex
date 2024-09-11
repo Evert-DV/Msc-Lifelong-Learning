@@ -64,60 +64,54 @@ Therefore, to bridge the gap between the simulation and the real-world implement
 The servo thus does not directly act on the actuation arm, but rotates a servo arm (\ref{item:servo-arm}) instead, which pulls the spring and thereby exerts a force on the actuation arm.
 As previously mentioned, the state of the KOS can be measured as the angle of twist, since it is directly related to its contraction.
 Likewise, assuming perfectly rigid links with negligible clearance between the hooks and eye-screws, the angle of twist is directly related to the angle of the actuation arm.
-This angle is measured using a contactless sensor (\ref{item:sensor}) that can measure the on-axis rotation of a small magnet (\ref{item:magnet}) attached to the actuation arm. \todo{discuss mechaical limit}  % TODO: mechanical limit
-
 In the full implementation, the robot's state $\mathbf{x}_t$ will thus be measured as the actuation arm's angular position and velocity $[\theta, \dot{\theta}]$.
-The sensor measures this state and sends the values to an Arduino Nano (\ref{item:arduino}) board, which runs a PID controller that returns the control action, i.e., an angular position for the servo.
+This angle is measured using a contactless sensor (\ref{item:sensor}) that can measure the on-axis rotation of a small magnet (\ref{item:magnet}) attached to the actuation arm.
+The sensor relays this information to an Arduino Nano (\ref{item:arduino}) board, which runs a PID controller that returns the control action, i.e., an angular position for the servo.
+The sensor measurement denotes a clockwise rotation (as viewed from the top) w.r.t.~the datum as a positive angle, and likewise, a counterclockwise rotation as a decrement in the angle.\todo{cite arduino library}  % cite arduino library
+In practice, this means that a positive control input from the servo (i.e.~a positive angle) results in a decrement in $\theta$.
+The operational range of the actuation arm is thus fully in the negative domain (\cref{fig:schematic}).
+Furthermore, there are mechanical limits for the rotation of both the actuation arm and servo arm, defined by the edge of the container housing the actuation mechanism and the supports holding the servo motor, respectively.
+However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
+
+\begin{figure}
+    \centering
+    \def\svgwidth{0.5\linewidth}
+    \footnotesize\selectfont\input{Thesis/figures/robot/schematic.pdf_tex}
+    \caption{Nominal signs of the angles for the servo and actuation arm during operation.}
+    \label{fig:schematic}
+\end{figure}
 
 \subsection{Software Implementation}\label{subsec:software-implement}
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
 
 \subsubsection{Nominal Control on the Arduino}
-Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its reference position (datum).
-The Arduino allows some time for the servo to reach its datum and then reads a first measurement of the angle sensor, setting this as the reference $\theta$.
+Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its datum position.
+The Arduino allows some time for the servo to reach its datum and then reads a first measurement of the angle sensor, setting this as the reference $\theta=0$.
 During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
-Based on these measurements, the PID controller computes the value to be written to the servo.
+Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\cref{subsec:mechanical-details}).
 The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
 Finally, it sends the tuple containing the state, action, resulting state, and target to the external computer.
 
 \subsubsection{Target Adaptation on the External Computer}
-The target adaptation and supervised learning is implemented exclusively on the external computer through the established connection with the Arduino.
+The target adaptation and supervised learning are implemented exclusively on the external computer through the established connection with the Arduino.
 The program is divided into several modules or \emph{threads} that run simultaneously.
-This way, values that need to be sent or read can be updated in the background upon request, without delaying the operations of other modules.
-For example, the sole task of the \texttt{send\_value} thread is to read the value of a global variable representing the target state and send this to the Arduino.
-The \texttt{listen} thread reads the tuple sent in return by the Arduino and assigns its contents to the respective shared variables for the state, control action, resulting state and target.
-It then adds this tuple to the buffer used for updating the adapter model.
-The \texttt{change\_value} thread is responsible for setting the \emph{true} target in the control loop, as well as the actual adaptations to it.
-At regular predefined intervals, it changes the true target $\theta_d$ to some value.
-Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
+This way, values that need to be sent or read can be updated in the background upon request, without delaying the operations of other modules (see~\cref{fig:code-diagram} for reference). \todo{possibly move this picture (and subsection) to an appendix}
 
 \begin{figure}
     \centering
     \def\svgwidth{\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/robot/code_diagram.pdf_tex}
-    \caption{}
-    \label{fig:}
+    \caption{The interaction between the modules and shared variables of the computer (blue) and Arduino (red).}
+    \label{fig:code-diagram}
 \end{figure}
 
-
-\begin{table}
-    \centering
-    \caption{}
-    \label{tab:}
-    \begin{tabular}{lll}
-        \toprule
-        Module                 & Reads from          & Writes to               \\
-        \midrule
-        Arduino                & Robot               & $x, \, x^{*}$           \\
-        \texttt{send\_value}   & $x^{*}_d$           & Arduino                 \\
-        Arduino                & PC                  & $x_d$                   \\
-        \texttt{PID}           & $x, \, x_d$         & $u$                     \\
-        Arduino                & $u$                 & Robot                   \\
-        \texttt{listen}        & Arduino             & $x^{*}$, buffer         \\
-        \texttt{change\_value} & $x^{*}, \, x^{*}_d$ & $\hat{x}_d, \, x^{*}_d$ \\
-        \texttt{update}        & buffer              & adapter                 \\
-        \bottomrule
-
-    \end{tabular}
-\end{table}
-
+For example, the sole task of the \texttt{send} thread is to read the value of a global variable representing the target state and send this to the Arduino.
+The \texttt{listen} thread reads the tuple sent in return by the Arduino and assigns its contents to the respective shared variables for the state, control action, resulting state and target.
+It then adds this tuple to the buffer used for updating the adapter model.
+The \texttt{update} thread is responsible for (re)training the adapter.
+It creates a copy of the adapter, which can then be trained in the background while the original adapter remains functional.
+Once training is completed, the copied adapter's weights are assigned to the original adapter.
+The \texttt{change\_value} thread is responsible for setting the \emph{true} target in the control loop, as well as the actual adaptations to it.
+At regular predefined intervals, it changes the true target $\theta_d$ to some value.
+Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
+The resulting predicted $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
