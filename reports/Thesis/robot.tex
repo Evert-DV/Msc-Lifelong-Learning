@@ -74,8 +74,8 @@ However, the design is such that the servo's mechanical limit corresponds to a $
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
 
 \subsubsection{Nominal Control on the Arduino}
-Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its datum position.
-The Arduino allows some time for the servo to reach its datum and then reads a first measurement of the angle sensor, setting this as the reference $\theta=0$.
+Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its minimum position.
+The Arduino allows some time for the servo to reach this home position and then reads a first measurement from the angle sensor, setting this as the reference $\theta=0$.
 During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
 Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\Cref{subsec:mechanical-details}).
 The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
@@ -88,5 +88,5 @@ This way, values that need to be sent or read can be updated in the background u
 At regular predefined intervals, a \texttt{change\_value} thread changes the true target $\theta_d$ to some value.
 Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
 The resulting predicted $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
-A buffer of approximately 1 minute is maintained by storing the tuples received from the Arduino.
+The buffer is maintained by storing the tuples received from the Arduino.
 Upon train-time, the adapter weights are updated in the background, without interrupting the adapter's performance.
