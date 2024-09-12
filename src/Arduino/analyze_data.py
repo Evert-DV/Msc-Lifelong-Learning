@@ -7,15 +7,16 @@ from matplotlib import pyplot as plt
 
 plt.style.use('tableau-colorblind10')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-# mpl.use("pgf")
-# mpl.rcParams.update({
-#     "pgf.texsystem": "xelatex",
-#     'font.size': 8,
-#     'text.usetex': True,
-#     'pgf.rcfonts': False,
-#     "pgf.preamble": r"\usepackage{amsmath}"
-#                     r"\usepackage{lmodern}"
-# })
+mpl.use("pgf")
+mpl.rcParams.update({
+    "pgf.texsystem": "xelatex",
+    'font.size': 8,
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    "pgf.preamble": r"\usepackage{amsmath}"
+                    r"\usepackage{lmodern}"
+                    r"\usepackage{siunitx}"
+})
 tex_line_width = 3.48
 tex_text_width = 7.17
 
@@ -23,8 +24,8 @@ root = os.getcwd() + '\\..\\..\\'
 data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",           # <-- varying perf, auto_save_10 is filtered here
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",            # <-- varying perf
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
@@ -48,8 +49,8 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID (auto_save_4 accidentally cut short)
+    "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
+    "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID (auto_save_4 accidentally cut short)
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
@@ -59,8 +60,8 @@ data_folders = [
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf
 ]
-file_name = "auto_save_0"
-file = f"{data_folders[0]}/{file_name}.npy"
+file_name = "auto_save_2"
+file = f"{data_folders[1]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -172,44 +173,47 @@ def metrics(file, do_print=True, do_plot=True):
 def plot_file():
     global mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca
 
-    signal_fig, signal_ax = plt.subplots(3, 1, figsize=(
-        tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
+    signal_fig, signal_ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, figsize=(
+        tex_line_width, 0.67 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
-    signal_ax[0].plot(count, targets, '--', color=colors[-1], label="Adapted target")
-    signal_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
-    signal_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
-    signal_ax[0].legend(fontsize=8, loc='upper left')
-    signal_ax[0].set_ylabel("Angle [deg]")
+    target_lines, = signal_ax[0].plot(count, targets, linestyle=(0, (3, 1)), color=colors[3], linewidth=.5, label="Adapted target")
+    truetarget_lines, = signal_ax[0].plot(count, true_targets, linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1, label="True target")
+    signal_lines, = signal_ax[0].plot(count, beta, color=colors[0], linewidth=.75, marker='.', markersize=1, label="Signal")
+    signal_ax[0].set_ylabel("$\\theta$ [deg]")
 
-    signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=3)
-    signal_ax[1].set_ylabel("Angular velocity [deg/s]")
+    # signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=2, lw=.5)
+    # signal_ax[1].set_ylabel("Angular velocity [deg/s]")
 
-    signal_ax[2].plot(count, control_action, color=colors[5], marker='.', markersize=3)
-    signal_ax[2].set_xlabel("Count")
-    signal_ax[2].set_ylabel("Control action [-]")
+    signal_ax[1].plot(count, control_action, color=colors[5], linewidth=.5, marker='.', markersize=1)
+    signal_ax[1].set_xlabel("Count")
+    signal_ax[1].set_ylabel("$u$ [\si{\micro\second}]")
+
+    signal_ax[0].set_xlim([34500, 35700])
+    signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
+                     fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
 
     signal_fig.tight_layout()
-    plt.savefig(f'{root}\\tmp\\signal.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    plt.savefig(f'{root}\\tmp\\signal.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
 
-    ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
-        tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
-
-    ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
-    ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
-    ise_ax[0].legend(fontsize=8, loc='upper left')
-    ise_ax[0].set_ylabel("Angle [deg]")
-
-    ise_ax[1].plot(count, ae, color=colors[5], label='Error')
-    ise_ax[1].plot(count, cae, color=colors[1], label='Moving average')
-    ise_ax[1].legend(fontsize=8, loc='upper left')
-    ise_ax[1].set_ylabel("Absolute error [deg]")
-
-    ise_ax[2].plot(count[1:], iae, color=colors[5])
-    ise_ax[2].set_xlabel("Count")
-    ise_ax[2].set_ylabel("Integral of absolute error [deg]")
-
-    ise_fig.tight_layout()
-    plt.savefig(f'{root}\\tmp\\ise.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
+    #     tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
+    #
+    # ise_ax[0].plot(count, beta, color=colors[0], marker='.', markersize=3, label="System response")
+    # ise_ax[0].plot(count, true_targets, '--', color=colors[6], label="True target")
+    # ise_ax[0].legend(fontsize=8, loc='upper left')
+    # ise_ax[0].set_ylabel("Angle [deg]")
+    #
+    # ise_ax[1].plot(count, ae, color=colors[5], label='Error')
+    # ise_ax[1].plot(count, cae, color=colors[1], label='Moving average')
+    # ise_ax[1].legend(fontsize=8, loc='upper left')
+    # ise_ax[1].set_ylabel("Absolute error [deg]")
+    #
+    # ise_ax[2].plot(count[1:], iae, color=colors[5])
+    # ise_ax[2].set_xlabel("Count")
+    # ise_ax[2].set_ylabel("Integral of absolute error [deg]")
+    #
+    # ise_fig.tight_layout()
+    # plt.savefig(f'{root}\\tmp\\ise.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     if kb_plot:
         kb_fig, kb_ax = plt.subplots(2, 1, figsize=(
