@@ -129,10 +129,10 @@ The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-proble
 
 \subsection{Preliminary Results}\label{subsec:preliminary-results}
 The toy problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend. % TODO: cite python and packages?
-The simulation ran for 60 seconds at 50 Hz.
-The target was changed Every 5 seconds, and the adapter was trained fully online, updating every 15 seconds.
+The simulation ran for \SI{60}{\second} at \SI{50}{\hertz}.
+The target was changed every \SI{5}{\second}, and the adapter was trained fully online, updating every \SI{15}{\second}.
 Training features were created for multiple prediction windows, this means the training features consisted of pairs $[\mathbf{x}_t, \mathbf{x}_{t+\textit{window}}]$ for windows of 3, 5, 10, 15, and 25.
-The buffer's budget corresponded to the past 30 seconds of data.
+The buffer's budget corresponded to the past \SI{30}{\second} of data.
 For reference, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
 To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
 
@@ -142,7 +142,7 @@ To both the reference and adapted signal, a small amount of Gaussian noise was a
     \input{Thesis/figures/method/toy_plot.pgf}
     \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
     Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
-    During the first 15 seconds (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
+    During the first \SI{15}{\second} (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
     \label{fig:toy-plot}
     \vspace*{1em} % Add white space between figures
 \end{figure*}
