@@ -1,10 +1,10 @@
 For each experiment, a minimum of two sets of KOSs was required:
 One set serving as a reference and baseline, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
-All experiments used a \SI{60}{\second} buffer and \SI{15}{\second} intervals between updates, with the first update at \SI{60}{\second}.
+All experiments used a 60\si{\second} buffer and 15\si{\second} intervals between updates, with the first update at 60\si{\second}.
 The adapter trained on prediction windows of 3, 5, 10, 15, and 25 steps.
-The true target, with values depending on the experiment, was updated every \SI{5}{\second}, following a predefined random sequence.
-This sequence amounts to \SI{5}{\minute} of deployment time and is repeated according to the full experiment duration.
-The signals corresponding to each \SI{5}{\minute} sequence are recorded and saved for evaluation.
+The true target, with values depending on the experiment, was updated every 5\si{\second}, following a predefined random sequence.
+This sequence amounts to 5\si{\minute} of deployment time and is repeated according to the full experiment duration.
+The signals corresponding to each 5\si{\minute} sequence are recorded and saved for evaluation.
 This way, the evolution of the performance metrics can be studied, and a fair comparison between the reference controller and adapted controller is ensured.
 \Cref{fig:test-setup} shows the general experimental setup.
 
@@ -25,30 +25,30 @@ Because the actuation arm's calibration point is set when the servo is at its mi
 \begin{figure}[htb]
     \centering
     \def\svgwidth{0.5\linewidth}
-    \footnotesize\selectfont\input{Thesis/figures/robot/schematic.pdf_tex}
+    \footnotesize\selectfont\input{Thesis/figures/setup/schematic.pdf_tex}
     \caption{Nominal signs of the angles for the servo and actuation arm during operation.}
     \label{fig:schematic}
 \end{figure}
 
-In addition, The \emph{Servo} Arduino library uses the \texttt{writeMicroseconds(\emph{value})} function to write to the servo, which maps a servo's range to a value between 1000 and \SI{2000}{\micro\second} depending on the servo's manufacturer.
+In addition, The \emph{Servo} Arduino library uses the \texttt{writeMicroseconds(\emph{value})} function to write to the servo, which maps a servo's range to a value between 1000 and 2000\si{\micro\second} depending on the servo's manufacturer.
 As such, \texttt{writeMicroseconds} provides more `resolution' than the common \texttt{write(\emph{angle})}, which works with integer values of angles in degrees. \todo{cite Servo library} % TODO: cite
 Note that the term \emph{microseconds} in this context does not refer in any way to the angular unit of measurement \emph{arcseconds}.
 Instead, it relates to the pulse width in microseconds of the signal that the Arduino sends to the servo motor.
-In this case, the servo's minimum position corresponds to a value of \SI{540}{\micro\second} and the maximum mechanical limit (as discussed in \Cref{subsec:mechanical-details}) corresponds to approximately \SI{1800}{\micro\second}.
+In this case, the servo's minimum position corresponds to a value of 540\si{\micro\second} and the maximum mechanical limit (as discussed in \Cref{subsec:mechanical-details}) corresponds to approximately 1800\si{\micro\second}.
 It might thus be confusing to see the control input, the angle of the servo arm, denoted in a unit of time.
-For convenience, the \SI{540}{\micro\second} value relates to 0 degrees, and the \SI{1800}{\micro\second} limit corresponds to 125 degrees.
+For convenience, the 540\si{\micro\second} value relates to 0 degrees, and the 1800\si{\micro\second} limit corresponds to 125 degrees.
 
 Finally, during the experiments, the Arduino initialized a \emph{counter} value to include in the tuple sent to the computer.
 This counter starts at 0 and simply increments by 1 with each iteration of the Arduino's loop.
 Since the interactions between the Arduino and computer, as well as between the several threads on the computer, are independent of timing (i.e., the modules do not have to ``wait for each other''), the counter's value is essential to accurately plot the several signals recorded during the experiments.
 As a result, the counter itself does not measure elapsed time directly, making it unitless.
-However, it can be used as a proxy for time, since all modules aim to operate at \SI{50}{\hertz}.
-This means that an increment of 1 in the counter corresponds to an estimated \SI{0.02}{\second}, allowing for the approximation of elapsed time based on the counter value.
+However, it can be used as a proxy for time, since all modules aim to operate at 50\si{\hertz}.
+This means that an increment of 1 in the counter corresponds to an estimated 0.02\si{\second}, allowing for the approximation of elapsed time based on the counter value.
 
 \subsection{Performance Metrics}\label{subsec:metrics}
-The performance metrics used to evaluate the \SI{5}{\minute} sequences are the mean rise time, mean settling time, mean overshoot, mean absolute error, integrated absolute error, mean absolute velocity, normalized total variance, and mean control action.
+The performance metrics used to evaluate the 5\si{\minute} sequences are the mean rise time, mean settling time, mean overshoot, mean absolute error, integrated absolute error, mean absolute velocity, normalized total variance, and mean control action.
 
-The mean rise time is calculated as the mean of all the rise times corresponding to each target in the \SI{5}{\minute} sequence.
+The mean rise time is calculated as the mean of all the rise times corresponding to each target in the 5\si{\minute} sequence.
 The rise time is defined as the time it takes the robot to come within 10\% of the target state, as calculated from the initial position.
 
 Similarly, the settling time is the average of the settling times for each target.

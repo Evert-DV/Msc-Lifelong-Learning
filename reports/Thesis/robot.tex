@@ -87,6 +87,6 @@ The program is divided into several modules or \emph{threads} that run simultane
 This way, values that need to be sent or read can be updated in the background upon request, without delaying the operations of other modules (see~\Cref{app:code-structure} for a more detailed breakdown of the interactions between various threads).
 At regular predefined intervals, a \texttt{change\_value} thread changes the true target $\theta_d$ to some value.
 Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
-The resulting predicted $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
+The resulting $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
 The buffer is maintained by storing the tuples received from the Arduino.
 Upon train-time, the adapter weights are updated in the background, without interrupting the adapter's performance.

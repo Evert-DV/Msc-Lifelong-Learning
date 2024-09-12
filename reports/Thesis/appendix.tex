@@ -3,7 +3,7 @@
 \begin{figure}[htb]
     \centering
     \def\svgwidth{\linewidth}
-    \footnotesize\selectfont\input{Thesis/figures/robot/code_diagram.pdf_tex}
+    \footnotesize\selectfont\input{Thesis/figures/appendix/code_diagram.pdf_tex}
     \caption{The interaction between the modules (rectangles) and shared variables (ovals) of the computer (blue) and Arduino (red).}
     \label{fig:code-diagram}
 \end{figure}
@@ -16,4 +16,4 @@ The \texttt{update} thread is responsible for (re)training the adapter.
 It creates a copy of the adapter, which can then be trained in the background while the original adapter remains functional.
 Once training is completed, the copied adapter's weights are assigned to the original adapter.
 The \texttt{change\_value} thread is responsible for setting the ``true'' target in the control loop, as well as the actual adaptations to it.
-All threads aim to operate at 50 Hz.
+All threads aim to operate at 50\si{\hertz}.
