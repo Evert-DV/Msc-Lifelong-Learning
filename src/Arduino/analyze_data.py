@@ -3,6 +3,7 @@ import pickle
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
+from botocore.compat import file_type
 from matplotlib import pyplot as plt
 
 plt.style.use('tableau-colorblind10')
@@ -22,16 +23,16 @@ tex_text_width = 7.17
 
 root = os.getcwd() + '\\..\\..\\'
 data_folders = [
-    "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
-    "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
+    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
+    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",     # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",      # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",     # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",      # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
@@ -288,7 +289,10 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
     x_ticks_list = []
     combined_ticks = set()
     for file_name in file_names:
-        x_ticks = [5 + 5 * int(file.split('_')[-1].strip('.npy')) for file in file_name]
+        if file_type == 'auto_save':
+            x_ticks = [5 + 5 * int(file.split('_')[-1].split('.')[0]) for file in file_name]
+        else:
+            x_ticks = [int(file.split('_')[-1].strip('.npy')) for file in file_name]
         x_ticks_list.append(x_ticks)
         combined_ticks.update(x_ticks)
 
@@ -300,12 +304,13 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
         avg_values_wo_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'wo adapter' in label], axis=0)
         avg_values_w_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'w adapter' in label], axis=0)
 
-        ax.plot(sorted(list(combined_ticks)), avg_values_wo_adapter, lw=.75, marker='.', markersize=2, color=colors[0])
-        ax.plot(sorted(list(combined_ticks)), avg_values_w_adapter, lw=.75, marker='.', markersize=2, color=colors[1])
+        for df, x_ticks, label in zip(dfs, x_ticks_list, short_labels):
+            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=.5, alpha=0.3, color=colors[1] if 'w adapter' in label else colors[0])
 
-        # for df, x_ticks, color in zip(dfs, x_ticks_list, colors):
-        #     ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=.75, marker='.', markersize=2, color=color)
-        skip_tick = len(combined_ticks) // 12
+        wo_adapter_lines, = ax.plot(sorted(list(combined_ticks)), avg_values_wo_adapter, lw=.75, marker='.', markersize=2, color=colors[0])
+        w_adapter_lines, = ax.plot(sorted(list(combined_ticks)), avg_values_w_adapter, lw=.75, marker='.', markersize=2, color=colors[1])
+
+        skip_tick = max(1, len(combined_ticks) // 12)
         ax.set_ylabel(header, fontsize=7)
         ax.set_xticks(sorted(list(combined_ticks))[::-skip_tick])
         ax.tick_params(axis='both', labelsize=6)
@@ -314,11 +319,7 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
     axes[-2].set_xlabel('Time [min]', fontsize=7)
     axes[-1].set_xlabel('Time [min]', fontsize=7)
 
-    # for ax in axes[len(metrics_headers):]:
-    #     fig.delaxes(ax)
-
-
-    fig.legend(["w/o adapter", "w/ adapter"], loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
+    fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
 
     fig.tight_layout()
     plot_file = os.path.join(save_folder, f'metrics_evolution.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
@@ -347,6 +348,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
     all_metrics = np.concatenate(all_metrics, axis=0)
     # all_metrics /= np.max(all_metrics, axis=0)
     all_metrics /= [5, 5, 25, 25, len(all_metrics) * 25, 8 * 60, 1800 / 1.9, 1800]
+    vmax = np.linalg.norm(np.ones(all_metrics.shape[-1]))
 
     # Find the longest common prefix
     common_prefix = os.path.commonpath(labels)
@@ -359,7 +361,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
             distances[i, j] = np.linalg.norm(metric_vec - metric_vec2, axis=-1)
 
     fig = plt.figure(figsize=(tex_line_width, 0.8 * tex_line_width) if mpl.get_backend() == 'pgf' else (10, 8))
-    cax = plt.imshow(distances, vmin=0, cmap='viridis', aspect='auto')
+    cax = plt.imshow(distances, vmin=0, vmax=vmax, cmap='viridis', aspect='auto')
     cbar = fig.colorbar(cax, label='metric distance')
     cbar.ax.tick_params(labelsize=6)
     cbar.ax.yaxis.label.set_size(6)
@@ -384,8 +386,8 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 
 def main():
-    metrics(file, do_print=True, do_plot=True)
-    compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
+    # metrics(file, do_print=True, do_plot=True)
+    compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
     # metrics_similarity(data_folders, file_type='ref_minute')
 
 
