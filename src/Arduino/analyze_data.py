@@ -25,16 +25,16 @@ root = os.getcwd() + '\\..\\..\\'
 data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",     # <-- limitations
-    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",      # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",  # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",  # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",       # <-- appendix?
@@ -45,24 +45,24 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
+    "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
+    "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",        # <-- varying perf
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
+    "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
+    "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",        # <-- varying perf
+    "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
+    "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
 ]
 file_name = "auto_save_5"
-file = f"{data_folders[1]}/{file_name}.npy"
+file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -168,7 +168,7 @@ def metrics(file, do_print=True, do_plot=True):
     if do_plot:
         plot_file()
 
-    return mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv, mca
+    return mean_rise_time, mean_settle_time, mean_overshoot, mae, iae[-1], mav, ntv, mca  #
 
 
 def plot_file():
@@ -177,9 +177,12 @@ def plot_file():
     signal_fig, signal_ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [3, 2]}, figsize=(
         tex_line_width, 0.67 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
-    target_lines, = signal_ax[0].plot(count, targets, linestyle=(0, (3, 1)), color=colors[3], linewidth=.5, label="Adapted target")
-    truetarget_lines, = signal_ax[0].plot(count, true_targets, linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1, label="True target")
-    signal_lines, = signal_ax[0].plot(count, beta, color=colors[0], linewidth=.75, marker='.', markersize=1, label="Signal")
+    target_lines, = signal_ax[0].plot(count, targets, linestyle=(0, (3, 1)), color=colors[3], linewidth=.5,
+                                      label="Adapted target")
+    truetarget_lines, = signal_ax[0].plot(count, true_targets, linestyle=(0, (6, 1)), color=colors[3], alpha=0.5,
+                                          linewidth=1, label="True target")
+    signal_lines, = signal_ax[0].plot(count, beta, color=colors[0], linewidth=.75, marker='.', markersize=1,
+                                      label="Signal")
     signal_ax[0].set_ylabel("$\\theta$ [deg]")
 
     # signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=2, lw=.5)
@@ -191,7 +194,7 @@ def plot_file():
 
     # signal_ax[0].set_xlim([34500, 35700])
     signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
-                     fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
+                      fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
 
     signal_fig.tight_layout()
     plt.savefig(f'{root}\\tmp\\signal.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
@@ -275,7 +278,7 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
     return excel_file
 
 
-def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
+def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='auto_save'):
     dfs = [pd.read_excel(file) for file in excel_files]
     metrics_headers = dfs[0]["Metric"].tolist()
     file_names = [df.columns[1:] for df in dfs]
@@ -296,41 +299,62 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
         x_ticks_list.append(x_ticks)
         combined_ticks.update(x_ticks)
 
-    fig, axes = plt.subplots(len(metrics_headers) // 2, 2,
+    fig, axes = plt.subplots((len(metrics_headers) + 1) // 2, 2,
                              figsize=(tex_text_width, len(metrics_headers) * 0.28 * tex_line_width / 2),
                              sharex=True)
     axes = axes.flatten()
     for ax, header in zip(axes, metrics_headers):
-        avg_values_wo_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'wo adapter' in label], axis=0)
-        avg_values_w_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'w adapter' in label], axis=0)
-
         for df, x_ticks, label in zip(dfs, x_ticks_list, short_labels):
-            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=.5, alpha=0.3, color=colors[1] if 'w adapter' in label else colors[0])
+            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], marker='.', markersize=1, lw=.5, alpha=0.25,
+                    color=colors[1] if 'w adapter' in label else colors[0])
 
-        wo_adapter_lines, = ax.plot(sorted(list(combined_ticks)), avg_values_wo_adapter, lw=.75, marker='.', markersize=2, color=colors[0])
-        w_adapter_lines, = ax.plot(sorted(list(combined_ticks)), avg_values_w_adapter, lw=.75, marker='.', markersize=2, color=colors[1])
+        # Determine the maximum length of the data
+        max_length_wo_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'wo adapter' in label])
+        max_length_w_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'w adapter' in label])
+
+        # Pad the shorter data arrays with NaN values
+        padded_data_wo_adapter = [
+            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_wo_adapter - df.shape[1]), constant_values=np.nan)
+            for df, label in zip(dfs, short_labels) if 'wo adapter' in label
+        ]
+        padded_data_w_adapter = [
+            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_w_adapter - df.shape[1]), constant_values=np.nan)
+            for df, label in zip(dfs, short_labels) if 'w adapter' in label
+        ]
+
+        # Calculate the averages, ignoring NaN values
+        avg_values_wo_adapter = np.nanmean(padded_data_wo_adapter, axis=0)
+        avg_values_w_adapter = np.nanmean(padded_data_w_adapter, axis=0)
+
+        # Plot the averages
+        wo_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_wo_adapter], avg_values_wo_adapter, lw=1., marker='.', markersize=2, color=colors[0])
+        w_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_w_adapter], avg_values_w_adapter, lw=1., marker='.', markersize=2, color=colors[1])
 
         skip_tick = max(1, len(combined_ticks) // 12)
         ax.set_ylabel(header, fontsize=7)
         ax.set_xticks(sorted(list(combined_ticks))[::-skip_tick])
         ax.tick_params(axis='both', labelsize=6)
 
-    # Set x-label for the last subplot in each column
-    axes[-2].set_xlabel('Time [min]', fontsize=7)
-    axes[-1].set_xlabel('Time [min]', fontsize=7)
+    for ax in axes[len(metrics_headers):]:
+        fig.delaxes(ax)
 
-    fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
+    # Set x-label for the last subplot in each column
+    axes[len(metrics_headers) - 2].set_xlabel('Time [min]', fontsize=7)
+    axes[len(metrics_headers) - 1].set_xlabel('Time [min]', fontsize=7)
+
+    fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left',
+               fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
 
     fig.tight_layout()
     plot_file = os.path.join(save_folder, f'metrics_evolution.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
-    plt.savefig(plot_file, dpi=300 , bbox_inches='tight')
+    plt.savefig(plot_file, dpi=300, bbox_inches='tight')
     # plt.show()
 
 
 def compare_metrics(data_folders, save_folder, file_type='auto_save'):
     excel_files = [make_xls(folder, file_type=file_type) for folder in data_folders]
-    plot_metrics_evolution(excel_files, save_folder)
+    plot_metrics_evolution(excel_files, save_folder, file_type)
 
 
 def metrics_similarity(data_folders, file_type='ref_minute'):
@@ -347,7 +371,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
     all_metrics = np.concatenate(all_metrics, axis=0)
     # all_metrics /= np.max(all_metrics, axis=0)
-    all_metrics /= [5, 5, 25, 25, len(all_metrics) * 25, 8 * 60, 1800 / 1.9, 1800]
+    all_metrics /= [5, 5, 25, 25, 25 * 50 * 60, 8 * 60, 1800 / 1.9, 1800]  # TODO: IAE normalization
     vmax = np.linalg.norm(np.ones(all_metrics.shape[-1]))
 
     # Find the longest common prefix
@@ -387,6 +411,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 def main():
     # metrics(file, do_print=True, do_plot=True)
+    compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
     compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
     # metrics_similarity(data_folders, file_type='ref_minute')
 
