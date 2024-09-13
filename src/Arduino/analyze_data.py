@@ -7,25 +7,25 @@ from matplotlib import pyplot as plt
 
 plt.style.use('tableau-colorblind10')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-mpl.use("pgf")
-mpl.rcParams.update({
-    "pgf.texsystem": "xelatex",
-    'font.size': 8,
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-    "pgf.preamble": r"\usepackage{amsmath}"
-                    r"\usepackage{lmodern}"
-                    r"\usepackage{siunitx}"
-})
+# mpl.use("pgf")
+# mpl.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     'font.size': 8,
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+#     "pgf.preamble": r"\usepackage{amsmath}"
+#                     r"\usepackage{lmodern}"
+#                     r"\usepackage{siunitx}"
+# })
 tex_line_width = 3.48
 tex_text_width = 7.17
 
 root = os.getcwd() + '\\..\\..\\'
 data_folders = [
-    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
-    # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf
+    "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
+    "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
@@ -41,26 +41,26 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <--
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo kb",       # <--
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
-    "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID (auto_save_4 accidentally cut short)
-    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",
-    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",
+    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
+    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
+    # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
     # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
     # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",        # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
 ]
-file_name = "auto_save_2"
+file_name = "auto_save_5"
 file = f"{data_folders[1]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
@@ -188,7 +188,7 @@ def plot_file():
     signal_ax[1].set_xlabel("Count")
     signal_ax[1].set_ylabel("$u$ [\si{\micro\second}]")
 
-    signal_ax[0].set_xlim([34500, 35700])
+    # signal_ax[0].set_xlim([34500, 35700])
     signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
                      fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
 
@@ -251,9 +251,9 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
     files = [f for f in os.listdir(data_folder) if file_type in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
-    metrics_headers = ["Mean Rise Time [s]", "Mean Settle Time [s]", "Mean Overshoot [deg]", "MAE [deg]",
+    metrics_headers = ["MRT [s]", "MST [s]", "MO [deg]", "MAE [deg]",
                        "IAE [deg]",
-                       "MAV [deg/s]", "NTV [-]", "MCA [-]"]
+                       "MAV [deg/s]", "NTV [\si{\micro\second}]", "MCA [\si{\micro\second}]"]
     csv_data = {"Metric": metrics_headers}
 
     for file in files:
@@ -279,6 +279,12 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
     metrics_headers = dfs[0]["Metric"].tolist()
     file_names = [df.columns[1:] for df in dfs]
 
+    # Find the longest common prefix
+    common_prefix = os.path.commonpath(excel_files)
+    short_labels = [
+        file.replace(common_prefix, '').replace('\\', ' ').replace('metrics_summary.xlsx', '').replace('_', ' ').strip(
+            '.npy') for file in excel_files]
+
     x_ticks_list = []
     combined_ticks = set()
     for file_name in file_names:
@@ -290,13 +296,18 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
                              figsize=(tex_text_width, len(metrics_headers) * 0.28 * tex_line_width / 2),
                              sharex=True)
     axes = axes.flatten()
-
     for ax, header in zip(axes, metrics_headers):
-        for df, x_ticks, color in zip(dfs, x_ticks_list, colors):
-            ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=1., marker='.', markersize=3, color=color)
-        # ax.set_title(header)
+        avg_values_wo_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'wo adapter' in label], axis=0)
+        avg_values_w_adapter = np.mean([df.loc[df["Metric"] == header].values[0][1:] for df, label in zip(dfs, short_labels) if 'w adapter' in label], axis=0)
+
+        ax.plot(sorted(list(combined_ticks)), avg_values_wo_adapter, lw=.75, marker='.', markersize=2, color=colors[0])
+        ax.plot(sorted(list(combined_ticks)), avg_values_w_adapter, lw=.75, marker='.', markersize=2, color=colors[1])
+
+        # for df, x_ticks, color in zip(dfs, x_ticks_list, colors):
+        #     ax.plot(x_ticks, df.loc[df["Metric"] == header].values[0][1:], lw=.75, marker='.', markersize=2, color=color)
+        skip_tick = len(combined_ticks) // 12
         ax.set_ylabel(header, fontsize=7)
-        ax.set_xticks(list(combined_ticks)[::2])
+        ax.set_xticks(sorted(list(combined_ticks))[::-skip_tick])
         ax.tick_params(axis='both', labelsize=6)
 
     # Set x-label for the last subplot in each column
@@ -306,18 +317,13 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp'):
     # for ax in axes[len(metrics_headers):]:
     #     fig.delaxes(ax)
 
-    # Find the longest common prefix
-    common_prefix = os.path.commonpath(excel_files)
-    short_labels = [
-        file.replace(common_prefix, '').replace('\\', ' ').replace('metrics_summary.xlsx', '').replace('_', ' ').strip(
-            '.npy') for file in excel_files]
 
-    fig.legend(short_labels, loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
+    fig.legend(["w/o adapter", "w/ adapter"], loc='lower left', fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
 
     fig.tight_layout()
     plot_file = os.path.join(save_folder, f'metrics_evolution.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
-    plt.savefig(plot_file)
+    plt.savefig(plot_file, dpi=300 , bbox_inches='tight')
     # plt.show()
 
 
@@ -379,7 +385,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 def main():
     metrics(file, do_print=True, do_plot=True)
-    # compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
+    compare_metrics(data_folders, f'{root}\\tmp', file_type='auto_save')
     # metrics_similarity(data_folders, file_type='ref_minute')
 
 
