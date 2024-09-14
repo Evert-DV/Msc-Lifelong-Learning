@@ -58,33 +58,41 @@
         \ldots
     \end{abstract}
 
+
     \section{Introduction}\label{sec:introduction}
     \input{Thesis/introduction}
 %    \FloatBarrier
+
 
     \section{Background}\label{sec:background}
     \input{Thesis/background}
 %    \FloatBarrier
 
+
     \section{Methodology}\label{sec:methodology}
     \input{Thesis/method}
 %    \FloatBarrier
+
 
     \section{A Kresling Origami Robot}\label{sec:origami-robot}
     \input{Thesis/robot}
 %    \FloatBarrier
 
+
     \section{Experimental Setup}\label{sec:experimental-setup}
     \input{Thesis/setup}
 %    \FloatBarrier
+
 
     \section{Experiments and Results}\label{sec:results}
     \input{Thesis/results}
 %    \FloatBarrier
 
+
     \section{Limitations}\label{sec:limitations}
     \input{Thesis/improvements}
 %    \FloatBarrier
+
 
     \section{Discussion}\label{sec:discussion}
     \input{Thesis/discussion}
@@ -94,7 +102,11 @@
 
     \appendices
     \renewcommand{\thefigure}{\Alph{section}.\arabic{figure}}
-    \preto\section{\setcounter{figure}{0}}
+    \renewcommand{\thetable}{\Alph{section}.\Roman{table}}
+    \preto\section{
+        \setcounter{figure}{0}
+        \setcounter{table}{0}
+    }
     \input{Thesis/appendix}
 
 \end{document}

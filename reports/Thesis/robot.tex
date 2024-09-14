@@ -22,6 +22,7 @@ To evaluate the method described in \Cref{sec:methodology}, a robot was designed
                 \setcounter{annotations}{\value{enumi}}
             \end{enumerate}
         \end{multicols}
+        \vspace*{-1em}
         \caption{The Kresling origami robot.}
         \label{fig:nomen-robot}
         \vspace*{1em}
@@ -42,6 +43,7 @@ To evaluate the method described in \Cref{sec:methodology}, a robot was designed
                 \item Magnet        \label{item:magnet}
             \end{enumerate}
         \end{multicols}
+        \vspace*{-1em}
         \caption{Actuation mechanism.}
         \label{fig:nomen-actuation}
     \end{subfigure}
@@ -67,15 +69,30 @@ Likewise, assuming perfectly rigid links with negligible clearance between the h
 In the full implementation, the robot's state $\mathbf{x}_t$ will thus be measured as the actuation arm's angular position and velocity $[\theta, \dot{\theta}]$.
 This angle is measured using a contactless sensor (\ref{item:sensor}) that can measure the on-axis rotation of a small magnet (\ref{item:magnet}) attached to the actuation arm.
 The sensor relays this information to an Arduino Nano (\ref{item:arduino}) board, which runs a PID controller that returns the control action, i.e., an angular position for the servo.
-Furthermore, there are mechanical limits for the rotation of both the actuation arm and servo arm, imposed by the edge of the container housing the actuation mechanism and the supports holding the servo motor, respectively.
+Furthermore, there are mechanical limits for the rotation of both the actuation arm and servo arm, imposed by the edge of the container housing the actuation mechanism and the supports holding the servo motor, respectively (\Cref{fig:extend-contract}, \emph{right}).
 However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
+
+\begin{figure}[htb]
+    \begin{subfigure}[tl]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{extended}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[tr]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{contracted}
+    \end{subfigure}
+    \caption{\emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.\\
+    \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
+    \label{fig:extend-contract}
+\end{figure}
 
 \subsection{Software Implementation}\label{subsec:software-implement}
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
 
 \subsubsection{Nominal Control on the Arduino}
 Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its minimum position.
-The Arduino allows some time for the servo to reach this home position and then reads a first measurement from the angle sensor, setting this as the reference $\theta=0$.
+The Arduino allows some time for the servo to reach this home position and then reads a first measurement from the angle sensor, setting this as the reference $\theta=0$ (see~\Cref{fig:extend-contract}, \emph{left}).
 During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
 Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\Cref{subsec:mechanical-details}).
 The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
