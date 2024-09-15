@@ -1,5 +1,7 @@
 reports/auxil
 !reports/out/*.pdf
+!reports/Thesis/figures
+!reports/Thesis/figures/**
 src/toy_problem/tmp
 ../../.pio
 !src/Arduino/Models/*
