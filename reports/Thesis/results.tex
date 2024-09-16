@@ -1,13 +1,126 @@
 The performance of the target adapter is evaluated over three types of experiments.
-In the first type, the KOS characteristics are varied, namely the degree of perforation in the folds, while keeping the PID controller identical across tests.
-For the second group of experiments, the PID controller's tuning is varied, while maintaining consistent KOS characteristics.
+In the first type, the PID controller's tuning is varied, while maintaining consistent KOS characteristics.
+For the second group of experiments, the KOS characteristics are varied, namely the degree of perforation in the folds, while keeping the PID controller identical across tests.
 Finally, the performance is tested for a crawling gait to observe the effect of the method in a highly restricted setting.
 
-\subsection{Varying the KOS Perforation}\label{subsec:varying-kos}
-For the first experiment, the PID controller is tuned to a reasonable performance on a robot with KOS perforations of a 1.5--0.5~\si{\mm} skip-to-cut ratio.
-The values of the targets in the random sequence are integer values ranging between -3 and -25~degrees.
-The KOS perforations used are 0.25–0.25~mm, 0.5–0.5~mm, 1.5–0.5~mm, and 2--0.5~mm, representing various stages of KOS degradation.
-
 \subsection{Varying the PID Controller}\label{subsec:varying-pid}
+For the first experiment, the method's robustness to the use of different PID controllers is tested.
+The robot is equipped with the standard set of KOSs\todo{find a place to dicuss the specifics of the chosen KOS design}, using perforations of 1.5--0.5\si{mm} cut--skip ratio.
+During this experiment, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees.
+The robot has 5\si{\second} to reach and settle around a target before it is provided with the next target in the sequence.
+
+\subsubsection{A controller that is slow but aggressive}
+The first PID controller has a disproportionally high integral gain, resulting in \emph{aggressive} but \emph{slow to respond} behavior.
+This controller yields particularly interesting results in combination with the bistable nature of the KOS.
+\Cref{fig:slow-overshoot-ref} shows a snapshot of the signal response from the reference controller, illustrating the behavior of the controller.
+In comparison, the signal obtained from the controller-adapter combination is shown in \Cref{fig:slow-overshoot-adapter}.
+
+\begin{figure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \missingfigure[figwidth=\linewidth, figheight=0.67\linewidth]{Signal response of reference (w/o adapter)}
+        \caption{}
+        \label{fig:slow-overshoot-ref}
+    \end{subfigure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \missingfigure[figwidth=\linewidth, figheight=0.67\linewidth]{Signal response of adapter}
+        \caption{}
+        \label{fig:slow-overshoot-adapter}
+    \end{subfigure}
+    \caption{Qualitative comparison of the response signal for the \emph{aggressive} PID controller.}
+    \label{fig:qualitaitve-aggressive}
+\end{figure}
+
+During the full 2\si{\hour} duration of the experiment, the evaluation of each 5\si{\minute} sequence was recorded.
+The result can be seen in \Cref{fig:slow-overshoot-metrics}.
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/results/slow-overshoot-metrics.pgf}
+%    \missingfigure[figwidth=\textwidth, figheight=0.5\linewidth]{metrics evolution an comparison for slow overshoot}
+    \caption{}
+    \label{fig:slow-overshoot-metrics}
+\end{figure*}
+
+Note the immediate (after the first 5\si{\minute}) improvement in overshoot and absolute error.
+The controller with target adapter initially has high rise times and low overshoots, but then evolves toward a stable behavior that retains short rise time, small position errors, and consistent overshoot values.
+As time progresses, the metric values for the unadaptive reference controller generally decrease, with the exception of the rise time.
+The adapted controller, however, seems to achieve this level of performance from the start.
+
+\paragraph*{Interpretation}
+The conjecture is that the potential barrier between the two stable states of the KOS slows down the controller's response, resulting in a higher control input.
+As the barrier is overcome, the KOS now complements the controller's action, resulting in the overshoot.
+Depending on the vicinity of the target to the KOS's potential barrier, the controller can enter an unstable state.
+As the potential barrier to transition between the two stable states of the KOS decreases, the reference controller has less difficulty maintaining a stable response.
+This explains the steady decrease in settling time, absolute velocity, and total variance, which reflect the decreasing irregularities in the signal and the controller’s corrective actions.
+The target adapter effectively shifts the target closer to the system's current state, facilitating a smoother transition to the desired state with reduced overshoot, thereby minimizing the risk of the controller entering an unstable cycle.
+
+\subsubsection{An ``under-tuned'' controller}
+The second PID controller is tuned with low gains, resulting in slow and under-responsive behavior.
+\Cref{fig:under-tuned-ref,fig:under-tuned-adapter} display the comparison between the reference controller and the controller with target adapter, respectively.
+
+\begin{figure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \includestandalone[mode=build]{Thesis/figures/results/under-tuned-ref-signal}
+        \caption{}
+        \label{fig:under-tuned-ref}
+    \end{subfigure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \includestandalone[mode=build]{Thesis/figures/results/under-tuned-signal}
+        \caption{}
+        \label{fig:under-tuned-adapter}
+    \end{subfigure}
+\end{figure}
+
+The evolution of the metrics is shown in~\Cref{fig:under-tuned-metrics}.
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/results/under-tuned-metrics.pgf}
+    \caption{}
+    \label{fig:under-tuned-metrics}
+\end{figure*}
+
+The controller with adapter clearly has lower rise times and absolute errors than the reference.
+However, it also exhibits higher overshoots, whereas the reference controller even slightly undershoots toward the end of the 2\si{\hour} experiment.
+The adapted controller results in higher mean absolute velocity and total variance.
+
+\paragraph*{Interpretation}
+The signal in~\Cref{fig:under-tuned-adapter} shows a clear reason for the lower rise times, namely that the target is shifted to more extreme positions as to yield larger control inputs from the controller.
+This corresponds to the observed larger overshoot and higher mean absolute velocity.
+The adapter makes the controller more \emph{aggressive}, as seen in the increased controller \emph{effort} (total variance).
+However, the adapter also seems to introduce unnecessary adaptations once the steady state is reached, further increasing the mean absolute velocity.
+These small oscillations are insignificant compare to the overall improvement in the mean absolute error.
+
+
+\subsection{Varying the Perforation}\label{subsec:varying-kos}
+For the second type of experiment, the PID controller is tuned to a reasonable performance on a robot with KOS perforations of a 1.5--0.5~\si{\mm} skip-to-cut ratio.
+The KOS perforations used are 0.25–0.25~mm, 0.5–0.5~mm, 1.5–0.5~mm, and 2--0.5~mm, representing various stages of KOS degradation.
+Once again, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees, and the robot has 5\si{\second} to reach and settle around a target.
+
+\subsubsection{0.25--0.25 \& 0.5--0.5 Perforations}
+The 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations represent KOSs in a state of lower degradation than the standard 1.5-0.5\si{\mm} perforation.
+The evolution of the metrics over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}.
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/results/25--25-50--50-metrics.pgf}
+    \caption{}
+    \label{fig:25--25-50--50-metrics}
+\end{figure*}
+
+
+
+\subsubsection{1.5--0.5 \& 2--0.5 Perforations}
+~\Cref{fig:150--50-200--50-metrics}.
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/results/150--50-200--50-metrics.pgf}
+    \caption{}
+    \label{fig:150--50-200--50-metrics}
+\end{figure*}
+
 
 \subsection{Crawling Gait}\label{subsec:crawling-gait}
