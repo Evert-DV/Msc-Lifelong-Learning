@@ -18,13 +18,15 @@ In comparison, the signal obtained from the controller-adapter combination is sh
 \begin{figure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \includestandalone[mode=build]{Thesis/figures/results/slow-overshoot-ref}
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/slow-overshoot-ref}
+        \vspace*{-2em}
         \caption{Reference signal.}
         \label{fig:slow-overshoot-ref}
     \end{subfigure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \includestandalone[mode=build]{Thesis/figures/results/slow-overshoot-adapter}
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/slow-overshoot-adapter}
+        \vspace*{-2em}
         \caption{Target adapted signal.}
         \label{fig:slow-overshoot-adapter}
     \end{subfigure}
@@ -63,16 +65,19 @@ The second PID controller is tuned with low gains, resulting in slow and under-r
 \begin{figure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \includestandalone[mode=build]{Thesis/figures/results/under-tuned-ref-signal}
-        \caption{}
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/under-tuned-ref-signal}
+        \vspace*{-2em}
+        \caption{Reference signal.}
         \label{fig:under-tuned-ref}
     \end{subfigure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \includestandalone[mode=build]{Thesis/figures/results/under-tuned-signal}
-        \caption{}
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/under-tuned-signal}
+        \vspace*{-2em}
+        \caption{Target adapted signal.}
         \label{fig:under-tuned-adapter}
     \end{subfigure}
+    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the \emph{under-tuned} PID controller.}
 \end{figure}
 
 The evolution of the metrics is shown in~\Cref{fig:under-tuned-metrics}.
@@ -93,7 +98,7 @@ The signal in~\Cref{fig:under-tuned-adapter} shows a clear reason for the lower 
 This corresponds to the observed larger overshoot and higher mean absolute velocity.
 The adapter makes the controller more \emph{aggressive}, as seen in the increased controller \emph{effort} (total variance).
 However, the adapter also seems to introduce unnecessary adaptations once the steady state is reached, further increasing the mean absolute velocity.
-These small oscillations are insignificant compare to the overall improvement in the mean absolute error.
+These small oscillations are insignificant compared to the overall improvement in the mean absolute error.
 
 
 \subsection{Varying the Perforation}\label{subsec:varying-kos}
@@ -103,7 +108,8 @@ Once again, the values of the targets in the random sequence are integer values 
 
 \subsubsection{0.25--0.25 \& 0.5--0.5 Perforations}
 The 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations represent KOSs in a state of lower degradation than the standard 1.5-0.5\si{\mm} perforation.
-The evolution of the metrics over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}.
+The evolution of the metrics over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}, showing the average of the results from both experiments.
+
 \begin{figure*}
     \centering
     \input{Thesis/figures/results/25--25-50--50-metrics.pgf}
@@ -111,10 +117,41 @@ The evolution of the metrics over the course of the 1\si{\hour} experiment is sh
     \label{fig:25--25-50--50-metrics}
 \end{figure*}
 
+On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
+Another observation is that the difference in the reference controller's performance between the two experiments drifts further apart over the full duration.
+However, the adapted controller's performance over the two experiments appears less varied.
+Overall, the relative difference in metrics between reference and adapted controller resembles that of the under-tuned PID experiment.
+
+\paragraph*{Interpretation}
+Since the perforations aim to represent a less degraded KOS, i.e.~stiffer, the gains of the PID (tuned to a 1.5-0.5\si{\mm} perforated KOS) are likely set too low.
+The situation is thus analogous to the under-tuned PID experiment, and this shows in the behaviour of the target adapter:
+\Cref{fig:qualitaitve-50--50} shows how the targets are shifted toward more extreme positions, resulting in the lower rise time and--in this particular example--reducing a steady-state error.
+
+\begin{figure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/50--50-ref}
+        \caption{Reference signal.}
+        \label{fig:50--50-ref}
+    \end{subfigure}
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/50--50-adapter}
+        \caption{Target adapted signal.}
+        \label{fig:50--50-adapter}
+    \end{subfigure}
+    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the 0.5--0.5\si{\mm} perforation.}
+    \label{fig:qualitaitve-50--50}
+    % TODO: Get in closer or remove figure
+\end{figure}
 
 
 \subsubsection{1.5--0.5 \& 2--0.5 Perforations}
-~\Cref{fig:150--50-200--50-metrics}.
+The 2--0.5\si{\mm} perforation aims to resemble a KOS that has been more degraded.
+The PID controller is initially tuned for the 1.5--0.5\si{\mm} KOS.
+For the 1.5--0.5\si{\mm} KOS experiment, with the runtime set to 2\si{\hour}, the aim is to assess how the controllers perform as the system gradually shifts into a more over-tuned state.
+
+
 \begin{figure*}
     \centering
     \input{Thesis/figures/results/150--50-200--50-metrics.pgf}
@@ -124,3 +161,9 @@ The evolution of the metrics over the course of the 1\si{\hour} experiment is sh
 
 
 \subsection{Crawling Gait}\label{subsec:crawling-gait}
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/results/crawling-metrics.pgf}
+    \caption{}
+    \label{fig:}
+\end{figure*}
