@@ -51,10 +51,10 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
-    "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",    # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",     # <-- varying PID, qualitative, self-correcting
+    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
+    "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",    # <-- varying PID
+    "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",     # <-- varying PID, qualitative, self-correcting
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
@@ -64,8 +64,8 @@ data_folders = [
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
 ]
-file_name = "auto_save_11"
-file = f"{data_folders[0]}/{file_name}.npy"
+file_name = "auto_save_17"
+file = f"{data_folders[1]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -208,13 +208,12 @@ def plot_file(files):
     signal_ax[1].set_xlabel("Count")
     signal_ax[1].set_ylabel("$u$ [\si{\micro\second}]")
 
-    # signal_ax[0].set_xlim([79200, 82050])
-    signal_ax[0].set_xlim([81900, 84850])
+    signal_ax[0].set_xlim([78950, 81780])
     signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
                       fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
 
     signal_fig.tight_layout()
-    plt.savefig(f'{root}\\reports\\Thesis\\figures\\results\\under-tuned-ref-signal.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
+    plt.savefig(f'{root}\\reports\\Thesis\\figures\\results\\slow-overshoot-adapter.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
 
     # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
     #     tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
@@ -332,21 +331,21 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
             x_last = x_ticks[-2]
             y_last = y_values[-2]
 
-            # Create the text annotation
-            txt = ax.text(
-                x_last,
-                y_last,
-                label.strip().split(' ')[0],
-                fontsize=6,
-                color=line.get_color(),
-                alpha=0.75,
-                ha='left',
-                va='bottom'
-            )
-            texts.append(txt)  # Add to the list of texts
-
-        # Adjust the text positions to prevent overlapping
-        adjust_text(texts, ax=ax, expand_points=(0.1, 0.1))
+        #     # Create the text annotation
+        #     txt = ax.text(
+        #         x_last,
+        #         y_last,
+        #         label.strip().split(' ')[0],
+        #         fontsize=6,
+        #         color=line.get_color(),
+        #         alpha=0.75,
+        #         ha='left',
+        #         va='bottom'
+        #     )
+        #     texts.append(txt)  # Add to the list of texts
+        #
+        # # Adjust the text positions to prevent overlapping
+        # adjust_text(texts, ax=ax, expand_points=(2., 2.))
 
         # Determine the maximum length of the data
         max_length_wo_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'wo adapter' in label])
@@ -371,7 +370,7 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         w_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_w_adapter -1], avg_values_w_adapter, lw=1., marker='.', markersize=2, color=colors[1])
 
         skip_tick = max(1, len(combined_ticks) // 12)
-        ax.set_ylabel(header, fontsize=7)
+        ax.set_ylabel(header, fontsize=8)
         ax.set_xticks(sorted(list(combined_ticks))[::-skip_tick])
         ax.tick_params(axis='both', labelsize=6)
 
@@ -379,14 +378,14 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         fig.delaxes(ax)
 
     # Set x-label for the last subplot in each column
-    axes[len(metrics_headers) - 2].set_xlabel('Time [min]', fontsize=7)
-    axes[len(metrics_headers) - 1].set_xlabel('Time [min]', fontsize=7)
+    axes[len(metrics_headers) - 2].set_xlabel('Time [min]', fontsize=8)
+    axes[len(metrics_headers) - 1].set_xlabel('Time [min]', fontsize=8)
 
     fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left',
-               fontsize=6, frameon=False, bbox_to_anchor=(0., -0.01))
+               fontsize=8, frameon=False, bbox_to_anchor=(0., -0.05))
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, f'150--50-200--50-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    plot_file = os.path.join(save_folder, f'slow-overshoot-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     plt.savefig(plot_file, dpi=300, bbox_inches='tight')
     # plt.show()
@@ -451,8 +450,8 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 def main():
     # plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
-    metrics(file, do_print=True, do_plot=True)
-    # compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\results', file_type='auto_save')
+    # metrics(file, do_print=True, do_plot=True)
+    compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\results', file_type='auto_save')
     # compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
     # metrics_similarity(data_folders, file_type='ref_minute')
 

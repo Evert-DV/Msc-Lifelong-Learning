@@ -18,17 +18,17 @@ In comparison, the signal obtained from the controller-adapter combination is sh
 \begin{figure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \missingfigure[figwidth=\linewidth, figheight=0.67\linewidth]{Signal response of reference (w/o adapter)}
-        \caption{}
+        \includestandalone[mode=build]{Thesis/figures/results/slow-overshoot-ref}
+        \caption{Reference signal.}
         \label{fig:slow-overshoot-ref}
     \end{subfigure}
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \missingfigure[figwidth=\linewidth, figheight=0.67\linewidth]{Signal response of adapter}
-        \caption{}
+        \includestandalone[mode=build]{Thesis/figures/results/slow-overshoot-adapter}
+        \caption{Target adapted signal.}
         \label{fig:slow-overshoot-adapter}
     \end{subfigure}
-    \caption{Qualitative comparison of the response signal for the \emph{aggressive} PID controller.}
+    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the \emph{slow-aggressive} PID controller.}
     \label{fig:qualitaitve-aggressive}
 \end{figure}
 

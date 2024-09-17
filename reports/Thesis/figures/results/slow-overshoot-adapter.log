@@ -2,8 +2,8 @@ This is XeTeX, Version 3.141592653-2.6-0.999996 (MiKTeX 24.4) (preloaded format=
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
-**./Thesis/figures/results/under-tuned-signal.tex
-(Thesis/figures/results/under-tuned-signal.tex
+**./Thesis/figures/results/slow-overshoot-adapter.tex
+(Thesis/figures/results/slow-overshoot-adapter.tex
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-07-20>
 
@@ -571,31 +571,31 @@ text;"
 -text;"
 
 Package translations Info: No language package found. I am going to use `englis
-h' as default language. on input line 18.
-(Thesis/figures/results/under-tuned-signal.aux)
-\openout1 = `Thesis/figures/results/under-tuned-signal.aux'.
+h' as default language. on input line 15.
+(Thesis/figures/results/slow-overshoot-adapter.aux)
+\openout1 = `Thesis/figures/results/slow-overshoot-adapter.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 1
-8.
+5.
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmr.fd
 File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
 slations-basic-dictionary-english.trsl
@@ -603,9 +603,9 @@ File: translations-basic-dictionary-english.trsl (english translation file `tra
 nslations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 18.
+or `english'. on input line 15.
 
-! LaTeX Error: File `under-tuned-signal.pgf' not found.
+! LaTeX Error: File `slow-overshoot-adapter.pgf' not found.
 
 Type X to quit or <RETURN> to proceed,
 or enter new name. (Default extension: pgf)
@@ -614,17 +614,17 @@ Enter file name:
 ! Emergency stop.
 <read *> 
          
-l.20         \input{under-tuned-signal.pgf}
+l.17     \input{slow-overshoot-adapter.pgf}
                                            ^^M
 *** (cannot \read from terminal in nonstop modes)
 
  
 Here is how much of TeX's memory you used:
  16925 strings out of 409029
- 412288 string characters out of 5756741
+ 412336 string characters out of 5756741
  1918612 words of memory out of 5000000
  39387 multiletter control sequences out of 15000+600000
  558173 words of font info for 49 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 87i,1n,93p,492b,405s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 87i,1n,93p,496b,405s stack positions out of 10000i,1000n,20000p,200000b,200000s
 No pages of output.
