@@ -12,7 +12,7 @@ The robot has 5\si{\second} to reach and settle around a target before it is pro
 \subsubsection{A controller that is slow but aggressive}
 The first PID controller has a disproportionally high integral gain, resulting in \emph{aggressive} but \emph{slow to respond} behavior.
 This controller yields particularly interesting results in combination with the bistable nature of the KOS.
-\Cref{fig:slow-overshoot-ref} shows a snapshot of the signal response from the reference controller, illustrating the behavior of the controller.
+\Cref{fig:slow-overshoot-ref} shows the signal response from the reference controller, illustrating the behavior of the controller.
 In comparison, the signal obtained from the controller-adapter combination is shown in \Cref{fig:slow-overshoot-adapter}.
 
 \begin{figure}
@@ -102,7 +102,7 @@ These small oscillations are insignificant compared to the overall improvement i
 
 
 \subsection{Varying the Perforation}\label{subsec:varying-kos}
-For the second type of experiment, the PID controller is tuned to a reasonable performance on a robot with KOS perforations of a 1.5--0.5~\si{\mm} skip-to-cut ratio.
+For the second type of experiment, the PID controller is tuned to a highly responsive performance on a robot with KOS perforations of a 1.5--0.5~\si{\mm} skip-to-cut ratio.
 The KOS perforations used are 0.25–0.25~mm, 0.5–0.5~mm, 1.5–0.5~mm, and 2--0.5~mm, representing various stages of KOS degradation.
 Once again, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees, and the robot has 5\si{\second} to reach and settle around a target.
 
@@ -123,7 +123,7 @@ However, the adapted controller's performance over the two experiments appears l
 Overall, the relative difference in metrics between reference and adapted controller resembles that of the under-tuned PID experiment.
 
 \paragraph*{Interpretation}
-Since the perforations aim to represent a less degraded KOS, i.e.~stiffer, the gains of the PID (tuned to a 1.5-0.5\si{\mm} perforated KOS) are likely set too low.
+Since the perforations aim to represent a less degraded KOS, i.e.~stiffer, the gains of the PID (tuned to a 1.5--0.5\si{\mm} perforated KOS) are likely set too low.
 The situation is thus analogous to the under-tuned PID experiment, and this shows in the behaviour of the target adapter:
 \Cref{fig:qualitaitve-50--50} shows how the targets are shifted toward more extreme positions, resulting in the lower rise time and--in this particular example--reducing a steady-state error.
 
@@ -131,12 +131,14 @@ The situation is thus analogous to the under-tuned PID experiment, and this show
     \begin{subfigure}[t]{\linewidth}
         \centering
         \includestandalone[mode=buildmissing]{Thesis/figures/results/50--50-ref}
+        \vspace*{-2em}
         \caption{Reference signal.}
         \label{fig:50--50-ref}
     \end{subfigure}
     \begin{subfigure}[t]{\linewidth}
         \centering
         \includestandalone[mode=buildmissing]{Thesis/figures/results/50--50-adapter}
+        \vspace*{-2em}
         \caption{Target adapted signal.}
         \label{fig:50--50-adapter}
     \end{subfigure}
@@ -147,10 +149,12 @@ The situation is thus analogous to the under-tuned PID experiment, and this show
 
 
 \subsubsection{1.5--0.5 \& 2--0.5 Perforations}
-The 2--0.5\si{\mm} perforation aims to resemble a KOS that has been more degraded.
+The 2--0.5\si{\mm} perforation aims to resemble a KOS that has been more deteriorated.
 The PID controller is initially tuned for the 1.5--0.5\si{\mm} KOS.
-For the 1.5--0.5\si{\mm} KOS experiment, with the runtime set to 2\si{\hour}, the aim is to assess how the controllers perform as the system gradually shifts into a more over-tuned state.
+For the 1.5--0.5\si{\mm} KOS experiment, with the runtime set to 2\si{\hour}, the aim is to assess how the controllers perform as the system gradually shifts into a more over-tuned condition.
 
+\Cref{fig:150--50-200--50-metrics} shows that the general performance of the target adapter consists of higher settling times, overshoot, mean absolute velocity and total variance compared to the reference, especially as the experiments progress.
+In fact, the only metric where the target adapter metrics are smaller than those of the reference, is the rise time.
 
 \begin{figure*}
     \centering
@@ -159,11 +163,67 @@ For the 1.5--0.5\si{\mm} KOS experiment, with the runtime set to 2\si{\hour}, th
     \label{fig:150--50-200--50-metrics}
 \end{figure*}
 
+Inspecting~\Cref{fig:200--50-qualitative}, it can be observed that by the end of the experiment, the target adaptations have become significantly noisy, resulting in chaotic behavior.
+The result of this is the increased settling time, mean absolute error, mean absolute velocity, and controller effort.
+However, as shown in~\Cref{fig:150--50-200--50-metrics}, the adapted controller initially demonstrates better performance concerning settling time and mean absolute error.
+Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute} of the experiment, the target adapter produces minimal and relatively stable adaptations, leading to improved rise times and lower absolute error.
+
+
+\begin{figure}
+    \begin{subfigure}[tl]{\linewidth}
+        \centering
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/200--50-ref}
+        \vspace*{-2em}
+        \caption{Reference signal, late in the experiment (last 5\si{\minute} sequence).}
+        \label{fig:200--50-ref}
+    \end{subfigure}
+    \begin{subfigure}[tl]{\linewidth}
+        \centering
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/200-50-adapter}
+        \vspace*{-2em}
+        \caption{Coresponding target adapted signal.}
+        \label{fig:200--50-adapter}
+    \end{subfigure}
+    \begin{subfigure}[tl]{\linewidth}
+        \centering
+        \includestandalone[mode=buildmissing]{Thesis/figures/results/200-50-adapter5}
+        \vspace*{-2em}
+        \caption{Target adapted signal, early in the experiment (sequence that ends at minute 30).}
+        \label{fig:200--50-adapter5}
+    \end{subfigure}
+    \caption{Qualitative comparison of 30\si{\second} of the response signal for the 2--0.5\si{\mm} perforation.
+    Also showing a comparison between the signals of the target adapted controller, late vs. early into the experiment.}
+    \label{fig:200--50-qualitative}
+\end{figure}
+
+\paragraph*{Interpretation}
+In the case of heavily deteriorated KOSs, the target adaptation seems to degrade the performance.
+The initially improved rise times can be attributed to the highly oscillatory nature of the signal response, rather than genuine performance gains.
+However, the fact that the target adapter shows improvement over the reference controller in the early stages of deterioration is promising.
+The highly responsive PID controller is quick to react, reducing the need for extreme adaptations as seen in the previous experiments.
+As the KOS further degrades, it sometimes enters an unstable cycle: much alike the ones seen in~\Cref{fig:slow-overshoot-ref},~\Cref{subsec:varying-pid}, but at a higher frequency.
+This results in training data that contains many contradicting features, which results in increased noise in the adapter's predictions.
+Noisy targets in turn produce noisy control actions and consequently noisy response signals.
 
 \subsection{Crawling Gait}\label{subsec:crawling-gait}
+The final experiment emulates the mode of operation that the robotic crawler was designed for.
+The targets in the sequences alternate between two states on opposite sides of the potential barrier, namely -8 and -18 degrees.
+This consequent contracting and expanding mimics a crawling-like motion.
+A small normally distributed random value is added to each of the alternating targets to avoid completely identical datapoints.
+The goal of the experiment is to observe the effect of a constrained operational setting on the compensations for the overshooting effect introduced by the potential barrier.
+The experiment uses a KOS with a perforation 1.5--0.5\si{\mm} and the highly responsive PID, tuned to this perforation.
+Given the fast deterioration of the potential barrier in the first few minutes, the experiment only runs for 20\si{\minute}.
+A reference controller is compared to both an adapter that is first pretrained and then fine-tuned online, and one that is completely trained online.
+
+\Cref{fig:crawling-metrics} shows the evolution of the metrics for the three runs over the span of 20\si{\minute}.
+The results show consistently lower rise and settling times, and mean absolute error for both implementations of the target adapter compared to the reference controller.
+This comes at the price of significantly higher overshoot.
+
 \begin{figure*}
     \centering
     \input{Thesis/figures/results/crawling-metrics.pgf}
-    \caption{}
-    \label{fig:}
+    \caption{Metrics evolution over the 20\si{\minute} duration of the crawling-gait experiment, with the average of both adapted controllers overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets, in this case alternating between values near to -18 and -8 degrees, respectively. Numerical values can be found in~\Cref{app:results-ext}.}
+    \label{fig:crawling-metrics}
 \end{figure*}
+
+Upon inspection of the signal response in~\Cref{fig:}, showing the first 5\si{\minute},
