@@ -1,7 +1,7 @@
 reports/auxil
 !reports/out/*.pdf
 !reports/Thesis/figures
-!reports/Thesis/figures/*.pdf
+!reports/Thesis/figures/**.pdf
 reports/Thesis/figures/**.log
 reports/Thesis/figures/**.aux
 reports/Thesis/figures/**.syntex.gz
