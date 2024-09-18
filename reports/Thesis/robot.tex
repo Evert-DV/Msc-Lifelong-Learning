@@ -1,9 +1,11 @@
 \subsection{Mechanical Details}\label{subsec:mechanical-details}
 As mentioned in \Cref{sec:background}\todo{discuss this in \Cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
 To evaluate the method described in \Cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
+\todo{first a section on the KOS characteristics}  % TODO: KOS characteristics
+
 \Cref{fig:robot-overview} provides important nomenclature for reference.
 
-\begin{figure}[htb]
+\begin{figure}
     \newcounter{annotations}
     \centering
     \begin{subfigure}[t]{\linewidth}
@@ -72,7 +74,7 @@ The sensor relays this information to an Arduino Nano (\ref{item:arduino}) board
 Furthermore, there are mechanical limits for the rotation of both the actuation arm and servo arm, imposed by the edge of the container housing the actuation mechanism and the supports holding the servo motor, respectively (\Cref{fig:extend-contract}, \emph{right}).
 However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
 
-\begin{figure}[htb]
+\begin{figure}
     \begin{subfigure}[tl]{0.49\linewidth}
         \centering
         \includegraphics[width=\linewidth]{extended}

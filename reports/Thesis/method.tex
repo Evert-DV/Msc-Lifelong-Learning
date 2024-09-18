@@ -16,7 +16,7 @@ The model is then provided with pairs of system states, spaced by a certain time
 From these pairs, the model infers the target it `believes' the controller aims to reach.
 However, instead of predicting the target directly, the model learns the difference $\bm{\Delta}$ between the target and the latter state in the pair (\Cref{fig:target-adaptation,fig:adapter-train}).
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
@@ -46,7 +46,7 @@ In short, given a current state $\mathbf{x}_t$ and a future state $\mathbf{x}_{t
 Thus, when presented with $\mathbf{x}_t$ and $\mathbf{x}_{t+\textit{window}}=\mathbf{x}_d$ (supposedly reached within the time window) it provides the (adapted) target that would ``push'' the controller toward that result.
 A full overview is presented in~\Cref{fig:deployed,fig:diagram}.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
@@ -75,7 +75,7 @@ To explore the proposed method, a toy problem is considered first.
 The toy problem consists of a simulation of a simple 1D mass-spring-damper system (\Cref{fig:toy-setup}) and an imperfectly tuned PID controller.
 The mass is suspended in a hanging position with gravity acting on it continuously.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \def\svgwidth{0.33\linewidth}
     \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
@@ -137,9 +137,10 @@ For reference, a second controller and system were also simulated, identical to 
 To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
 
 \subsubsection{A case where the controller is too aggressive}
-\begin{figure*}[htb]
+\begin{figure*}
     \centering
     \input{Thesis/figures/method/toy_plot.pgf}
+    \vspace*{-1em}
     \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
     Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
     During the first 15\si{\second} (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
@@ -149,7 +150,7 @@ To both the reference and adapted signal, a small amount of Gaussian noise was a
 
 For a first simulation, a combination of a system and controller was chosen where the controller's gains were tuned too high.
 In~\Cref{fig:toy-plot}, the result of the simulation can be observed.
-At the start, and due to the near-zero initialization of the adapter's parameters, the response signal of the system controlled by the adapted controller is indistinguishable from that of the reference controller.
+At the start, and due to the near-zero initialization of the adapter's parameters, the signal response of the system controlled by the adapted controller is indistinguishable from that of the reference controller.
 However, as soon as the adapter has trained on the buffer, the changes to the target become visible.
 
 The effects of the adaptation can be more clearly observed in~\Cref{fig:toy-plot-closeup}.
@@ -161,9 +162,10 @@ Therefore, upon receiving the input feature $[\mathbf{x}_t, \mathbf{x}_d]$
 it produces and adapted target position in between $x_t$ and $x_d$.
 As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \small\selectfont\input{Thesis/figures/method/toy_plot_closeup.pgf}
+    \vspace*{-1em}
     \caption{A close-up of the second to last target in the one-minute simulation. The effects of the adapter can be more clearly observed: The overshoot (seen in the reference signal) is countered by bringing the target closer to the current state.}
     \label{fig:toy-plot-closeup}
     \vspace*{1em} % Add white space between figures
@@ -174,9 +176,10 @@ For a second simulation, the system and controller were designed such that the c
 Additionally, the signal produced by the reference controller has a clear steady-state error.
 The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
 
-\begin{figure*}[htb]
+\begin{figure*}
     \centering
     \input{Thesis/figures/method/toy_plot_damped.pgf}
+    \vspace*{-1em}
     \caption{The full minute simulation of the system with an under-responsive controller. Top: The system response and target of the adapted controller, alongside the response and target of the unadapted reference controller.
     Bottom: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered reference control inputs.}
     \label{fig:toy-plot-damped}
@@ -191,11 +194,13 @@ Another effect of the adapter is the consistent offset applied to the target:
 In the training features, the adapter regularly encounters pairs $\mathbf{x}_t, \, \mathbf{x}_{t+\emph{window}} = \mathbf{x}_t$, which appear to represent the target state being reached, even though $x_{t+\emph{window}}\neq x_d$.
 These features are the result of the steady-state error present in the signal, leading the adapter to learn to apply an offset to the target to counteract this.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \small\selectfont\input{Thesis/figures/method/toy_plot_damped_closeup.pgf}
+    \vspace*{-1em}
     \caption{A close-up of the second to last target in the one-minute simulation. Noteable observations: The target is initially moved further from the current state to `pull' it towards the desired state in a shorter period. In addition, the adapted target is offset from the esired state as to counter the steady-state error seen in the reference signal.}
     \label{fig:toy-plot-damped-closeup}
     \vspace*{1em} % Add white space between figures
 \end{figure}
 
+\todo{Redo fontsizes on all figures in section}  % TODO: fontsize figures, make standalone figs

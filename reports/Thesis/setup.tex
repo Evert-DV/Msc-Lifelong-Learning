@@ -1,5 +1,5 @@
 For each experiment, a minimum of two sets of KOSs was required:
-One set serving as a reference and baseline, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
+One set serving as a reference, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
 All experiments used a 60\si{\second} buffer and 15\si{\second} intervals between updates, with the first update at 60\si{\second}.
 The adapter trained on prediction windows of 3, 5, 10, 15, and 25 steps.
 The true target, with values depending on the experiment, was updated every 5\si{\second}, following a predefined random sequence.
@@ -8,7 +8,7 @@ The signals corresponding to each 5\si{\minute} sequence are recorded and saved 
 This way, the evolution of the performance metrics can be studied, and a fair comparison between the reference controller and adapted controller is ensured.
 \Cref{fig:test-setup} shows the general experimental setup.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \def\svgwidth{0.75\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/setup/setup.pdf_tex}
@@ -28,7 +28,7 @@ In practice, this means that a positive control input from the servo (i.e.~a pos
 Because the actuation arm's calibration point is set when the servo is at its minimum output, the operational range of the actuation arm is entirely in the negative domain.
 \Cref{fig:schematic} illustrates the servo arm and actuation arm in a configuration representative of a typical scenario during the experiments, with the signs of the angles indicated.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \def\svgwidth{0.5\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/setup/schematic.pdf_tex}
@@ -62,10 +62,11 @@ The robot state is considered settled when it remains within 5\% of the target s
 
 The mean overshoot is the average of the maximum overshoots observed for each target.
 
-The mean absolute error represents the average difference between the robot’s angle $\theta$ and the true target $\theta_d$, while the integrated absolute error captures the cumulative difference over time.
+The mean absolute error represents the average difference between the robot’s angle $\theta$ and the true target $\theta_d$.
+%, while the integrated absolute error captures the cumulative difference over time.
 
 The mean absolute velocity refers to the measurements of $\dot{\theta}$.
-This metric is meant to provide a measure of the ``chaoticness'' of the robot's response signal.
+This metric is meant to provide a measure of the ``chaoticness'' of the robot's signal response.
 
 The normalized total variance is calculated as the sum of the absolute of all increments and decrements in the control action, normalized over time\footnote{Actually, it is normalized over the \emph{count}, see \Cref{subsec:sign-unit}.}.
-This, combined with the mean control action, aims to quantify the controller's ``effort''.
+This aims to quantify the controller's ``effort''.

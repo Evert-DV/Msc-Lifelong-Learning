@@ -30,7 +30,7 @@ In comparison, the signal obtained from the controller-adapter combination is sh
         \caption{Target adapted signal.}
         \label{fig:slow-overshoot-adapter}
     \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the \emph{slow-aggressive} PID controller.}
+    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the \emph{slow-aggressive} PID controller.}
     \label{fig:qualitaitve-aggressive}
 \end{figure}
 
@@ -59,7 +59,7 @@ As the potential barrier to transition between the two stable states of the KOS 
 This explains the steady decrease in settling time, absolute velocity, and total variance, which reflect the decreasing irregularities in the signal and the controller’s corrective actions.
 The target adapter effectively shifts the target closer to the system's current state, facilitating a smoother transition to the desired state with reduced overshoot, thereby minimizing the risk of the controller entering an unstable cycle.
 
-\subsubsection{An ``under-tuned'' controller}
+\subsubsection{An under-tuned controller}
 The second PID controller is tuned with low gains, resulting in slow and under-responsive behavior.
 \Cref{fig:under-tuned-ref,fig:under-tuned-adapter} display the comparison between the reference controller and the controller with target adapter, respectively.
 
@@ -78,7 +78,7 @@ The second PID controller is tuned with low gains, resulting in slow and under-r
         \caption{Target adapted signal.}
         \label{fig:under-tuned-adapter}
     \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the \emph{under-tuned} PID controller.}
+    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the \emph{under-tuned} PID controller.}
 \end{figure}
 
 The evolution of the metrics is shown in~\Cref{fig:under-tuned-metrics}.
@@ -145,7 +145,7 @@ The targets are shifted toward more extreme positions, resulting in the lower ri
 %        \caption{Target adapted signal.}
 %        \label{fig:50--50-adapter}
 %    \end{subfigure}
-%    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the 0.5--0.5\si{\mm} perforation.}
+%    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the 0.5--0.5\si{\mm} perforation.}
 %    \label{fig:qualitaitve-50--50}
 %    % TODO: Get in closer or remove figure
 %\end{figure}
@@ -195,7 +195,7 @@ Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute
         \caption{Target adapted signal, early in the experiment (sequence that ends at minute 30).}
         \label{fig:200--50-adapter5}
     \end{subfigure}
-    \caption{Qualitative comparison of 30\si{\second} of the response signal for the 2--0.5\si{\mm} perforation.
+    \caption{Qualitative comparison of 30\si{\second} of the signal response for the 2--0.5\si{\mm} perforation.
     Also showing a comparison between the signals of the target adapted controller, late vs. early into the experiment.}
     \label{fig:200--50-qualitative}
 \end{figure}
@@ -207,7 +207,7 @@ However, the fact that the target adapter shows improvement over the reference c
 The highly responsive PID controller is quick to react, reducing the need for extreme adaptations as seen in the previous experiments.
 As the KOS further degrades, it sometimes enters an unstable cycle: much alike the ones seen in~\Cref{fig:slow-overshoot-ref},~\Cref{subsec:varying-pid}, but at a higher frequency.
 This results in training data that contains many contradicting features, which results in increased noise in the adapter's predictions.
-Noisy targets in turn produce noisy control actions and consequently noisy response signals.
+Noisy targets in turn produce noisy control actions and consequently noisy signal responses.
 
 \subsection{Crawling Gait}\label{subsec:crawling-gait}
 The final experiment emulates the mode of operation that the robotic crawler was designed for.
@@ -252,7 +252,7 @@ This corresponds to the relatively low difference in total variance between refe
         \caption{Target adapted signal for the fully online trained adapter.}
         \label{fig:crawl-adapter}
     \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the response signal for the 0.5--0.5\si{\mm} perforation.
+    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the 0.5--0.5\si{\mm} perforation.
     The snapshot is taken from the first 5\si{\minute} sequence.}
     \label{fig:crawl-qualitative}
 \end{figure}
