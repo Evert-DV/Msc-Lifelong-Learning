@@ -9,16 +9,16 @@ from adjustText import adjust_text
 
 plt.style.use('tableau-colorblind10')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-mpl.use("pgf")
-mpl.rcParams.update({
-    "pgf.texsystem": "xelatex",
-    'font.size': 8,
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-    "pgf.preamble": r"\usepackage{amsmath}"
-                    r"\usepackage{lmodern}"
-                    r"\usepackage{siunitx}"
-})
+# mpl.use("pgf")
+# mpl.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     'font.size': 8,
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+#     "pgf.preamble": r"\usepackage{amsmath}"
+#                     r"\usepackage{lmodern}"
+#                     r"\usepackage{siunitx}"
+# })
 tex_line_width = 3.48
 tex_text_width = 7.17
 
@@ -46,15 +46,15 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
     # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
     # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
-    "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",    # <-- varying PID
-    "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",     # <-- varying PID, qualitative, self-correcting
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",    # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",     # <-- varying PID, qualitative, self-correcting
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
@@ -64,8 +64,8 @@ data_folders = [
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
 ]
-file_name = "auto_save_17"
-file = f"{data_folders[1]}/{file_name}.npy"
+file_name = "auto_save_0"
+file = f"{data_folders[2]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -207,13 +207,22 @@ def plot_file(files):
 
     signal_ax[1].set_xlabel("Count")
     signal_ax[1].set_ylabel("$u$ [\si{\micro\second}]")
+    for ax in signal_ax:
+        ax.tick_params(axis='both', labelsize=6)
 
-    signal_ax[0].set_xlim([78950, 81780])
+    # signal_ax[0].set_xlim([78950, 81780])
+    # signal_ax[0].set_xlim([67390, 70400])
+    # signal_ax[0].set_xlim([31250, 34100])
+    # signal_ax[0].set_xlim([32300, 35250])
+    # signal_ax[0].set_xlim([79050, 81900])
+    # signal_ax[0].set_xlim([77230, 78650])
+    # signal_ax[0].set_xlim([79800, 81270])
+    signal_ax[0].set_xlim([10950, 13650])
     signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
-                      fontsize=6, frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.04))
+                      frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.07))
 
     signal_fig.tight_layout()
-    plt.savefig(f'{root}\\reports\\Thesis\\figures\\results\\slow-overshoot-adapter.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
+    plt.savefig(f'{root}\\reports\\Thesis\\figures\\results\\crawling-gait-adapter.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
 
     # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
     #     tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
@@ -331,21 +340,22 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
             x_last = x_ticks[-2]
             y_last = y_values[-2]
 
-        #     # Create the text annotation
-        #     txt = ax.text(
-        #         x_last,
-        #         y_last,
-        #         label.strip().split(' ')[0],
-        #         fontsize=6,
-        #         color=line.get_color(),
-        #         alpha=0.75,
-        #         ha='left',
-        #         va='bottom'
-        #     )
-        #     texts.append(txt)  # Add to the list of texts
-        #
-        # # Adjust the text positions to prevent overlapping
-        # adjust_text(texts, ax=ax, expand_points=(2., 2.))
+            # Create the text annotation
+            # txt = ax.text(
+            #     x_last,
+            #     y_last,
+            #     label.strip().split(' ')[-1],
+            #     fontsize=6,
+            #     color=line.get_color(),
+            #     alpha=0.75,
+            #     ha='left',
+            #     va='bottom'
+            # )
+            # texts.append(txt)  # Add to the list of texts
+            # texts[0].set_visible(False)  # Hide the first text annotation
+
+        # Adjust the text positions to prevent overlapping
+        adjust_text(texts, ax=ax, expand_points=(0., .5), expand_text=(0., 1.1))
 
         # Determine the maximum length of the data
         max_length_wo_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'wo adapter' in label])
@@ -370,7 +380,7 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         w_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_w_adapter -1], avg_values_w_adapter, lw=1., marker='.', markersize=2, color=colors[1])
 
         skip_tick = max(1, len(combined_ticks) // 12)
-        ax.set_ylabel(header, fontsize=8)
+        ax.set_ylabel(header)
         ax.set_xticks(sorted(list(combined_ticks))[::-skip_tick])
         ax.tick_params(axis='both', labelsize=6)
 
@@ -378,11 +388,11 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         fig.delaxes(ax)
 
     # Set x-label for the last subplot in each column
-    axes[len(metrics_headers) - 2].set_xlabel('Time [min]', fontsize=8)
-    axes[len(metrics_headers) - 1].set_xlabel('Time [min]', fontsize=8)
+    axes[len(metrics_headers) - 2].set_xlabel('Time [min]')
+    axes[len(metrics_headers) - 1].set_xlabel('Time [min]')
 
     fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left',
-               fontsize=8, frameon=False, bbox_to_anchor=(0., -0.05))
+               frameon=False, bbox_to_anchor=(0., -0.05))
 
     fig.tight_layout()
     plot_file = os.path.join(save_folder, f'slow-overshoot-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
@@ -450,8 +460,8 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 def main():
     # plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
-    # metrics(file, do_print=True, do_plot=True)
-    compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\results', file_type='auto_save')
+    metrics(file, do_print=True, do_plot=True)
+    # compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\results', file_type='auto_save')
     # compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
     # metrics_similarity(data_folders, file_type='ref_minute')
 
