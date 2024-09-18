@@ -1,8 +1,6 @@
 \subsection{Mechanical Details}\label{subsec:mechanical-details}
 As mentioned in \Cref{sec:background}\todo{discuss this in \Cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
 To evaluate the method described in \Cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
-\todo{first a section on the KOS characteristics}  % TODO: KOS characteristics
-
 \Cref{fig:robot-overview} provides important nomenclature for reference.
 
 \begin{figure}
@@ -88,6 +86,9 @@ However, the design is such that the servo's mechanical limit corresponds to a $
     \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
     \label{fig:extend-contract}
 \end{figure}
+
+\subsection{KOS characteristics}\label{subsec:kos-characteristics}
+\todo[inline]{section on the KOS specifics}  % TODO: KOS characteristics
 
 \subsection{Software Implementation}\label{subsec:software-implement}
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
