@@ -1,6 +1,6 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (MiKTeX 24.4) (preloaded format=xelatex 2024.9.16)  17 SEP 2024 15:07
+This is XeTeX, Version 3.141592653-2.6-0.999996 (MiKTeX 24.4) (preloaded format=xelatex 2024.9.16)  18 SEP 2024 10:10
 entering extended mode
- \write18 enabled.
+ restricted \write18 enabled.
  %&-line parsing enabled.
 **./Thesis/figures/results/200--50-ref.tex
 (Thesis/figures/results/200--50-ref.tex
@@ -13,17 +13,22 @@ Document Class: standalone 2022/10/10 v1.3b Class to compile TeX sub-files stan
 dalone
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/tools\shellesc.sty
 Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
-Package shellesc Info: Unrestricted shell escape enabled on input line 75.
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifluatex.sty
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifluatex.sty
 Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
 Package: iftex 2022/02/03 v1.0f TeX engine tests
-)) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
+))
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/xkeyval\xkeyval.sty
 Package: xkeyval 2022/06/16 v2.9 package option processing (HA)
-(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex (
-C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
+
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkeyval.tex
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\xkvutils.tex
 \XKV@toks=\toks17
 \XKV@tempa@toks=\toks18
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/xkeyval\keyval.tex))
 \XKV@depth=\count190
 File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
@@ -53,8 +58,8 @@ File: size10.clo 2024/02/08 v1.4n Standard LaTeX file (size option)
 \bibindent=\dimen141
 )
 \sa@box=\box52
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.st
-y
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/pgf/utilities\pgfrcs.st
 y
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
@@ -68,18 +73,20 @@ y
 \pgfutil@abb=\box53
 )
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs.
-code.tex (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revi
-sion.tex)
+code.tex
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/pgf\pgf.revision.tex)
 Package: pgfrcs 2023-01-15 v3.1.10 (3.1.10)
 ))
 Package: pgf 2023-01-15 v3.1.10 (3.1.10)
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgfcore.
-sty (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.s
-ty
+sty
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2024/05/23 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
 Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
 )
@@ -88,6 +95,7 @@ fg
 File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
 )
 Package graphics Info: Driver file: xetex.def on input line 106.
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\xetex.def
 File: xetex.def 2022/09/22 v5.0n Graphics/color driver for xetex
 ))
@@ -159,8 +167,10 @@ File: pgfsyssoftpath.code.tex 2023-01-15 v3.1.10 (3.1.10)
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
 sprotocol.code.tex
 File: pgfsysprotocol.code.tex 2023-01-15 v3.1.10 (3.1.10)
-)) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+))
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2023/11/15 v3.01 LaTeX color extensions (UK)
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.cfg
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
@@ -335,20 +345,25 @@ Package: pgfcomp-version-0-65 2023-01-15 v3.1.10 (3.1.10)
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
 mp-version-1-18.sty
 Package: pgfcomp-version-1-18 2023-01-15 v3.1.10 (3.1.10)
-)) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+))
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2024/05/23 v2.17q AMS math features
 \@mathmargin=\skip51
+
 For additional information on amsmath, use the `?' option.
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
 Package: amstext 2021/08/26 v2.01 AMS text
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0 generic functions
 \@emptytoks=\toks29
 \ex@=\dimen183
-)) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
+))
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d Bold Symbols
 \pmbraise@=\dimen184
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
 Package: amsopn 2022/04/08 v2.04 operator names
 )
 \inf@bad=\count280
@@ -398,7 +413,8 @@ LaTeX Info: Redefining \Relbar on input line 970.
 \mathdisplay@stack=\toks33
 LaTeX Info: Redefining \[ on input line 2953.
 LaTeX Info: Redefining \] on input line 2954.
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\lmodern.sty
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\lmodern.sty
 Package: lmodern 2015/05/01 v1.6.1 Latin Modern Fonts
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
 (Font)                  OT1/cmr/m/n --> OT1/lmr/m/n on input line 22.
@@ -432,7 +448,8 @@ LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
 (Font)                  OT1/cmr/bx/it --> OT1/lmr/bx/it on input line 37.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 (Font)                  OT1/cmtt/m/n --> OT1/lmtt/m/n on input line 38.
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/siunitx\siunitx.sty
 Package: siunitx 2024-08-20 v3.3.21 A comprehensive (SI) units package
 \l__siunitx_number_uncert_offset_int=\count292
 \l__siunitx_number_exponent_fixed_int=\count293
@@ -453,6 +470,7 @@ Package: siunitx 2024-08-20 v3.3.21 A comprehensive (SI) units package
 ns.sty
 Package: translations 2022/02/05 v1.12 internationalization of LaTeX2e packages
  (CN)
+
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2020/10/05 v2.5k e-TeX tools for LaTeX (JAW)
 \etb@tempcnta=\count303
@@ -465,7 +483,8 @@ Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
 ty
 Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
 Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
 )
 Package pdftexcmds Info: \pdf@primitive is available.
@@ -485,7 +504,7 @@ Package pdftexcmds Info: \pdfdraftmode not found.
 \l__siunitx_unit_tmp_int=\count304
 \l__siunitx_unit_position_int=\count305
 \l__siunitx_unit_total_int=\count306
-(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+ (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
 Package: array 2024/06/14 v2.6d Tabular extension package (FMi)
 \col@sep=\dimen197
 \ar@mcellbox=\box70
@@ -494,11 +513,11 @@ Package: array 2024/06/14 v2.6d Tabular extension package (FMi)
 \extratabsurround=\skip54
 \backup@length=\skip55
 \ar@cellbox=\box71
-)) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.st
-y
+))
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.sty
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xpars
-e.sty (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.st
-y
+e.sty
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
 Package: expl3 2024-07-20 L3 programming layer (loader) 
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-xet
@@ -531,10 +550,11 @@ X
 \l__fontspec_tmpa_dim=\dimen199
 \l__fontspec_tmpb_dim=\dimen256
 \l__fontspec_tmpc_dim=\dimen257
-(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
+ (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
 Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
-) (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.cfg
-)))
+)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/fontspec\fontspec.cfg))
+)
 
 Package fontspec Info: 
 (fontspec)             Font family 'TeXGyreTermes(0)' created for font 'TeX
@@ -572,8 +592,8 @@ text;"
 
 Package translations Info: No language package found. I am going to use `englis
 h' as default language. on input line 15.
-No file Thesis/figures/results/200--50-ref.aux.
-\openout1 = `Thesis/figures/results/200--50-ref.aux'.
+ (C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200--50-ref.aux)
+\openout1 = `200--50-ref.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
 LaTeX Font Info:    ... okay on input line 15.
@@ -586,7 +606,7 @@ LaTeX Font Info:    ... okay on input line 15.
 LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 1
 5.
-(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmr.fd
+ (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmr.fd
 File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
 LaTeX Font Info:    ... okay on input line 15.
@@ -605,26 +625,57 @@ nslations-basic-dictionary')
 Package translations Info: loading dictionary `translations-basic-dictionary' f
 or `english'. on input line 15.
 
-! LaTeX Error: File `200--50-ref.pgf' not found.
+(C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis\figures\results\
+200--50-ref.pgf
+LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 2
+43.
 
-Type X to quit or <RETURN> to proceed,
-or enter new name. (Default extension: pgf)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\ot1lmr.fd
+File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OML+lmm on input line 2
+43.
 
-Enter file name: 
-! Emergency stop.
-<read *> 
-         
-l.17     \input{200--50-ref.pgf}
-                                ^^M
-*** (cannot \read from terminal in nonstop modes)
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omllmm.fd
+File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
+243.
 
- 
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omslmsy.fd
+File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
+243.
+
+(C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omxlmex.fd
+File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <6> on input line 243.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 243.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <8> on input line 274.
+)
+
+[1
+
+]
+(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200--50-ref.aux)
+ ***********
+LaTeX2e <2024-06-01> patch level 2
+L3 programming layer <2024-07-20>
+ ***********
+ ) 
 Here is how much of TeX's memory you used:
- 16922 strings out of 409029
- 412077 string characters out of 5756741
- 1918612 words of memory out of 5000000
- 39386 multiletter control sequences out of 15000+600000
- 558173 words of font info for 49 fonts, out of 8000000 for 9000
+ 17070 strings out of 409029
+ 415843 string characters out of 5756741
+ 1968612 words of memory out of 5000000
+ 39501 multiletter control sequences out of 15000+600000
+ 569194 words of font info for 62 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 87i,1n,93p,485b,405s stack positions out of 10000i,1000n,20000p,200000b,200000s
-No pages of output.
+ 87i,8n,93p,485b,833s stack positions out of 10000i,1000n,20000p,200000b,200000s
+
+Output written on C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis
+\figures\results\200--50-ref.pdf (1 page).

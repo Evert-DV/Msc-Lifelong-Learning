@@ -2,8 +2,8 @@ This is XeTeX, Version 3.141592653-2.6-0.999996 (MiKTeX 24.4) (preloaded format=
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./Thesis/figures/results/200-50-adapter.tex
-(Thesis/figures/results/200-50-adapter.tex
+**./Thesis/figures/results/200-50-adapter5.tex
+(Thesis/figures/results/200-50-adapter5.tex
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-07-20>
 
@@ -593,9 +593,9 @@ text;"
 Package translations Info: No language package found. I am going to use `englis
 h' as default language. on input line 15.
 
-(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter.au
-x)
-\openout1 = `200-50-adapter.aux'.
+(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter5.a
+ux)
+\openout1 = `200-50-adapter5.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
 LaTeX Font Info:    ... okay on input line 15.
@@ -628,7 +628,7 @@ Package translations Info: loading dictionary `translations-basic-dictionary' f
 or `english'. on input line 15.
 
 (C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis\figures\results\
-200--50-adapter.pgf
+200--50-adapter5.pgf
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 2
 24.
 
@@ -664,8 +664,8 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 [1
 
 ]
-(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter.au
-x)
+(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter5.a
+ux)
  ***********
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-07-20>
@@ -673,12 +673,12 @@ L3 programming layer <2024-07-20>
  ) 
 Here is how much of TeX's memory you used:
  17071 strings out of 409029
- 415917 string characters out of 5756741
- 1971612 words of memory out of 5000000
+ 415936 string characters out of 5756741
+ 1966612 words of memory out of 5000000
  39501 multiletter control sequences out of 15000+600000
  569194 words of font info for 62 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 87i,8n,93p,488b,833s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 87i,8n,93p,489b,833s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis
-\figures\results\200-50-adapter.pdf (1 page).
+\figures\results\200-50-adapter5.pdf (1 page).

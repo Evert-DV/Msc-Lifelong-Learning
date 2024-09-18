@@ -2,8 +2,8 @@ This is XeTeX, Version 3.141592653-2.6-0.999996 (MiKTeX 24.4) (preloaded format=
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./Thesis/figures/results/200-50-adapter.tex
-(Thesis/figures/results/200-50-adapter.tex
+**./Thesis/figures/results/under-tuned-signal.tex
+(Thesis/figures/results/under-tuned-signal.tex
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-07-20>
 
@@ -591,33 +591,33 @@ text;"
 -text;"
 
 Package translations Info: No language package found. I am going to use `englis
-h' as default language. on input line 15.
+h' as default language. on input line 18.
 
-(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter.au
-x)
-\openout1 = `200-50-adapter.aux'.
+(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\under-tuned-signa
+l.aux)
+\openout1 = `under-tuned-signal.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
 LaTeX Font Info:    Trying to load font information for TS1+cmr on input line 1
-5.
+8.
  (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/base\ts1cmr.fd
 File: ts1cmr.fd 2023/04/13 v2.5m Standard LaTeX font definitions
 )
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
-LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
+LaTeX Font Info:    ... okay on input line 18.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/translations/dicts\tran
 slations-basic-dictionary-english.trsl
@@ -625,60 +625,60 @@ File: translations-basic-dictionary-english.trsl (english translation file `tra
 nslations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 15.
+or `english'. on input line 18.
 
 (C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis\figures\results\
-200--50-adapter.pgf
+under-tuned-signal.pgf
 LaTeX Font Info:    Trying to load font information for OT1+lmr on input line 2
-24.
+05.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\ot1lmr.fd
 File: ot1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OML+lmm on input line 2
-24.
+05.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omllmm.fd
 File: omllmm.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMS+lmsy on input line 
-224.
+205.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omslmsy.fd
 File: omslmsy.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    Trying to load font information for OMX+lmex on input line 
-224.
+205.
 
 (C:\Users\evert\AppData\Local\Programs\MiKTeX\tex/latex/lm\omxlmex.fd
 File: omxlmex.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 224.
+(Font)              <8> on input line 205.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 224.
+(Font)              <6> on input line 205.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 255.
+(Font)              <5> on input line 205.
 )
 
 [1
 
 ]
-(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\200-50-adapter.au
-x)
+(C:/Users\evert\Documents\Msc-Lifelong-Learning\reports\auxil\under-tuned-signa
+l.aux)
  ***********
 LaTeX2e <2024-06-01> patch level 2
 L3 programming layer <2024-07-20>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 17071 strings out of 409029
- 415917 string characters out of 5756741
- 1971612 words of memory out of 5000000
+ 17070 strings out of 409029
+ 415969 string characters out of 5756741
+ 2421628 words of memory out of 5000000
  39501 multiletter control sequences out of 15000+600000
  569194 words of font info for 62 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 87i,8n,93p,488b,833s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 87i,8n,93p,492b,833s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on C:\Users\evert\Documents\Msc-Lifelong-Learning\reports\Thesis
-\figures\results\200-50-adapter.pdf (1 page).
+\figures\results\under-tuned-signal.pdf (1 page).
