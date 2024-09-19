@@ -2,10 +2,10 @@ The performance of the target adapter is evaluated over three types of experimen
 In the first type, the PID controller's tuning is varied, while maintaining consistent KOS characteristics.
 For the second group of experiments, the KOS characteristics are varied, namely the degree of perforation in the folds, while keeping the PID controller identical across tests.
 Finally, the performance is tested for a crawling gait to observe the effect of the method in a highly restricted setting.
-
+\todo[inline]{FOR ENTIRE SECTION: quantify the results: x\% improvement of y, etc.}  % TODO QUANTIFY!!!
 \subsection{Varying the PID Controller}\label{subsec:varying-pid}
 For the first experiment, the method's robustness to the use of different PID controllers is tested.
-The robot is equipped with the standard set of KOSs\todo{find a place to dicuss the specifics of the chosen KOS design}, using perforations of 1.5--0.5\si{mm} cut--skip ratio.
+The robot is equipped with the standard set of KOSs, using perforations of 1.5--0.5\si{mm} cut--skip ratio.
 During this experiment, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees.
 The robot has 5\si{\second} to reach and settle around a target before it is provided with the next target in the sequence.
 
@@ -235,7 +235,7 @@ Signal responses are shown in~\Cref{fig:crawl-qualitative}, note that the adapte
 The improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the reference controller having an unstable signal.
 In fact, the signal from the reference resembles that of an under-tuned controller.
 Target adaptations appear to be minimal, being only visual in close-ups of the signal.
-This corresponds to the relatively low difference in total variance between reference and adapted controllers, observed in the metric evolution. \todo{FOR ENTIRE SECTION: quantify the results: x\% improvement of y, etc.}  % TODO QUANTIFY!!!
+This corresponds to the relatively low difference in total variance between reference and adapted controllers, observed in the metric evolution.
 
 \begin{figure}
     \begin{subfigure}[t]{\linewidth}

@@ -1,6 +1,5 @@
 \subsection{Target Adaptations}\label{subsec:target-adaptations}
 The method proposed in this paper aims to provide a way of improving a given controller's performance as well as fortifying it against evolving system dynamics \emph{without} having access to the inner workings of the controller itself.
-In other words, as long as the fundamental assumptions of a controller are satisfied—i.e.~it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
 In addition, the aim is not to replace the controller entirely but to introduce an additional module to the control scheme that enables lifelong robustness to evolving system dynamics.
 The advantage of such a method is that it could be applied to any system as a \emph{plug-and-play} module.
 
@@ -135,6 +134,7 @@ Training features were created for multiple prediction windows, this means the t
 The buffer's budget corresponded to the past 30\si{\second} of data.
 For reference, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
 To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
+\todo[inline]{Redo fontsizes, control axis size, on all figures in section}  % TODO: fontsize figures, make standalone figs
 
 \subsubsection{A case where the controller is too aggressive}
 \begin{figure*}
@@ -202,5 +202,3 @@ These features are the result of the steady-state error present in the signal, l
     \label{fig:toy-plot-damped-closeup}
     \vspace*{1em} % Add white space between figures
 \end{figure}
-
-\todo{Redo fontsizes on all figures in section}  % TODO: fontsize figures, make standalone figs

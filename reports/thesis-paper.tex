@@ -56,7 +56,21 @@
     \maketitle
 
     \begin{abstract}
-        \ldots
+%        \ldots
+        Soft robots offer a variety of useful applications.
+        However, the nature of their design makes them challenging to control using traditional techniques.
+        Many applications therefore rely on machine learning-based methods, learning ``blackbox'' control policies or dynamic models of the robot.
+        This often results in overly complex and opaque solutions for the problem at hand.
+
+        In this paper, a simplified approach is considered:
+        Using a common feedforward neural network as a \emph{target adapter} module,
+        learned adaptations are added to the desired targets that are fed to a simple PID controller, essentially \emph{deceiving} it into a better performance.
+        This adapter is completely separate from the controller itself, allowing for relatively simple controllers to control--and adapt to--complex and evolving systems.
+
+        The approach is tested in simulation on a simple mass-spring-damper control problem, where qualitative results show near-immediate improvement in controller performance.
+        The approach is then tested on a demonstrator origami robot, which relies for its functionality on the dynamics of the Kresling origami spring.
+        Results show that this simple adaptation approach is robust to both changes in controller tuning and changes in system dynamics.
+        However, the method is sensitive to the sampling frequency at which training data is recorded.
     \end{abstract}
 
 
@@ -97,6 +111,7 @@
     \input{Thesis/conclusion}
 %    \FloatBarrier
 
+    \todo[inline]{filter through refrences, just the essentials}
     \printbibliography
     \FloatBarrier
 
