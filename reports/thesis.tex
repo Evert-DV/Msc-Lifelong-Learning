@@ -10,9 +10,11 @@
 \usepackage[backend=biber, style=apa]{biblatex}
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
 \usepackage[mode=tex]{standalone}
+\usepackage{fontspec}
 \usepackage{lipsum}
-\usepackage{multicol}
-\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xr}
+\usepackage{pdfpages}
 \usepackage{etoolbox}
 \usepackage{geometry}
 \usepackage{csquotes}
@@ -20,18 +22,14 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{tabularx}
-\usepackage[ruled]{algorithm2e}
 \usepackage{cleveref}
 \usepackage{float}
-\usepackage{wrapfig2}
-\usepackage{caption}
 \usepackage{subcaption}
 \usepackage{pgf}
-\usepackage{titling}
 \usepackage[section]{placeins}
 
 
-
+\externaldocument{thesis-paper}
 \newfontfamily{\textimes}{TeX Gyre Termes}
 
 % easy citing
@@ -50,116 +48,6 @@
 \AtBeginEnvironment{figure*}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure*}{\let\sffamily\relax}
 \AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
-
-% Define a new environment "ieeetranenv"
-\newenvironment{ieeetranenv}
-{
-    \bgroup
-
-    % Custom title format like ieeetran, single-column
-    \newcommand{\makepapertitle}{%
-        \centering
-        \Huge\thetitle\par
-        \vskip 0.2em
-        \normalsize\theauthor\par
-        \vskip 0.2em
-    }
-    \renewcommand{\maketitle}{}
-
-    % Define the abstract environment
-    \newenvironment{abstract}{%
-        \bfseries
-        {\itshape Abstract\textemdash}%
-        }{}
-
-    % Change section format
-    \renewcommand\thesection{\Roman{section}}
-        \titleformat{\section}
-    {\centering\large\scshape}{\thesection.}{1em}{}
-
-    % Change subsection format
-    \renewcommand\thesubsection{\Alph{subsection}}
-    \titleformat{\subsection}
-    {\itshape}{\thesubsection.}{1em}{}
-
-    % Define the heading for the bibliography within this environment
-    \renewcommand{\bibname}{References}
-    \renewcommand{\bibfont}{\textimes}
-    \defbibheading{bibliography}[\bibname]{%
-        \section*{##1} % This ensures the heading uses the current environment's font and style
-    }
-    \setlength{\bibitemsep}{0pt} % Compact the entries
-
-    % Appendix Formatting
-    \newcommand{\appendices}{%
-        \setcounter{section}{0}%
-        \renewcommand{\thesection}{\Alph{section}}%
-        \titleformat{\section}
-        {\centering\large\scshape}{Appendix \thesection}{1em}{\\\normalsize}%
-        \renewcommand{\thesubsection}{\thesection.\arabic{subsection}}%
-        \titleformat{\subsection}
-        {\itshape}{\thesubsection.}{1em}{}
-        \crefname{section}{Appendix}{Appendices}
-    }
-
-    % Define a command to set the font and size for captions
-    \renewcommand{\captionfont}{\textimes\fontsize{8pt}{10pt}\selectfont}
-
-    \let\oldfigure\figure
-    \let\endoldfigure\endfigure
-    \let\oldtable\table
-    \let\endoldtable\endtable
-
-    % Hook into the figure and table environment
-    \renewenvironment{figure}[1][htbp]
-    {\oldfigure[##1]\minipage{\linewidth}\wrapfigure{l}{\linewidth}
-    \captionsetup{labelsep=period, name=Fig.}}
-    {\endwrapfigure\endminipage\endoldfigure}
-
-    \renewenvironment{table}[1][htbp]
-    {\minipage{\linewidth}\wraptable{l}{\linewidth}
-    \captionsetup{font+=sc, labelsep=newline, name=TABLE, justification=centering}}
-    {\endwraptable\endminipage}
-
-    % Define caption formatting for figures and tables
-    \renewcommand{\thefigure}{\arabic{figure}}
-    \renewcommand{\thetable}{\Roman{table}}
-    \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
-    \AtBeginEnvironment{tabular*}{\fontsize{8.5pt}{10pt}\selectfont}
-
-    % Ensure references to figures and tables appear correctly
-    \crefname{figure}{fig.}{figs.}
-    \Crefname{figure}{Fig.}{Figs.}
-    \crefname{table}{table}{tables}
-    \Crefname{table}{Table}{Tables}
-
-    % General page layout
-    % Set the page number font to TeX Gyre Termes
-    \fancypagestyle{plain}{
-        \fancyhf{}
-        \fancyfoot[C]{\centering\textimes\fontsize{9.5pt}{10.5pt}\selectfont\thepage}
-        \renewcommand{\headrulewidth}{0pt}
-        \renewcommand{\footrulewidth}{0pt}
-    }
-    \pagestyle{plain}
-    \newgeometry{left=1.3cm, right=1.3cm, top=1.9cm, bottom=4.3cm}
-    \textimes
-
-    % Manually create the title
-    {\makepapertitle}
-
-    \begin{multicols}{2}
-
-    \setlength{\columnsep}{12pt}
-
-    \fontsize{9.5pt}{10.5pt}\selectfont
-}
-{
-% End two-column layout
-\end{multicols}
-\restoregeometry
-\egroup
-}
 
 % changes color markup
 \setaddedmarkup{\color{Green}#1}
@@ -186,20 +74,22 @@
 %\vfill
 %}
 
+
 \begin{document}
 \makecover
 \frontmatter
 
 \input{Thesis/title}
 \input{Thesis/preface}
+see \Cref{fig:limitation} in \cref{sec:discussion}.
+
+\tableofcontents
+\listoffigures
 
 \mainmatter
 
-\title{\thetitle: \thesubtitle}
-\begin{ieeetranenv}
-\input{thesis-paper}
-\end{ieeetranenv}
+\includepdf[pages=-]{out/thesis-paper.pdf}
 
-\appendix
+%\appendix
 
 \end{document}
