@@ -147,8 +147,11 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
                         axis=-1) for array in windowed_data for window in window_list)
 
     labels = ops.concatenate(
-        array[..., window:, -target_size:] - array[..., window:, :target_size] for array in
-        windowed_data for window in window_list)
+        # array[..., window:, -target_size:] - array[..., window:, :target_size] for array in
+        # windowed_data for window in window_list   # take labels from x_t+window
+        array[..., :-window, -target_size:] - array[..., window:, :target_size] for array in
+        windowed_data for window in window_list     # take labels from x_t
+    )
 
     if val_split is not None:
         dataset = TensorDataset(features, labels)
