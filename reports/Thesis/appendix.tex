@@ -1,0 +1,24 @@
+\section{Code Structure}\label[appendix]{app:code-structure}
+
+\begin{figure}[htb]
+    \centering
+    \def\svgwidth{\linewidth}
+    \footnotesize\selectfont\input{Thesis/figures/appendix/code_diagram.pdf_tex}
+    \caption{The interaction between the modules (rectangles) and shared variables (ovals) of the computer (blue) and Arduino (red).}
+    \label{fig:code-diagram}
+\end{figure}
+
+\Cref{fig:code-diagram} provides an overview of the communication between computer and Arduino, and their inner interactions between various modules.
+For example, the sole task of the \texttt{send} thread is to read the value of a global variable representing the target state and send this to the Arduino.
+The \texttt{listen} thread reads the tuple sent in return by the Arduino and assigns its contents to the respective shared variables for the state, control action, resulting state and target.
+It then adds this tuple to the buffer used for updating the adapter model.
+The \texttt{update} thread is responsible for (re)training the adapter.
+It creates a copy of the adapter, which can then be trained in the background while the original adapter remains functional.
+Once training is completed, the copied adapter's weights are assigned to the original adapter.
+The \texttt{change\_value} thread is responsible for setting the ``true'' target in the control loop, as well as the actual adaptations to it.
+All threads aim to operate at 50\si{\hertz}.
+
+
+\section{Comparing KOSs}\label[appendix]{app:KOS-refs}
+
+\section{Extended Test Results}\label[appendix]{app:results-ext}

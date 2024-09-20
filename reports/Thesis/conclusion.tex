@@ -1,0 +1,16 @@
+The goal of the target adaptation approach is to provide a simplified and intuitive alternative to more opaque control techniques commonly seen in soft-robotics applications.
+The idea is that a simple or traditional method can be used to handle the base control of the robot, and that a separate module improves the performance of that controller.
+It achieves this by providing the controller with adapted targets, but without altering the controller's parameters.
+
+In simulation, it was shown that such an approach offers near instantaneous improvement for the control of a simple mass-spring damper system.
+
+The tests on a demonstrator robot, with a design relying on Kresling origami springs, show that the method is robust to varying controller tuning and varying system dynamics.
+The target adapter module tends to make passive controllers more aggressive, and vice versa, resulting in a consistent performance.
+Usage of the method on a constrained operational domain shows that both pretrained and online trained adapters manage to improve the performance, with a preference for the latter\todo{discuss pretrain and online difference in discussion}.  % TODO: pre vs online trained
+
+A limitation is presented in the form of the sampling frequency at which the signal response is stored for training the module: The frequency has to be high enough to capture enough detail.
+If the sampling frequency is too low \emph{and} the recorded data contains some unstable oscillations, the adapter is unable to find meaningful relationships between the state pairs and targets it uses for updating itself.
+Updates on such meaningless features lead to a negative feedback loop for the adapter's performance, which it is unable to escape.
+
+Possible solutions to the problem are methods that allow the adapter to either recall previous settings or maintain a more stable performance.
+An implementation of some kind of memory, or more envolved updating techniques like \emph{learning without forgetting} (LoF)\todo{cite}, could potentially allow the adapter to escape such vicious cycles.

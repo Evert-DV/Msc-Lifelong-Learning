@@ -48,16 +48,18 @@ class PIDController:
         self.kd = kd
         self.ki = ki
         self.integral_error = 0.
+        self.prev_error = 0.
 
     def compute_control(self, current_state, target, dt):
         if target is None:
             return 0
         else:
             position_error = target[0] - current_state[0]
-            velocity_error = target[1] - current_state[1]
+            d_error = (position_error - self.prev_error) / dt
             self.integral_error += position_error * dt
+            self.prev_error = position_error
 
-            control_action = self.kp * position_error + self.kd * velocity_error + self.ki * self.integral_error
+            control_action = self.kp * position_error + self.kd * d_error + self.ki * self.integral_error
 
         return control_action
 
@@ -139,11 +141,13 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
         # data = data[..., :-target_size]
     windowed_data = [data[ops.all(ops.isclose(ops.array(true_target_list), ops.array(i)), axis=-1)] for i in
                      np.unique(true_target_list, axis=0)]
+
     features = ops.concatenate(
         ops.concatenate((array[..., :-window, :state_size], array[..., window:, :state_size]),
                         axis=-1) for array in windowed_data for window in window_list)
+
     labels = ops.concatenate(
-        array[..., window:, -target_size:] - array[..., window:, :1] for array in
+        array[..., window:, -target_size:] - array[..., window:, :target_size] for array in
         windowed_data for window in window_list)
 
     if val_split is not None:

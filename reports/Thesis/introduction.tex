@@ -1,0 +1,35 @@
+\todo[inline]{farm literature study for references} % TODO: cite
+Lifelong learning, the ability of a system to continuously adapt to new information throughout its lifetime, is a much sought-after feature for many applications.
+Rather than relying on policies that are \emph{set in stone}, these systems learn and evolve autonomously, changing and improving their behaviors as they encounter new tasks or environments.
+This ability makes lifelong learning a powerful tool for systems that operate in uncertain or evolving scenarios, where changes are common or to be expected.
+Not in the least for robotics.
+
+Robots, like all mechanical systems, wear down over time—joints become more compliant, motors weaken, and sensors lose precision.
+Traditionally, maintaining a robot’s performance might require manual software updates or recalibrations every so often.
+But as robots become more complex, especially in fields like soft robotics, where flexible, compliant materials introduce additional challenges, the need for autonomous adaptation becomes clear:
+The materials used in the construction of soft robots are by design less sturdy and thus more prone to much faster deterioration, which makes manual updates or recalibrations impractical.
+
+In addition, the complex system dynamics introduced by the unconventional robot configurations and use of materials make modeling their dynamics and control a difficult task.
+Deriving an analytical model for the dynamics of a soft robot can become so complicated to the point that it is impractical.
+Soft-robotics applications therefore heavily rely on the use of machine learning (ML) methods~\cite{Kim2021}.
+These ``blackbox'' techniques offer the possibility of modeling the robot's dynamics and allow for continuous adaptation but are often very opaque or complex, even though the task or environment setting of the soft robot could be something fairly simple.
+
+This paper proposes a method of enhancing a traditional controller with ML abilities.
+The idea is that a basic controller can be tuned to a bare minimum sufficient performance, without worrying about the variations in dynamics introduced by soft robots.
+This controller is expanded with a separate module that takes care of the learning and adapting part of the challenge.
+The module then only needs to improve the performance of the controller, without requiring knowledge on the dynamics of the system, nor is the controller completely replaced by an uninterpretable ``blackbox'' policy.
+The controller works in cooperation with the ML-module, separating the interpretable basic control from the opaque learning and adapting.
+
+Techniques like parameter adaptation work much in the same way.
+An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\cite{Sprechmann2018,Annaswamy2021}.
+However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned), and such a module must thus be designed separately for each controller.
+
+The proposed method tries to mitigate this downside by offering a ``plug-and-play'' module that can improve a controller's performance by simply adapting the desired target it receives.
+In this way, no previous knowledge on the type or tuning of the controller is required.
+In other words, as long as the fundamental assumptions of a controller are satisfied—i.e.~it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
+
+\todo[inline]{KOS specific collection in Mendeley: \cite{Kaufmann2022,Kidambi2020,Masana1993,Masana2019,Bhovad2019}]}  % TODO: Cite
+As a demonstration of the technique, this target adaptation approach is tested on a demonstrator origami robot, constructed in part from paper and which relies on the widespread Kresling pattern for its design.
+The Kresling origami spring (KOS) is characterized by its non-linear stiffness with deflection and bistable behavior, making it an interesting playground for testing the adaptability of the method to more complex dynamics.
+
+

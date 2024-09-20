@@ -1,0 +1,112 @@
+\subsection{Mechanical Details}\label{subsec:mechanical-details}
+As mentioned in \Cref{sec:background}\todo{discuss this in \Cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
+To evaluate the method described in \Cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
+\Cref{fig:robot-overview} provides important nomenclature for reference.
+
+\begin{figure}
+    \newcounter{annotations}
+    \centering
+    \begin{subfigure}[t]{\linewidth}
+        \centering
+        \def\svgwidth{0.9\linewidth}
+        \scriptsize\selectfont\input{Thesis/figures/robot/full_robot.pdf_tex}
+%        \missingfigure[figwidth=0.9\linewidth]{Outside view of the robot with nomenclature labels}
+        \begin{multicols}{2}
+            \small
+            \begin{enumerate}
+                \item KOS               \label{item:kos}
+                \item Actuation arm     \label{item:arm}
+                \item Connecting link   \label{item:link}
+                \item Eye screw         \label{item:eye}
+                \item Arduino           \label{item:arduino}
+                \setcounter{annotations}{\value{enumi}}
+            \end{enumerate}
+        \end{multicols}
+        \vspace*{-1em}
+        \caption{The Kresling origami robot.}
+        \label{fig:nomen-robot}
+        \vspace*{1em}
+    \end{subfigure}
+    \begin{subfigure}[b]{\linewidth}
+        \centering
+        \def\svgwidth{0.9\linewidth}
+        \scriptsize\selectfont\input{Thesis/figures/robot/actuation.pdf_tex}
+%        \missingfigure[figwidth=0.9\linewidth]{Inside view of the robot with nomenclature labels}
+        \begin{multicols}{2}
+            \small
+            \begin{enumerate}
+                \setcounter{enumi}{\value{annotations}}
+                \item Servo motor   \label{item:servo}
+                \item Servo arm     \label{item:servo-arm}
+                \item Metal spring  \label{item:spring}
+                \item Angle sensor  \label{item:sensor}
+                \item Magnet        \label{item:magnet}
+            \end{enumerate}
+        \end{multicols}
+        \vspace*{-1em}
+        \caption{Actuation mechanism.}
+        \label{fig:nomen-actuation}
+    \end{subfigure}
+    \caption{Annotated views of the robot and its most important actuation mechanisms}
+    \label{fig:robot-overview}
+\end{figure}
+
+The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\Cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation mechanism in between.
+Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet''.
+To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
+Rather, the state of the KOSs is the state that will be controlled.
+
+A KOS can be actuated both by linear motion (pushing or pulling on the spring) and by rotational motion (twisting).
+Since the two motions are directly related (\Cref{subsec:kresling-origami})\todo{\Cref{subsec:kresling-origami}}, a contracting or expanding motion can be measured as the angle of the KOS' twist.
+The twist is induced by turning a rotating arm (\ref{item:arm}) which is connected to the ends of the KOSs by two links (\ref{item:link}) that hook into eye-screws (\ref{item:eye}).
+To turn the arm, a micro servo motor (\ref{item:servo}) is employed.
+In the toy problem, the controller yields a force to exert on the system in order to reach the target position.
+However, most micro servo's come with a near perfect position controller built-in, which cannot be accessed or changed.
+Therefore, to bridge the gap between the simulation and the real-world implementation, the position output of the servo is converted to a force output by the use of a small, metal spring (\ref{item:spring}).
+The servo thus does not directly act on the actuation arm, but rotates a servo arm (\ref{item:servo-arm}) instead, which pulls the spring and thereby exerts a force on the actuation arm.
+As previously mentioned, the state of the KOS can be measured as the angle of twist, since it is directly related to its contraction.
+Likewise, assuming perfectly rigid links with negligible clearance between the hooks and eye-screws, the angle of twist is directly related to the angle of the actuation arm.
+In the full implementation, the robot's state $\mathbf{x}_t$ will thus be measured as the actuation arm's angular position and velocity $[\theta, \dot{\theta}]$.
+This angle is measured using a contactless sensor (\ref{item:sensor}) that can measure the on-axis rotation of a small magnet (\ref{item:magnet}) attached to the actuation arm.
+The sensor relays this information to an Arduino Nano (\ref{item:arduino}) board, which runs a PID controller that returns the control action, i.e., an angular position for the servo.
+Furthermore, there are mechanical limits for the rotation of both the actuation arm and servo arm, imposed by the edge of the container housing the actuation mechanism and the supports holding the servo motor, respectively (\Cref{fig:extend-contract}, \emph{right}).
+However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
+
+\begin{figure}
+    \begin{subfigure}[tl]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{extended}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[tr]{0.49\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{contracted}
+    \end{subfigure}
+    \caption{\emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.\\
+    \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
+    \label{fig:extend-contract}
+\end{figure}
+
+\subsection{KOS characteristics}\label{subsec:kos-characteristics}
+\todo[inline]{section on the KOS specifics}  % TODO: KOS characteristics
+
+\subsection{Software Implementation}\label{subsec:software-implement}
+The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
+
+\subsubsection{Nominal Control on the Arduino}
+Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its minimum position.
+The Arduino allows some time for the servo to reach this home position and then reads a first measurement from the angle sensor, setting this as the reference $\theta=0$ (see~\Cref{fig:extend-contract}, \emph{left}).
+During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
+Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\Cref{subsec:mechanical-details}).
+The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
+Finally, it sends the tuple containing the state, action, resulting state, and target to the external computer.
+
+\subsubsection{Target Adaptation on the External Computer}
+The target adaptation and supervised learning are implemented exclusively on the external computer through the established connection with the Arduino.
+The program is divided into several modules or \emph{threads} that run simultaneously.
+This way, values that need to be sent or read can be updated in the background upon request, without delaying the operations of other modules (see~\Cref{app:code-structure} for a more detailed breakdown of the interactions between various threads).
+At regular predefined intervals, a \texttt{change\_value} thread changes the true target $\theta_d$ to some value.
+Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
+The resulting $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
+The buffer is maintained by storing the tuples received from the Arduino.
+Upon train-time, the adapter weights are updated in the background, without interrupting the adapter's performance.

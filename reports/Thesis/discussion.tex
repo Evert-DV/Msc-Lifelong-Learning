@@ -1,0 +1,107 @@
+\Cref{sec:results} provides some short interpretation and discussion on the various results presented there.
+
+
+\subsection{Key Insights}\label{subsec:key-insights}
+A general trend in the effect of the target adapter can be observed: Whenever a controller-system configuration
+exhibits under-responsive characteristics, such as the under-tuned controller in~\Cref{subsec:varying-pid} and the 0.25--0.25\si{\mm} \& 0.5--0.5\si{\mm} perforations in~\Cref{subsec:varying-kos}, the target adapter induces more aggressive controller behavior.
+Likewise, when the controller is too aggressive from the start, target adaptions tend to moderate or constrain the behavior.
+
+This follows from the interpretation of the evaluation metrics in these scenarios.
+For example, under-responsive systems exhibit high rise times, and therefore high settling times.
+These systems are also characterized by low overshoot, low mean absolute velocity, and low controller \emph{effort} (total variance).
+When the adapter produces more extreme target positions, rise time and settling time decrease, but the overshoot increases.
+The controller is thus ``making an extra effort'', which is observed in the higher total variance: initially setting a more extreme target position, then gradually bringing it closer to the desired target, etc.
+The overall faster response results in the increased mean absolute velocity.
+As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles that of the under-responsive simulation in the toy problem (\Cref{subsec:preliminary-results}) very closely.
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/discussion/under-tuned-closeup.pgf}
+    \caption{A close-up from the under-tuned PID controller with target adapter.
+    The signal response generally resembles that of~\Cref{fig:toy-plot-damped-closeup} from the toy problem.}
+    \label{fig:under-tuned-closeup}
+\end{figure}
+
+Similarly, systems with an over-aggressive controller, i.e.~the \emph{slow-aggressive} controller experiment and the 2--0.5\si{\mm} \& 1.5--0.5\si{\mm} perforations, exhibit low rise times, but high settling times: the high gains \emph{push} state toward the desired target quickly, and then overcompensate for the high overshoot, resulting in a difficult to maintain a stable response near the target.
+This explains the high controller \emph{effort}.
+The adapter moves the target to less extreme positions, compensating for the overshoot ``in advance''.
+This prevents the system from entering an unstable feedback loop, by preventing the control inputs from getting overly aggressive in the first place.
+Thus, even though target adaptions are made, the overall controller effort is decreased.
+\Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
+Again, a resemblance to the equivalent scenario in the toy problem can be observed.
+The contradicting results from the 2--0.5 \& 1.5--0.5\si{\mm} perforations, see~\Cref{fig:150--50-200--50-metrics}, will be addressed in~\Cref{subsec:limitations}.
+However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the reference in the early stages, and it is during this phase that the same trends described earlier can be observed.
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/discussion/slow-overshoot-closeup.pgf}
+    \caption{A close-up from the \emph{slow-aggressive} PID controller with target adapter.
+    The manner in which the target is adapted resembles that of~\Cref{fig:toy-plot-closeup} from the toy problem.}
+    \label{fig:slow-overshoot-closeup}
+\end{figure}
+
+
+These two observed trends in the target adapter's effect suggest that the method is inherently self-correcting.
+By constantly retraining the adapter on features derived from its own influence on the signal response, an under-responsive adapted controller will become more aggressive, up to the point that the adapter needs to moderate its behavior again.
+This idea is supported by the observation that the evolution of the metrics for adapted controllers tends to stagnate (most clearly visible in~\Cref{fig:slow-overshoot-metrics,fig:under-tuned-metrics,fig:25--25-50--50-metrics}).
+Supposedly, the adapted controller finds a good compromise between moderate and aggressive behavior, and is able to maintain a consistent performance from that point onward.
+
+
+\subsection{Limitations}\label{subsec:limitations}
+As discussed in~\Cref{subsec:varying-kos}, the experiment using 1.5--0.5 \& 2--0.5\si{\mm} perforations in combination with a highly responsive PID controller yielded better results for the reference controller than for the adapted controller.
+The hypothesis is that the training data obtained from the signal response gradually contains more conflicting features, as illustrated by~\Cref{fig:limitation}.
+As the controller is highly responsive, the frequency at which the signal response is stored in the buffer is too low to capture sufficient detail.
+
+However, this high responsiveness alone is not solely responsible for the adapter's deteriorating performance, since the adapter initially manages to slightly improve performance.
+The same reference controller is used in the 0.25--0.25 \& 0.5--0.5\si{\mm} perforation experiments, as well as in the crawling gait experiments (\Cref{subsec:varying-kos,subsec:crawling-gait}, respectively).
+It seems to be the specific combination of a highly responsive controller--or conversely, a low sampling rate for the buffer--with a more deteriorated KOS that leads to the issue.
+Once the system enters an unstable feedback loop, the oscillations occur so frequently that any meaningful relationship between sequential datapoints is lost, an observation which becomes clear by comparing~\Cref{fig:slow-overshoot-closeup,fig:limitation}.
+As a result, training features obtained from near-identical regions in the signal response can vay drastically.
+The adapter thus starts producing less meaningful adaptations, entering a vicious cycle.
+
+This explains why the combination of 1.5--0.5\si{\mm} perforations and a \emph{slow}-aggressive controller poses no problem, nor does the same perforation combined with the highly responsive controller during the first 30\si{\minute} (also demonstrated by the crawling gait experiment).
+Similarly, the 0.25--0.25 and 0.5--0.5\si{\mm} perforations effectively prevent the controller from entering an unstable state.
+
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/discussion/limitation.pgf}
+    \caption{A close-up of the 2--0.5\si{\mm} experiment.
+    The oscillations in the signal response are recorded at an insufficient frequency to contain any meaningful relationship between spaced-out state pairs and the target.
+    As a result, the adapter's output becomes more chaotic as well, further polluting the training data.}
+    \label{fig:limitation}
+\end{figure}
+
+
+\subsection{Validity of the Results}\label{subsec:validity}
+Several important aspects regarding the validity of the results should be addressed.
+
+\subsubsection{Reproducibility of Identical KOS}
+Since a key part of understanding the results is the use of a reference controller as a baseline, it is important to confirm that the comparisons are representative.
+\Cref{sec:experimental-setup} already stressed that identical target sequences were used for each comparison.
+The focus thus shifts to the possible differences in the characteristics of supposedly identical KOSs.
+
+The KOS templates were all designed with identical parameters, exempting the perforations, and were cut out using a laser-cutter.
+They were, however, assembled by hand.
+Several steps were taken to mitigate or minimize variability introduced during the assembly.
+
+First, the required KOSs for a certain experiment setting--usually four, since two are required for the reference run, and 2 for the adapter test--were all made in a single \emph{batch}, following a preset routine.
+Additionally, all KOSs were then ``conditioned'' by exactly one cycle of contracting and expanding it.
+This procedure reduces potential differences in the cutting and assembly process.
+
+Second, the nature of the robot's design requires two KOSs per experiment run: as described in~\Cref{subsec:mechanical-details}, the state of the robot is represented by the angle of the actuation arm.
+This arm is restrained on both sides by a KOS, each a mirror image of the other.
+In practice, the combined contribution of both springs averages out, and the influence of any single KOS is minimized.
+
+Finally, during each run of an experiment setting, a ``reference minute'' was recorded with intervals of 30\si{\minute}.
+During these reference minutes, and regardless of the specific experiment setting (i.e., with or without the adapter), the robot ran the relevant reference controller on a 1\si{\minute} target sequence.
+These minutes were evaluated using the same metrics as the experiments to compare the similarity of the KOSs involved.
+Comparisons of these metrics are presented in~\Cref{app:KOS-refs}, but it is sufficient here to note that variations in metric values for reference minutes are insignificant compared to the difference introduced by the implementation of the target adapter.
+
+These measures allow for valid interpretation of the results.
+
+\subsubsection{Uninterpreted Results}
+For certain experiments, the nature of the adapter's influence causing the improvement remains unclear.
+Qualitative results for both adapter configurations of the crawling gait experiment, and the early stage of the 1.5--0.5 \& 2--0.5\si{\mm} perforation experiment (\Cref{fig:crawl-qualitative,fig:200--50-qualitative}) do not indicate significant adaptations to the target.
+This might lead to disregarding the results as coincidences.
+However, the improvement is consistent over all these experiment settings, with notable similarity in the reference signal responses for all settings, as well as adapter signal responses (i.e., signals from seemingly slightly under-responsive systems, and highly responsive systems, respectively).

@@ -1,14 +1,30 @@
+% Global package options
+\PassOptionsToPackage{dvipsnames}{xcolor}
+\PassOptionsToPackage{final}{changes}        % for disabling changes markup
+%\PassOptionsToPackage{disable}{todonotes}   % for disabling todonotes markup
+
 \documentclass[a4paper, 10pt]{IEEEtran}
 
 \usepackage[backend=biber, style=apa]{biblatex}
-\usepackage[mode=tex]{standalone}
+\usepackage[mode=buildmissing]{standalone}
+\usepackage[todonotes={textwidth=15mm, textsize=scriptsize}]{changes}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{etoolbox}
+\usepackage{bm}
+\usepackage{graphicx}
+\usepackage{multicol}
 \usepackage{lipsum}
 \usepackage{pgf}
 \usepackage{fontspec}
+\usepackage{subcaption}
 \usepackage{float}
-\usepackage{cleveref}
 \usepackage{booktabs}
-\usepackage[section]{placeins}
+\usepackage{placeins}
+\usepackage[ruled]{algorithm2e}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{textcomp}
 
 
 \setmainfont{TeX Gyre Termes}
@@ -17,12 +33,22 @@
 \AtBeginEnvironment{figure}{\renewcommand{\sffamily}{}}
 \AtEndEnvironment{figure}{\let\sffamily\relax}
 \AtBeginEnvironment{figure}{\newcommand{\mathdefault}[1][]{}}
+% Hook into the figure* environment
+\AtBeginEnvironment{figure*}{\renewcommand{\sffamily}{}}
+\AtEndEnvironment{figure*}{\let\sffamily\relax}
+\AtBeginEnvironment{figure*}{\newcommand{\mathdefault}[1][]{}}
+
+\AtBeginEnvironment{texttt}{\small}
+
+\setlength{\marginparwidth}{1.1cm}
 
 \addbibresource{Thesis/library.bib}
-\graphicspath{{./Thesis/figures/}, {../src/Arduino/tmp/}}
+\graphicspath{{./Thesis/figures/method}, {./Thesis/figures/robot}, {./Thesis/figures/setup}, {./Thesis/figures/results},
+        {./Thesis/figures/appendix}, {../src/Arduino/tmp/}}
 
 
-\title{Lifelong Learning for an Origami Robot: Supervised Learning of Target Adaptations}
+\title{Lifelong Learning for a Kresling-Origami Robot:\\
+{\LARGE A Plug-and-play Module for Supervised Learning of Target Adaptations}}
 \author{E. De Vroey}
 \date{\today}
 
@@ -30,32 +56,72 @@
     \maketitle
 
     \begin{abstract}
-        \lipsum[1]
+%        \ldots
+        Soft robots offer a variety of useful applications.
+        However, the nature of their design makes them challenging to control using traditional techniques.
+        Many applications therefore rely on machine learning-based methods, learning ``blackbox'' control policies or dynamic models of the robot.
+        This often results in overly complex and opaque solutions for the problem at hand.
+
+        In this paper, a simplified approach is considered:
+        Using a common feedforward neural network as a \emph{target adapter} module,
+        learned adaptations are added to the desired targets that are fed to a simple PID controller, essentially \emph{deceiving} it into a better performance.
+        This adapter is completely separate from the controller itself, allowing for relatively simple controllers to control--and adapt to--complex and evolving systems.
+
+        The approach is tested in simulation on a simple mass-spring-damper control problem, where qualitative results show near-immediate improvement in controller performance.
+        The approach is then tested on a demonstrator origami robot, which relies for its functionality on the dynamics of the Kresling origami spring.
+        Results show that this simple adaptation approach is robust to both changes in controller tuning and changes in system dynamics.
+        However, the method is sensitive to the sampling frequency at which training data is recorded.
     \end{abstract}
+
 
     \section{Introduction}\label{sec:introduction}
     \input{Thesis/introduction}
-    \FloatBarrier
+%    \FloatBarrier
+
 
     \section{Background}\label{sec:background}
     \input{Thesis/background}
-    \FloatBarrier
+%    \FloatBarrier
+
 
     \section{Methodology}\label{sec:methodology}
     \input{Thesis/method}
-    \FloatBarrier
+%    \FloatBarrier
 
-    \section{Results}\label{sec:results}
+
+    \section{A Kresling Origami Robot}\label{sec:origami-robot}
+    \input{Thesis/robot}
+%    \FloatBarrier
+
+
+    \section{Experimental Setup}\label{sec:experimental-setup}
+    \input{Thesis/setup}
+%    \FloatBarrier
+
+
+    \section{Experiments and Results}\label{sec:results}
     \input{Thesis/results}
-    \FloatBarrier
+
 
     \section{Discussion}\label{sec:discussion}
     \input{Thesis/discussion}
+%    \FloatBarrier
+
+    \section{Conclusion}\label{sec:conclusion}
+    \input{Thesis/conclusion}
+%    \FloatBarrier
+
+    \todo[inline]{filter through refrences, just the essentials}
+    \printbibliography
     \FloatBarrier
 
-    \printbibliography
-
     \appendices
+    \renewcommand{\thefigure}{\Alph{section}.\arabic{figure}}
+    \renewcommand{\thetable}{\Alph{section}.\Roman{table}}
+    \preto\section{
+        \setcounter{figure}{0}
+        \setcounter{table}{0}
+    }
     \input{Thesis/appendix}
 
 \end{document}
