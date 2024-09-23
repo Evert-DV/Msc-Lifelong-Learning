@@ -1,4 +1,10 @@
-\todo[inline]{farm literature study for references} % TODO: cite
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=.9\linewidth]{robot}
+    \caption{\todo[inline]{\ldots}}
+    \label{fig:cool-robot}
+\end{figure}
+
 Lifelong learning, the ability of a system to continuously adapt to new information throughout its lifetime, is a much sought-after feature for many applications.
 Rather than relying on policies that are \emph{set in stone}, these systems learn and evolve autonomously, changing and improving their behaviors as they encounter new tasks or environments.
 This ability makes lifelong learning a powerful tool for systems that operate in uncertain or evolving scenarios, where changes are common or to be expected.
@@ -21,7 +27,7 @@ The module then only needs to improve the performance of the controller, without
 The controller works in cooperation with the ML-module, separating the interpretable basic control from the opaque learning and adapting.
 
 Techniques like parameter adaptation work much in the same way.
-An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\cite{Sprechmann2018,Annaswamy2021}.
+An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Sprechmann2018,Annaswamy2021}.
 However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned), and such a module must thus be designed separately for each controller.
 
 The proposed method tries to mitigate this downside by offering a ``plug-and-play'' module that can improve a controller's performance by simply adapting the desired target it receives.
