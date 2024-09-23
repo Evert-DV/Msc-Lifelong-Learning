@@ -1,0 +1,131 @@
+To explore the proposed method, an illustrative problem is considered first.
+The problem consists of a simulation of a simple 1D mass-spring-damper system (\Cref{fig:toy-setup}) and an imperfectly tuned PID controller.
+The mass is suspended in a hanging position with gravity acting on it continuously.
+
+\begin{figure}
+    \centering
+    \def\svgwidth{0.33\linewidth}
+    \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
+    \caption{Setup of the mass-spring-damper system in the toy problem with positive directions indicated.}
+    \label{fig:toy-setup}
+    \vspace*{1em}
+\end{figure}
+
+The system state $\mathbf{x}$ consists of the position and velocity $x,\,\dot{x}$, respectively.
+The controller aims to reach targets of the form $\mathbf{x}_d = [x_d,\, 0]$, but controls position only.
+At regular intervals, a random target position $x_d$ is generated for the controller to reach and maintain.
+Each timestep, the adapter calculates the required $\Delta$, and the controller computes the control action based on the current position and the adapted target position.
+The system's response to this control input is simulated and the tuple $(x_0, \dot{x}_0, u, x, \dot{x}, x_d+\Delta, 0)$ is added to the buffer.
+This buffer stores a limited number of tuples corresponding to a specified window of the most recent data.
+Once capacity is reached, the oldest element is removed at every timestep.
+At regular update intervals, the adapter is trained on the data in the buffer.
+It is important that the tuples in the training data always contain the target position that was actually provided to the controller, i.e., $x_d + \Delta$, and not the \emph{true} desired target $x_d$.
+As the simulation progresses, the parameters of the dynamic system are gradually altered to simulate system degradation.
+%In addition, at a random point in time, a hard shift the system's parameters is introduced.
+The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-problem}.
+
+\begin{algorithm}
+    \SetAlgoLined
+    \caption{Target adaptation}
+    \label{alg:toy-problem}
+
+    \KwData{system state $\mathbf{x}$, target $\mathbf{x}_d$, adaption $\Delta$, control action $u$}
+
+    Initialize model:  \textit{adapter}\;
+    Initialize buffer: $\textit{buffer} \gets []$\;
+    \For{each timestep $t_i$}{
+        \If{len(buffer) > threshold}{
+            Remove the oldest element in the buffer\;
+        }
+        \If{$t_i \mod target\_interval = 0$}{
+            $\mathbf{x}_d \gets random\_target()$\;
+        }
+        \If{$t_i \mod update\_interval = 0$}{
+            $(\textit{features, labels}) \gets \textit{prep\_data(buffer, window)}$\;
+            $\textit{adapter.fit(features, labels)}$\;
+        }
+
+        $\Delta \gets adapter.predict([\mathbf{x}_0, \mathbf{x}_d])$\;
+        $u \gets controller.compute\_control(\mathbf{x}_0, \mathbf{x}_d + [\Delta, 0])$\;
+        Simulate the system response $\mathbf{x}$\;
+        Update system parameters\;
+        Append $(\mathbf{x}_0, u, \mathbf{x}, \mathbf{x}_d + [\Delta, 0])$ to \textit{buffer}\;
+        $\mathbf{x}_0 \gets \mathbf{x}$\;
+    }
+\end{algorithm}
+
+The problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend. % TODO: cite python and packages?
+The simulation ran for 60\si{\second} at 50\si{\hertz}.
+The target was changed every 5\si{\second}, and the adapter was trained fully online, updating every 15\si{\second}.
+Training features were created for multiple prediction windows, this means the training features consisted of pairs $[\mathbf{x}_t, \mathbf{x}_{t+\textit{window}}]$ for windows of 3, 5, 10, 15, and 25.
+The buffer's budget corresponded to the past 30\si{\second} of data.
+For reference, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
+To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
+\todo[inline]{Redo fontsizes, control axis size, on all figures in section}  % TODO: fontsize figures, make standalone figs
+
+\subsection{A case where the controller is too aggressive}
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/method/toy_plot.pgf}
+    \vspace*{-1em}
+    \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
+    Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
+    During the first 15\si{\second} (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
+    \label{fig:toy-plot}
+    \vspace*{1em} % Add white space between figures
+\end{figure*}
+
+For a first simulation, a combination of a system and controller was chosen where the controller's gains were tuned too high.
+In~\Cref{fig:toy-plot}, the result of the simulation can be observed.
+At the start, and due to the near-zero initialization of the adapter's parameters, the signal response of the system controlled by the adapted controller is indistinguishable from that of the reference controller.
+However, as soon as the adapter has trained on the buffer, the changes to the target become visible.
+
+The effects of the adaptation can be more clearly observed in~\Cref{fig:toy-plot-closeup}.
+Since the reference controller is too aggressive, the reference signal overshoots and oscillates significantly before settling.
+In contrast, the adapter counters this by bringing the target closer to the current state.
+This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target position\footnote{Rather, the labeled $\Delta = x_{d} - x_{t+\emph{window}}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+\emph{window}}$.
+Therefore, upon receiving the input feature $[\mathbf{x}_t, \mathbf{x}_d]$
+%(representing $\mathbf{x}_d$ being reached from $\mathbf{x}_t$ within 10 timesteps),
+it produces and adapted target position in between $x_t$ and $x_d$.
+As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
+
+\begin{figure}
+    \centering
+    \small\selectfont\input{Thesis/figures/method/toy_plot_closeup.pgf}
+    \vspace*{-1em}
+    \caption{A close-up of the second to last target in the one-minute simulation. The effects of the adapter can be more clearly observed: The overshoot (seen in the reference signal) is countered by bringing the target closer to the current state.}
+    \label{fig:toy-plot-closeup}
+    \vspace*{1em} % Add white space between figures
+\end{figure}
+
+\subsection{A case where the controller is under-responsive}
+For a second simulation, the system and controller were designed such that the controller was more \emph{conservative} or \emph{under-responsive}.
+Additionally, the signal produced by the reference controller has a clear steady-state error.
+The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/method/toy_plot_damped.pgf}
+    \vspace*{-1em}
+    \caption{The full minute simulation of the system with an under-responsive controller. Top: The system response and target of the adapted controller, alongside the response and target of the unadapted reference controller.
+    Bottom: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered reference control inputs.}
+    \label{fig:toy-plot-damped}
+    \vspace*{1em} % Add white space between figures
+\end{figure*}
+
+Once more, the adapter is able to improve the controller's performance after just a single update.
+In~\Cref{fig:toy-plot-damped-closeup} it can be seen that the adapted target is adjusted away from the current state.
+This is because training features created from the data in the buffer frequently include state pairs $\mathbf{x}_t,\, \mathbf{x}_{t+\emph{window}}$ where the target position $x_d$ is positioned further from $x_t$ than it is from $x_{t+\emph{window}}$.
+As a result, the adapter learns to predict adaptations that would move $x_d$ farther from $x_t$, making the controller more aggressive.
+Another effect of the adapter is the consistent offset applied to the target:
+In the training features, the adapter regularly encounters pairs $\mathbf{x}_t, \, \mathbf{x}_{t+\emph{window}} = \mathbf{x}_t$, which appear to represent the target state being reached, even though $x_{t+\emph{window}}\neq x_d$.
+These features are the result of the steady-state error present in the signal, leading the adapter to learn to apply an offset to the target to counteract this.
+
+\begin{figure}
+    \centering
+    \small\selectfont\input{Thesis/figures/method/toy_plot_damped_closeup.pgf}
+    \vspace*{-1em}
+    \caption{A close-up of the second to last target in the one-minute simulation. Noteable observations: The target is initially moved further from the current state to `pull' it towards the desired state in a shorter period. In addition, the adapted target is offset from the desired state as to counter the steady-state error seen in the reference signal.}
+    \label{fig:toy-plot-damped-closeup}
+    \vspace*{1em} % Add white space between figures
+\end{figure}
