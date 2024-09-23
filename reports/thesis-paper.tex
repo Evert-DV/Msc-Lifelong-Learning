@@ -43,7 +43,7 @@
 \setlength{\marginparwidth}{1.1cm}
 
 \addbibresource{Thesis/library.bib}
-\graphicspath{{./Thesis/figures/method}, {./Thesis/figures/robot}, {./Thesis/figures/setup}, {./Thesis/figures/results},
+\graphicspath{{./Thesis/figures/introduction}, {./Thesis/figures/method}, {./Thesis/figures/robot}, {./Thesis/figures/setup}, {./Thesis/figures/results}, {./Thesis/figures/discussion},
         {./Thesis/figures/appendix}, {../src/Arduino/tmp/}}
 
 
@@ -53,6 +53,9 @@
 \date{\today}
 
 \begin{document}
+
+%    \listoffigures
+
     \maketitle
 
     \begin{abstract}
@@ -72,20 +75,24 @@
         Results show that this simple adaptation approach is robust to both changes in controller tuning and changes in system dynamics.
         However, the method is sensitive to the sampling frequency at which training data is recorded.
     \end{abstract}
-
+    \FloatBarrier
 
     \section{Introduction}\label{sec:introduction}
     \input{Thesis/introduction}
 %    \FloatBarrier
 
 
-    \section{Background}\label{sec:background}
+    \section{Related Work}\label{sec:background}
     \input{Thesis/background}
 %    \FloatBarrier
 
 
     \section{Methodology}\label{sec:methodology}
     \input{Thesis/method}
+%    \FloatBarrier
+
+    \section{Illustrative Problem}\label{sec:toy-problem}
+    \input{Thesis/toy-problem}
 %    \FloatBarrier
 
 
@@ -123,5 +130,6 @@
         \setcounter{table}{0}
     }
     \input{Thesis/appendix}
+%    \tableofcontents
 
 \end{document}
