@@ -10,6 +10,7 @@
 \usepackage[backend=biber, style=apa]{biblatex}
 \usepackage[todonotes={textwidth=30mm, textsize=footnotesize}]{changes}
 \usepackage[mode=tex]{standalone}
+\usepackage{siunitx}
 \usepackage{fontspec}
 \usepackage{lipsum}
 \usepackage{hyperref}
@@ -77,18 +78,28 @@
 
 \begin{document}
 \makecover
+
 \frontmatter
 
 \input{Thesis/title}
-\input{Thesis/preface}
-see \Cref{fig:limitation} in \cref{sec:discussion}.
 
-\tableofcontents
-\listoffigures
+\input{Thesis/preface}
+
+\include{Thesis/frontmatter}
 
 \mainmatter
 
-\includepdf[pages=-]{out/thesis-paper.pdf}
+%\addcontentsline{toc}{chapter}{Lifelong Learning for a Kresling-Origami Robot}
+
+
+\begingroup
+\let\orignumberline\numberline
+\renewcommand{\numberline}[1]{}
+\includepdf[pages=-, addtotoc={
+    1, chapter, 0, Lifelong Learning for a Kresling-Origami Robot, mainmatter
+}]{out/thesis-paper.pdf}
+\endgroup
+
 
 %\appendix
 
