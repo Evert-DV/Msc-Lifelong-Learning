@@ -6,6 +6,7 @@ from src.toy_problem.toy_tools import *
 import pickle
 import keras
 import matplotlib as mpl
+import scienceplots
 from keras import optimizers, losses
 from torch.utils.data import TensorDataset, DataLoader
 
@@ -28,18 +29,18 @@ def main():
 
     # Define system
     # system = System(1, 5000, 1, 5)
-    # system = System(5, 20, 10, 5)
-    system = System(5, 20, 87, 5)
+    system = System(5, 20, 10, 5)
+    # system = System(5, 20, 87, 5)
 
     # Define controller
     # controller = PIDController(2500, 100, 10200)
-#     controller = PIDController(300, 10, 50)
-    controller = PIDController(300, 40, 5)
+    controller = PIDController(300, 10, 50)
+#     controller = PIDController(300, 40, 5)
 
     # Define reference controller
     # reference_controller = PIDController(2500, 100, 10200)
-#     reference_controller = PIDController(300, 10, 50)
-    reference_controller = PIDController(300, 40, 5)
+    reference_controller = PIDController(300, 10, 50)
+#     reference_controller = PIDController(300, 40, 5)
 
     # Setup KB
     use_kb = False
@@ -281,7 +282,7 @@ def main():
     reference_controls = np.asarray(reference_controls)
     adapted_controls = np.asarray(adapted_controls)
 
-    plt.style.use('tableau-colorblind10')
+    plt.style.use('vibrant')
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     mpl.use("pgf")
     mpl.rcParams.update({
@@ -295,8 +296,8 @@ def main():
     tex_line_width = 3.48
     tex_text_width = 7.17
 
-    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [3, 2]},
-                           figsize=(tex_line_width, 0.67 * tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
+    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [2, 1]},
+                           figsize=(tex_line_width, 0.6 * tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
                            sharex=True)
 
     if use_kb:
@@ -311,21 +312,22 @@ def main():
                 ax_i.axvline(t_tres, color='tab:red', linestyle=':')
             ax_i.axvline(t_change, color='r', linestyle='-')
 
-    ref_sig, = ax[0].plot(t, reference_signal[:, 0], color=colors[0], alpha=0.5, linewidth=.75)
-    ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (6, 1)), color=colors[3], alpha=0.5, linewidth=1)
-    adapted_target, = ax[0].plot(t, adapted_targets[:, 0], linestyle=(0, (3, 1)), color=colors[3], linewidth=.5)
-    sig, = ax[0].plot(t, signal[:, 0], color=colors[0], linewidth=.75)
+    ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (5, 2)), color=colors[0], alpha=.8, linewidth=.7)
+    ref_sig, = ax[0].plot(t, reference_signal[:, 0], linestyle=(0, (2, 2)), color=colors[1], alpha=.8, linewidth=.7)
+    adapted_target, = ax[0].plot(t, adapted_targets[:, 0], color=colors[-3], linewidth=.75)
+    sig, = ax[0].plot(t, signal[:, 0], color=colors[1], linewidth=.7)
     # ax[0].legend(fontsize=8, loc='upper left')
-    ax[0].set_ylabel("Position [m]", fontsize=7)
+    ax[0].set_ylabel("Position [m]")
     ax[0].tick_params(axis='both', labelsize=6)
     ax[0].set_xlim(49, 56)
     ax[0].set_ylim(8, 12)
+    ax[1].set_ylim(-1100, 1100)
 
-    ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (2, 2)), color=colors[1], linewidth=1)
-    u, = ax[1].plot(t, adapted_controls, color=colors[5], linewidth=.5)
+    u, = ax[1].plot(t, adapted_controls, color=colors[2], alpha=1., linewidth=.7)
+    ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (3, 3)), color=colors[-2], linewidth=.7)
     #     ax[1].legend(fontsize=8, loc='upper left')
-    ax[1].set_ylabel("Force [N]", fontsize=7)
-    ax[1].set_xlabel("Time [s]", fontsize=7)
+    ax[1].set_ylabel("Force [N]")
+    ax[1].set_xlabel("Time [s]")
     ax[1].tick_params(axis='both', labelsize=6)
 
     if mpl.get_backend() != 'pgf':
@@ -339,18 +341,19 @@ def main():
         ax[2].axhline(0., color='k', linestyle='--', lw=.8)
         ax[2].ticklabel_format(style='plain')
         ax[2].set_ylim(-0.1, np.log(2) + 0.1)
-        legend1 = ax[2].legend(fontsize=8, loc='upper left',
+        legend1 = ax[2].legend(loc='upper left',
                                handles=selection_lines, labels=[f"KB entry {i}" for i in range(initial_kb_len)])
         ax[2].add_artist(legend1)
-        ax[2].legend(fontsize=8, loc='upper right',
+        ax[2].legend(loc='upper right',
                      handles=js_loss_lines, labels=["updated-kb-dist vs. running dist", "kb-dist vs. updated-kb-dist"])
 
     fig.legend(handles=[ref_target, adapted_target, ref_sig, sig, ref_u, u],
-               labels=["Reference target", "Adapted target", "Reference signal", "Signal", "Reference control",
-                       "Control"],
-               loc='lower left', fontsize=6, frameon=False, ncol=3, bbox_to_anchor=(0, -0.12))
+               labels=["PID target", "Adapter target", "PID signal", "Adapter signal", "PID control",
+                       "Adapted control"],
+               handlelength=1.,
+               loc='lower left', frameon=False, ncol=3, bbox_to_anchor=(0., -0.15))
     fig.tight_layout()
-    fig.savefig(f"../../reports/Thesis/figures/method/toy_plot_damped_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+    fig.savefig(f"../../reports/Thesis/figures/toy-problem/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
                 dpi=300, bbox_inches='tight')
     # plt.show()
 
