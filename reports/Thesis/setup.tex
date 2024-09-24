@@ -1,5 +1,5 @@
 For each experiment, a minimum of two sets of KOSs was required:
-One set serving as a reference, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
+One set serving as a baseline, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
 All experiments used a 60\si{\second} buffer and 15\si{\second} intervals between updates, with the first update at 60\si{\second}.
 The adapter trained on prediction windows of 3, 5, 10, 15, and 25 steps.
 The true target, with values depending on the experiment, was updated every 5\si{\second}, following a predefined random sequence.
@@ -23,7 +23,8 @@ This way, the evolution of the performance metrics can be studied, and a fair co
 
 \subsection{Sign Conventions and Unit Clarification}\label{subsec:sign-unit}
 Before the experiments and results can be properly understood, it is necessary to clarify certain sign and unit conventions.
-Most importantly, the contactless magnetic sensor denotes a clockwise rotation (as viewed from the top) w.r.t.~the datum as a positive angle, and likewise, a counterclockwise rotation as a decrement in the angle.\todo{cite arduino library}  % cite arduino library
+
+For example, contactless magnetic sensor denotes a clockwise rotation (as viewed from the top) w.r.t.~the datum as a positive angle, and likewise, a counterclockwise rotation as a decrement in the angle~\parencite{RobTillaart}.
 In practice, this means that a positive control input from the servo (i.e.~a positive angle) results in a decrement in $\theta$.
 Because the actuation arm's calibration point is set when the servo is at its minimum output, the operational range of the actuation arm is entirely in the negative domain.
 \Cref{fig:schematic} illustrates the servo arm and actuation arm in a configuration representative of a typical scenario during the experiments, with the signs of the angles indicated.
@@ -36,20 +37,21 @@ Because the actuation arm's calibration point is set when the servo is at its mi
     \label{fig:schematic}
 \end{figure}
 
-In addition, The \emph{Servo} Arduino library uses the \texttt{writeMicroseconds(\emph{value})} function to write to the servo, which maps a servo's range to a value between 1000 and 2000\si{\micro\second} depending on the servo's manufacturer.
-As such, \texttt{writeMicroseconds} provides more `resolution' than the common \texttt{write(\emph{angle})}, which works with integer values of angles in degrees. \todo{cite Servo library} % TODO: cite
-Note that the term \emph{microseconds} in this context does not refer in any way to the angular unit of measurement \emph{arcseconds}.
-Instead, it relates to the pulse width in microseconds of the signal that the Arduino sends to the servo motor.
-In this case, the servo's minimum position corresponds to a value of 540\si{\micro\second} and the maximum mechanical limit (as discussed in \Cref{subsec:mechanical-details}) corresponds to approximately 1800\si{\micro\second}.
-It might thus be confusing to see the control input, the angle of the servo arm, denoted in a unit of time.
-For convenience, the 540\si{\micro\second} value relates to 0 degrees, and the 1800\si{\micro\second} limit corresponds to 125 degrees.
+In addition, The \emph{Servo} Arduino library uses the \texttt{writeMicroseconds(\emph{value})} function to write to the servo.
+\texttt{writeMicroseconds(\emph{value})} maps a servo's range to a value between 1000 and 2000\si{\micro\second} (depending on the servo's manufacturer), relating to the pulse width in microseconds of the signal that the Arduino sends to the servo motor~\parencite{Arduino}.
+%As such, \texttt{writeMicroseconds} provides more `resolution' than the common \texttt{write(\emph{angle})}, which works with integer values of angles in degrees.
+%Note that the term \emph{microseconds} in this context does not refer in any way to the angular unit of measurement \emph{arcseconds}.
+%Instead, it
+%In this case, the servo's minimum position corresponds to a value of 540\si{\micro\second} and the maximum mechanical limit (as discussed in \Cref{subsec:mechanical-details}) corresponds to approximately 1800\si{\micro\second}.
+%It might thus be confusing to see the control input, the angle of the servo arm, denoted in a unit of time.
+%For convenience, the 540\si{\micro\second} value relates to 0 degrees, and the 1800\si{\micro\second} limit corresponds to 125 degrees.
 
 Finally, during the experiments, the Arduino initialized a \emph{counter} value to include in the tuple sent to the computer.
 This counter starts at 0 and simply increments by 1 with each iteration of the Arduino's loop.
-Since the interactions between the Arduino and computer, as well as between the several threads on the computer, are independent of timing (i.e., the modules do not have to ``wait for each other''), the counter's value is essential to accurately plot the several signals recorded during the experiments.
-As a result, the counter itself does not measure elapsed time directly, making it unitless.
-However, it can be used as a proxy for time, since all modules aim to operate at 50\si{\hertz}.
-This means that an increment of 1 in the counter corresponds to an estimated 0.02\si{\second}, allowing for the approximation of elapsed time based on the counter value.
+Since the interactions between the Arduino and computer and the several threads on the computer are independent of timing (i.e., the modules do not have to ``wait for each other''), the counter's value is essential to accurately plot the several signals recorded during the experiments.
+%As a result, the counter itself does not measure elapsed time directly, making it unitless.
+%However, it can be used as a proxy for time, since all modules aim to operate at 50\si{\hertz}.
+%This means that an increment of 1 in the counter corresponds to an estimated 0.02\si{\second}, allowing for the approximation of elapsed time based on the counter value.
 
 \subsection{Performance Metrics}\label{subsec:metrics}
 The performance metrics used to evaluate the 5\si{\minute} sequences are the mean rise time, mean settling time, mean overshoot, mean absolute error, integrated absolute error, mean absolute velocity, normalized total variance, and mean control action.
@@ -66,7 +68,7 @@ The mean absolute error represents the average difference between the robot’s 
 %, while the integrated absolute error captures the cumulative difference over time.
 
 The mean absolute velocity refers to the measurements of $\dot{\theta}$.
-This metric is meant to provide a measure of the ``chaoticness'' of the robot's signal response.
+This metric is meant to provide a measure for the ``chaoticness'' of the robot's signal response.
 
 The normalized total variance is calculated as the sum of the absolute of all increments and decrements in the control action, normalized over time\footnote{Actually, it is normalized over the \emph{count}, see \Cref{subsec:sign-unit}.}.
 This aims to quantify the controller's ``effort''.

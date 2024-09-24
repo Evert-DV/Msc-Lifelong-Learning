@@ -12,7 +12,7 @@ These systems are also characterized by low overshoot, low mean absolute velocit
 When the adapter produces more extreme target positions, rise time and settling time decrease, but the overshoot increases.
 The controller is thus ``making an extra effort'', which is observed in the higher total variance: initially setting a more extreme target position, then gradually bringing it closer to the desired target, etc.
 The overall faster response results in the increased mean absolute velocity.
-As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles that of the under-responsive simulation in the toy problem (\Cref{subsec:preliminary-results}) very closely.
+As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles that of the under-responsive simulation in the illustrative problem (\Cref{subsec:toy-damped}) very closely.
 
 \begin{figure}
     \centering
@@ -28,7 +28,7 @@ The adapter moves the target to less extreme positions, compensating for the ove
 This prevents the system from entering an unstable feedback loop, by preventing the control inputs from getting overly aggressive in the first place.
 Thus, even though target adaptions are made, the overall controller effort is decreased.
 \Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
-Again, a resemblance to the equivalent scenario in the toy problem can be observed.
+Again, a resemblance to the equivalent scenario in~\Cref{subsec:toy-aggressive} can be observed.
 The contradicting results from the 2--0.5 \& 1.5--0.5\si{\mm} perforations, see~\Cref{fig:150--50-200--50-metrics}, will be addressed in~\Cref{subsec:limitations}.
 However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the reference in the early stages, and it is during this phase that the same trends described earlier can be observed.
 

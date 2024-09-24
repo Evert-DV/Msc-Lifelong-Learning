@@ -52,7 +52,7 @@ To evaluate the method described in \Cref{sec:methodology}, a robot was designed
 \end{figure}
 
 The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\Cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation mechanism in between.
-Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet''.
+Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet'' (see~\Cref{fig:extend-contract}, \emph{top}).
 To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
 Rather, the state of the KOSs is the state that will be controlled.
 
@@ -73,6 +73,12 @@ Furthermore, there are mechanical limits for the rotation of both the actuation 
 However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
 
 \begin{figure}
+    \begin{subfigure}[tc]{\linewidth}
+        \centering
+        \includegraphics[width=.45\linewidth]{feet}
+    \end{subfigure}
+    \vspace*{.5em}
+    \vfill
     \begin{subfigure}[tl]{0.49\linewidth}
         \centering
         \includegraphics[width=\linewidth]{extended}
@@ -82,8 +88,9 @@ However, the design is such that the servo's mechanical limit corresponds to a $
         \centering
         \includegraphics[width=\linewidth]{contracted}
     \end{subfigure}
-    \caption{\emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.\\
-    \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
+    \caption{\emph{Top}: The ``feet'' of the robot grip when dragged backwards, but slide when pushed forward, allowing the robot to move forward, also known as \emph{two-anchor crawling}~\parencite{Calisti2017}.
+        \emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.
+        \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
     \label{fig:extend-contract}
 \end{figure}
 
@@ -91,22 +98,14 @@ However, the design is such that the servo's mechanical limit corresponds to a $
 \todo[inline]{section on the KOS specifics}  % TODO: KOS characteristics
 
 \subsection{Software Implementation}\label{subsec:software-implement}
-The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
+The software implementation consists of two main components: The nominal control of the robot, and the target adaptation.
 
-\subsubsection{Nominal Control on the Arduino}
-Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its minimum position.
-The Arduino allows some time for the servo to reach this home position and then reads a first measurement from the angle sensor, setting this as the reference $\theta=0$ (see~\Cref{fig:extend-contract}, \emph{left}).
-During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
-Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\Cref{subsec:mechanical-details}).
-The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
-Finally, it sends the tuple containing the state, action, resulting state, and target to the external computer.
+The Arduino board is responsible for the nominal control, implemented as a simple PID controller.
+Additionally, it takes care of calibrating the measurements upon startup, i.e.~(re)setting the actuation and servo arm to their minimum ``home'' position (\Cref{fig:extend-contract}, \emph{left}).
 
-\subsubsection{Target Adaptation on the External Computer}
-The target adaptation and supervised learning are implemented exclusively on the external computer through the established connection with the Arduino.
-The program is divided into several modules or \emph{threads} that run simultaneously.
-This way, values that need to be sent or read can be updated in the background upon request, without delaying the operations of other modules (see~\Cref{app:code-structure} for a more detailed breakdown of the interactions between various threads).
-At regular predefined intervals, a \texttt{change\_value} thread changes the true target $\theta_d$ to some value.
-Every iteration, it constructs an input feature [$\theta,\,\dot{\theta},\,\theta_d,\,0$] for the adapter.
-The resulting $\Delta$ is added to the target, which is read by the \texttt{send} thread and forwarded to the Arduino.
-The buffer is maintained by storing the tuples received from the Arduino.
-Upon train-time, the adapter weights are updated in the background, without interrupting the adapter's performance.
+Target adaptation is implemented on an external computer.
+Through a serial connection (\Cref{fig:test-setup},~\cref{item:serial}) with the Arduino, it both receives the measurements to be stored in the buffer, and sends the adapted targets to be used by the PID controller.
+The main process was summarized in~\Cref{sec:toy-problem} by~\Cref{alg:toy-problem}.
+However, on the computer, the several steps are divided amongst separate modules that act in parallel so that real-time performance is ensured.
+
+A more detailed description of the software implementation can be found in~\Cref{app:code-structure}.

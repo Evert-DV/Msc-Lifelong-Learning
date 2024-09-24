@@ -8,7 +8,6 @@ The mass is suspended in a hanging position with gravity acting on it continuous
     \small\selectfont\input{Thesis/figures/method/toy_setup.pdf_tex}
     \caption{Setup of the mass-spring-damper system in the toy problem with positive directions indicated.}
     \label{fig:toy-setup}
-    \vspace*{1em}
 \end{figure}
 
 The system state $\mathbf{x}$ consists of the position and velocity $x,\,\dot{x}$, respectively.
@@ -19,9 +18,8 @@ The system's response to this control input is simulated and the tuple $(x_0, \d
 This buffer stores a limited number of tuples corresponding to a specified window of the most recent data.
 Once capacity is reached, the oldest element is removed at every timestep.
 At regular update intervals, the adapter is trained on the data in the buffer.
-It is important that the tuples in the training data always contain the target position that was actually provided to the controller, i.e., $x_d + \Delta$, and not the \emph{true} desired target $x_d$.
+It is important that the tuples in the training data always contain the target position that was actually provided to the controller, i.e.,~$x_d + \Delta$, and not the \emph{true} desired target $x_d$.
 As the simulation progresses, the parameters of the dynamic system are gradually altered to simulate system degradation.
-%In addition, at a random point in time, a hard shift the system's parameters is introduced.
 The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-problem}.
 
 \begin{algorithm}
@@ -54,21 +52,20 @@ The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-proble
     }
 \end{algorithm}
 
-The problem was implemented in Python: simulating the system response using SciPy's \texttt{lsim}, and implementing the adapter in Keras with the PyTorch backend. % TODO: cite python and packages?
 The simulation ran for 60\si{\second} at 50\si{\hertz}.
 The target was changed every 5\si{\second}, and the adapter was trained fully online, updating every 15\si{\second}.
 Training features were created for multiple prediction windows, this means the training features consisted of pairs $[\mathbf{x}_t, \mathbf{x}_{t+\textit{window}}]$ for windows of 3, 5, 10, 15, and 25.
 The buffer's budget corresponded to the past 30\si{\second} of data.
-For reference, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
-To both the reference and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
+As a baseline, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
+To both the baseline and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
 
 \subsection{A case where the controller is too aggressive}\label{subsec:toy-aggressive}
 \begin{figure*}
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot}
     \vspace*{-2em}
-    \caption{The full minute simulation of the toy problem with an aggressive controller. Top: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
-    Bottom: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
+    \caption{The full minute simulation of the toy problem with an aggressive controller. \emph{Top}: The system response $x$ and target $x_d+\Delta$ of the adapted controller, alongside the response and target of the unadapted reference controller ($\Delta=0$).
+    \emph{Bottom}: The resulting adapted control inputs from the controller receiving $x_d+\Delta$ alongside the unaltered reference control inputs.
     During the first 15\si{\second} (3 targets) the adapter has not received updates yet, and the signal is thus identical to the reference signal.}
     \label{fig:toy-plot}
 \end{figure*}
@@ -95,7 +92,7 @@ As the state approaches the adapted target, the adapter starts producing targets
     \label{fig:toy-plot-closeup}
 \end{figure}
 
-\subsection{A case where the controller is under-responsive}
+\subsection{A case where the controller is under-responsive}\label{subsec:toy-damped}
 For a second simulation, the system and controller were designed such that the controller was more \emph{conservative} or \emph{under-responsive}.
 Additionally, the signal produced by the reference controller has a clear steady-state error.
 The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
@@ -104,8 +101,8 @@ The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot_damped}
     \vspace*{-2em}
-    \caption{The full minute simulation of the system with an under-responsive controller. Top: The system response and target of the adapted controller, alongside the response and target of the unadapted reference controller.
-    Bottom: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered reference control inputs.}
+    \caption{The full minute simulation of the system with an under-responsive controller. \emph{Top}: The system response and target of the adapted controller, alongside the response and target of the unadapted reference controller.
+    \emph{Bottom}: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered reference control inputs.}
     \label{fig:toy-plot-damped}
 \end{figure*}
 
