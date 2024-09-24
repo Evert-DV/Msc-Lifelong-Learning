@@ -13,26 +13,15 @@ The robot has 5\si{\second} to reach and settle around a target before it is pro
 \subsubsection{A controller that is slow but aggressive}
 The first PID controller has a disproportionally high integral gain, resulting in \emph{aggressive} but \emph{slow to respond} behavior.
 This controller yields particularly interesting results in combination with the bistable nature of the KOS.
-\Cref{fig:slow-overshoot-ref} shows the signal response from the reference controller, illustrating the behavior of the controller.
-In comparison, the signal obtained from the controller-adapter combination is shown in \Cref{fig:slow-overshoot-adapter}.
+\Cref{fig:slow-overshoot-overlay} shows the signal response from the reference controller, illustrating the behavior of the controller.
+In comparison, the signal obtained from the controller-adapter combination is shown in \Cref{fig:slow-overshoot-overlay}.\todo{rewrite}  % TODO: rewrite
 
 \begin{figure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/slow-overshoot-ref}
-        \vspace*{-2em}
-        \caption{Reference signal.}
-        \label{fig:slow-overshoot-ref}
-    \end{subfigure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/slow-overshoot-adapter}
-        \vspace*{-2em}
-        \caption{Target adapted signal.}
-        \label{fig:slow-overshoot-adapter}
-    \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the \emph{slow-aggressive} PID controller.}
-    \label{fig:qualitaitve-aggressive}
+    \centering
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/slow-overshoot-overlay}
+    \vspace*{-2em}
+    \caption{}
+    \label{fig:slow-overshoot-overlay}
 \end{figure}
 
 During the full 2\si{\hour} duration of the experiment, the evaluation of each 5\si{\minute} sequence was recorded.
@@ -42,7 +31,6 @@ The result can be seen in \Cref{fig:slow-overshoot-metrics}.
     \centering
     \input{Thesis/figures/results/slow-overshoot-metrics.pgf}
     \vspace*{-1em}
-%    \missingfigure[figwidth=\textwidth, figheight=0.5\linewidth]{metrics evolution an comparison for slow overshoot}
     \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for an \emph{aggressive} but \emph{under-responsive} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Numerical values can be found in~\Cref{app:results-ext}.}
     \label{fig:slow-overshoot-metrics}
 \end{figure*}
@@ -62,24 +50,14 @@ The target adapter effectively shifts the target closer to the system's current 
 
 \subsubsection{An under-tuned controller}
 The second PID controller is tuned with low gains, resulting in slow and under-responsive behavior.
-\Cref{fig:under-tuned-ref,fig:under-tuned-adapter} display the comparison between the reference controller and the controller with target adapter, respectively.
+\Cref{fig:under-tuned} displays the comparison between the baseline controller and the controller with target adapter.
 
 \begin{figure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/under-tuned-ref-signal}
-        \vspace*{-2em}
-        \caption{Reference signal.}
-        \label{fig:under-tuned-ref}
-    \end{subfigure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/under-tuned-signal}
-        \vspace*{-2em}
-        \caption{Target adapted signal.}
-        \label{fig:under-tuned-adapter}
-    \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the \emph{under-tuned} PID controller.}
+    \centering
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/under-tuned-overlay}
+    \vspace*{-2em}
+    \caption{}
+    \label{fig:under-tuned}
 \end{figure}
 
 The evolution of the metrics is shown in~\Cref{fig:under-tuned-metrics}.
@@ -177,23 +155,16 @@ Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute
 \begin{figure}
     \begin{subfigure}[tl]{\linewidth}
         \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200--50-ref}
+        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200--50-overlay-late}
         \vspace*{-2em}
-        \caption{Reference signal, late in the experiment (last 5\si{\minute} sequence).}
-        \label{fig:200--50-ref}
-    \end{subfigure}
-    \begin{subfigure}[tl]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200-50-adapter}
-        \vspace*{-2em}
-        \caption{Coresponding target adapted signal.}
+        \caption{}
         \label{fig:200--50-adapter}
     \end{subfigure}
     \begin{subfigure}[tl]{\linewidth}
         \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200-50-adapter5}
+        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200--50-overlay-early}
         \vspace*{-2em}
-        \caption{Target adapted signal, early in the experiment (sequence that ends at minute 30).}
+        \caption{}
         \label{fig:200--50-adapter5}
     \end{subfigure}
     \caption{Qualitative comparison of 30\si{\second} of the signal response for the 2--0.5\si{\mm} perforation.
@@ -239,22 +210,10 @@ Target adaptations appear to be minimal, being only visual in close-ups of the s
 This corresponds to the relatively low difference in total variance between reference and adapted controllers, observed in the metric evolution.
 
 \begin{figure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/crawling-gait-ref}
-        \vspace*{-2em}
-        \caption{Reference signal.}
-        \label{fig:crawl-ref}
-    \end{subfigure}
-    \begin{subfigure}[t]{\linewidth}
-        \centering
-        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/crawling-gait-adapter}
-        \vspace*{-2em}
-        \caption{Target adapted signal for the fully online trained adapter.}
-        \label{fig:crawl-adapter}
-    \end{subfigure}
-    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the 0.5--0.5\si{\mm} perforation.
-    The snapshot is taken from the first 5\si{\minute} sequence.}
+    \centering
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/crawling-gait-overlay}
+    \vspace*{-2em}
+    \caption{}
     \label{fig:crawl-qualitative}
 \end{figure}
 
