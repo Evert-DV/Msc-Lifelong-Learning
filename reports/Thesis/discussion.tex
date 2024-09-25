@@ -16,8 +16,9 @@ As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles th
 
 \begin{figure}
     \centering
-    \input{Thesis/figures/discussion/under-tuned-closeup.pgf}
-    \caption{A close-up from the under-tuned PID controller with target adapter.
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/50--50-overlay}
+    \vspace*{-2em}
+    \caption{A close-up from the 0.5--0.5\si{\mm} perforation with target adapter.
     The signal response generally resembles that of~\Cref{fig:toy-plot-damped-closeup} from the toy problem.}
     \label{fig:under-tuned-closeup}
 \end{figure}
@@ -34,7 +35,8 @@ However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph
 
 \begin{figure}
     \centering
-    \input{Thesis/figures/discussion/slow-overshoot-closeup.pgf}
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/slow-overshoot-overlay}
+    \vspace*{-2em}
     \caption{A close-up from the \emph{slow-aggressive} PID controller with target adapter.
     The manner in which the target is adapted resembles that of~\Cref{fig:toy-plot-closeup} from the toy problem.}
     \label{fig:slow-overshoot-closeup}
@@ -65,7 +67,7 @@ Similarly, the 0.25--0.25 and 0.5--0.5\si{\mm} perforations effectively prevent 
 
 \begin{figure}
     \centering
-    \input{Thesis/figures/discussion/limitation.pgf}
+%    \input{Thesis/figures/discussion/limitation.pgf}
     \caption{A close-up of the 2--0.5\si{\mm} experiment.
     The oscillations in the signal response are recorded at an insufficient frequency to contain any meaningful relationship between spaced-out state pairs and the target.
     As a result, the adapter's output becomes more chaotic as well, further polluting the training data.}
