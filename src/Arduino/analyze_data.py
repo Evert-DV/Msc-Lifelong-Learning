@@ -3,11 +3,12 @@ import pickle
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
+import scienceplots
 from botocore.compat import file_type
 from matplotlib import pyplot as plt
-from adjustText import adjust_text
+from adjustText import adjust_text, expand_axes_to_fit
 
-plt.style.use('tableau-colorblind10')
+plt.style.use('vibrant')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 # mpl.use("pgf")
 # mpl.rcParams.update({
@@ -46,27 +47,29 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",               # <-- crawling gait
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",     # <-- crawling gait, + qualitative
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",         # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",  # <-- crawling gait
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",  # <-- crawling gait, + qualitative
+    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",  # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
-    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",    # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",     # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",    # <-- varying PID
-    "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",     # <-- varying PID, qualitative, self-correcting
+    # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",  # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",   # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",  # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",  # <-- varying PID, qualitative, self-correcting
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\wo adapter",    # <-- varying PID
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\w adapter",  # <-- varying PID
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID barely stable\\w adapter",
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
-    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",        # <-- varying perf
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",       # <-- varying perf
-    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",        # <-- varying perf, + qualitative
+    # "Dynamics data\\25-25 perforation\\PID 150-50\\wo adapter",  # <-- varying perf
+    # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",  # <-- varying perf
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",  # <-- varying perf
+    # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",  # <-- varying perf, + qualitative
     # "Dynamics data\\150-50 perforation\\",
 ]
-file_name = "auto_save_3"
-file = f"{data_folders[0]}/{file_name}.npy"
+file_name = "auto_save_1"
+file = f"{data_folders[1]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -181,52 +184,75 @@ def plot_file(files):
     signal_fig, signal_ax = plt.subplots(2, 1, gridspec_kw={'height_ratios': [2, 1]}, figsize=(
         tex_line_width, 0.57 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
 
-    count_offset = []
-    for i, file in enumerate(files):
-        _, count, *_ = get_file_data(file)
-        count_offset.append(count[0])
-        plot_count = count
+    target_styles = [(0, (5, 2)), '-']
+    signal_styles = [(0, (2, 2)), '-']
+    control_styles = [(0, (3, 3)), '-']
+
+    target_colors = [colors[0], colors[-3]]
+    target_alpha = [.8, 1.]
+    signal_alpha = [.8, 1.]
+    control_colors = [colors[-2], colors[2]]
+
+    t_lines = []
+    x_lines = []
+    u_lines = []
+
+    offsets = [.000, .00078]
 
     for i, file in enumerate(files):
         data, count, beta, omega, control_action, targets, true_targets = get_file_data(file)
-        # count -= count[0]
-        # count /= count[-1]
-        # alpha = 1 - ((1 - i) / len(files) * 0.8)  # Vary alpha from 1.0 to 0.2
+        count -= count[0]
+        count /= count[-1]
+        count -= offsets[i]
 
-        target_lines, = signal_ax[0].plot(count, targets, linestyle=(0, (3, 1)), color=colors[3], linewidth=.5,
-                                              label="Adapted target")
-        truetarget_lines, = signal_ax[0].plot(count, true_targets, linestyle=(0, (6, 1)), color=colors[3], alpha=0.5,
-                                              linewidth=1, label="True target")
-        signal_lines, = signal_ax[0].plot(count, beta, color=colors[0], linewidth=.75, marker='.', markersize=1,
-                                          label="Signal")
-        signal_ax[1].plot(count, control_action, color=colors[5], linewidth=.5, marker='.', markersize=1)
+        target_line, = signal_ax[0].plot(count, targets, linestyle=target_styles[i], color=target_colors[i],
+                                         alpha=target_alpha[i], linewidth=.7,
+                                         )
+        # truetarget_lines, = signal_ax[0].plot(count, true_targets, linestyle=(0, (6, 1)), color=colors[3], alpha=0.5,
+        #                                       linewidth=1, label="True target")
+        signal_line, = signal_ax[0].plot(count, beta, linestyle=signal_styles[i], color=colors[1],
+                                         alpha=signal_alpha[i], linewidth=.7,  # marker='.', markersize=1,
+                                         )
+        control_line, = signal_ax[1].plot(count, control_action, linestyle=control_styles[i], color=control_colors[i],
+                                          linewidth=.7)
+
+        t_lines.append(target_line)
+        x_lines.append(signal_line)
+        u_lines.append(control_line)
 
     signal_ax[0].set_ylabel("$\\theta$ [deg]")
     # signal_ax[1].set_xticks(plot_count[::1000])
     # signal_ax[1].plot(count, omega, color=colors[-2], marker='.', markersize=2, lw=.5)
     # signal_ax[1].set_ylabel("Angular velocity [deg/s]")
 
-    signal_ax[1].set_xlabel("Count")
+    signal_ax[1].set_xlabel("Normalized count")
     signal_ax[1].set_ylabel("$u$ [\si{\micro\second}]")
     for ax in signal_ax:
         ax.tick_params(axis='both', labelsize=6)
 
-    # signal_ax[0].set_xlim([78950, 81780])
-    # signal_ax[0].set_xlim([67390, 70400])
-    # signal_ax[0].set_xlim([31250, 34100])
-    # signal_ax[0].set_xlim([32300, 35250])
-    # signal_ax[0].set_xlim([79050, 81900])
-    # signal_ax[0].set_xlim([77230, 78650])
-    # signal_ax[0].set_xlim([79800, 81270])
-    # signal_ax[0].set_xlim([10950, 13650])
+    # signal_ax[0].set_xlim([0.286, 0.386])  # PID soft
+    # signal_ax[0].set_xlim([.82, .92])  # 200-50
+    # signal_ax[0].set_ylim([-25, -7.5])  # 200-50
+    # signal_ax[0].set_xlim([.145, .245])  # slow overshoot
+    # signal_ax[0].set_ylim([-27, -1])  # slow overshoot
+    # signal_ax[0].set_xlim([.53, .63])   # crawling gait
+    # signal_ax[0].set_ylim([-21, -5.5])  # crawling gait
+    # signal_ax[0].set_xlim([.183, .215])   # 50--50
+    # signal_ax[0].set_ylim([-8.5, -3.7])   # 50--50
+    signal_ax[0].set_xlim([.096, .128])  # slow over (2)
+    signal_ax[0].set_ylim([-27, -7.5])  # slow over (2)
     # signal_ax[0].set_xlim([33450, 33950])
     # signal_ax[0].set_xlim([73950, 74400])
     # signal_ax[0].set_ylim([-15.5, -2])
-    signal_fig.legend(handles=[target_lines, signal_lines, truetarget_lines],
-                      frameon=False, loc='lower left', ncol=3, bbox_to_anchor=(0, -0.07))
+    signal_fig.legend(handles=[*t_lines, *x_lines, *u_lines],
+                      labels=["PID target", "Adapter target", "PID signal", "Adapter signal", "PID control",
+                              "Adapter control"],
+                      frameon=False, loc='lower left', ncol=3, handlelength=1., bbox_to_anchor=(0, -0.15))
 
     signal_fig.tight_layout()
-    plt.savefig(f'{root}\\tmp\\slow-over-test.{"pgf" if mpl.get_backend() == "pgf" else "png"}', bbox_inches='tight', dpi=300)
+    if mpl.get_backend() == 'pgf':
+        plt.savefig(f'{root}\\reports\\Thesis\\figures\\discussion\\slow-overshoot-overlay.pgf', bbox_inches='tight',
+                    dpi=300)
 
     # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
     #     tex_line_width, 0.75 * tex_line_width) if mpl.get_backend() == 'pgf' else (12, 8), sharex=True)
@@ -280,21 +306,57 @@ def plot_file(files):
     # plt.show()
 
 
-def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'):
+def generate_latex_table(data, columns, file_path):
+    import math
+
+    # Modify the column headers
+    columns = [str((i - 1) * 5 + 5) if col.startswith('auto_save_') else col for i, col in enumerate(columns)]
+
+    max_cols_per_table = 12  # Maximum number of data columns per table (excluding first column)
+    num_data_cols = len(columns) - 1  # Exclude the first column (labels)
+    number_of_tables = math.ceil(num_data_cols / max_cols_per_table)
+
+    with open(file_path, 'w') as f:
+        for table_idx in range(number_of_tables):
+            start_idx = 1 + table_idx * max_cols_per_table
+            end_idx = min(start_idx + max_cols_per_table, len(columns))
+
+            table_columns = [columns[0]] + columns[start_idx:end_idx]
+
+            # Write the LaTeX table code
+            f.write("\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}l|" + "r" * (len(table_columns) - 1) + "}\n")
+            f.write("    \\toprule\n")
+            f.write("    " + " & ".join([f"\\textbf{{{col}}}" for col in table_columns]) + " \\\\\n")
+            f.write("    \\midrule\n")
+            for row in data:
+                row_data = [row[0]] + row[start_idx:end_idx]
+                formatted_row = ["{:.2f}".format(value) if isinstance(value, (int, float)) else str(value) for value in row_data]
+                formatted_row[0] = f"\\textbf{{{formatted_row[0]}}}"  # Make the first column bold
+                f.write("    " + " & ".join(formatted_row) + " \\\\\n")
+            f.write("    \\bottomrule\n")
+            f.write("\\end{tabular*}\n\n")  # Add a newline between tables
+
+
+
+def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save', do_latex=True):
     files = [f for f in os.listdir(data_folder) if file_type in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
-    metrics_headers = ["MRT [s]", "MST [s]", "MO [deg]", "MAE [deg]",
+    metrics_headers = ["MRT [s]", "MST [s]", "MO  [deg]", "MAE [deg]",
                        # "IAE [deg]",
                        "MAV [deg/s]", "NTV [\si{\micro\second}]",
-#                        "MCA [\si{\micro\second}]"
+                       #                        "MCA [\si{\micro\second}]"
                        ]
     csv_data = {"Metric": metrics_headers}
 
+    avg_metrics = []
     for file in files:
         file_path = os.path.join(data_folder, file)
         file_metrics = metrics(file_path, do_print=False, do_plot=False)
         csv_data[file] = file_metrics
+        avg_metrics.append(file_metrics)
+
+    avg_metrics = np.mean(avg_metrics, axis=0)
 
     df = pd.DataFrame(csv_data)
     if save_folder is None:
@@ -303,8 +365,29 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
     excel_file = os.path.join(save_folder, f"metrics_summary.xlsx")
     df.to_excel(excel_file, index=False)
 
+    if do_latex:
+        columns = df.columns.tolist()
+        data = df.values.tolist()
+        latex_file_path = os.path.join(f"{root}\\reports\\Thesis\\appendix tables\\",
+                                       f'crawling gait {os.path.basename(data_folder)}.tex')
+        generate_latex_table(data, columns, latex_file_path)
+
     if do_plot:
         plot_metrics_evolution(excel_file)
+
+    # Print header
+    print(f"\nMetrics for {os.path.basename(data_folder)}")
+    headers = ["Metric", "Value"]
+    header_row = "| {:<20} | {:<20} |".format(headers[0], headers[1])
+    print(header_row)
+    print("-" * len(header_row))
+
+    # Print each metric
+    for metric, value in zip(metrics_headers, avg_metrics):
+        if isinstance(value, float):
+            print("| {:<20} | {:<20.4f} |".format(metric, value))
+        else:
+            print("| {:<20} | {:<20} |".format(metric, "Array"))
 
     return excel_file
 
@@ -338,8 +421,9 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         texts = []
         for df, x_ticks, label in zip(dfs, x_ticks_list, short_labels):
             y_values = df.loc[df["Metric"] == header].values[0][1:]
-            line, = ax.plot(x_ticks, y_values, marker='.', markersize=1, lw=.5, alpha=0.25,
-                    color=colors[1] if 'w adapter' in label else colors[0])
+            line, = ax.plot(x_ticks, y_values, marker='.', markersize=1, lw=.5, alpha=0.5,
+                            color=colors[1] if 'w adapter' in label else colors[-3],
+                            linestyle='-' if 'w adapter' in label else '--')
             # Choose a point to annotate
             x_last = x_ticks[-1]
             y_last = y_values[-1]
@@ -348,18 +432,19 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
             txt = ax.text(
                 x_last,
                 y_last,
+                # '-'.join([str(float(f) / 100) for f in label.strip().split(' ')[0].split('-')]),
                 label.strip().split(' ')[-1],
                 fontsize=6,
                 color=line.get_color(),
-                alpha=0.75,
+                alpha=1.,
                 ha='left',
                 va='bottom'
             )
             texts.append(txt)  # Add to the list of texts
-            texts[0].set_visible(False)  # Hide the first text annotation
+            # texts[0].set_visible(False)  # Hide the first text annotation
 
         # Adjust the text positions to prevent overlapping
-        adjust_text(texts, ax=ax, expand_points=(0., .5), expand_text=(0., 1.1))
+        adjust_text(texts, ax=ax, expand_axes=True, avoid_self=False)
 
         # Determine the maximum length of the data
         max_length_wo_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'wo adapter' in label])
@@ -367,11 +452,13 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
 
         # Pad the shorter data arrays with NaN values
         padded_data_wo_adapter = [
-            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_wo_adapter - df.shape[1]), constant_values=np.nan)
+            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_wo_adapter - df.shape[1]),
+                   constant_values=np.nan)
             for df, label in zip(dfs, short_labels) if 'wo adapter' in label
         ]
         padded_data_w_adapter = [
-            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_w_adapter - df.shape[1]), constant_values=np.nan)
+            np.pad(df.loc[df["Metric"] == header].values[0][1:], (0, max_length_w_adapter - df.shape[1]),
+                   constant_values=np.nan)
             for df, label in zip(dfs, short_labels) if 'w adapter' in label
         ]
 
@@ -380,8 +467,10 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         avg_values_w_adapter = np.nanmean(padded_data_w_adapter, axis=0)
 
         # Plot the averages
-        wo_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_wo_adapter -1], avg_values_wo_adapter, lw=1., marker='.', markersize=2, color=colors[0])
-        w_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_w_adapter -1], avg_values_w_adapter, lw=1., marker='.', markersize=2, color=colors[1])
+        wo_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_wo_adapter - 1], avg_values_wo_adapter,
+                                    linestyle='--', lw=.7, marker='.', markersize=2, color=colors[-3])
+        w_adapter_lines, = ax.plot(sorted(list(combined_ticks))[:max_length_w_adapter - 1], avg_values_w_adapter, lw=.7,
+                                   marker='.', markersize=2, color=colors[1])
 
         skip_tick = max(1, len(combined_ticks) // 12)
         ax.set_ylabel(header)
@@ -396,12 +485,13 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
     axes[len(metrics_headers) - 1].set_xlabel('Time [min]')
 
     fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left',
-               frameon=False, bbox_to_anchor=(0., -0.05))
+               frameon=False, bbox_to_anchor=(0., -0.05), handlelength=1.25)
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, f'baselines.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    plot_file = os.path.join(save_folder, f'crawling-gait-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
-    plt.savefig(plot_file, dpi=300, bbox_inches='tight')
+    if mpl.get_backend() == 'pgf':
+        plt.savefig(plot_file, dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -463,9 +553,9 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
 
 def main():
-    plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
+    # plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
     # metrics(file, do_print=True, do_plot=True)
-    # compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\discussion', file_type='auto_save')
+    compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\appendix', file_type='auto_save')
     # compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
     # metrics_similarity(data_folders, file_type='ref_minute')
 
