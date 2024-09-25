@@ -30,7 +30,7 @@ Once training is completed, the copied adapter's weights are assigned to the ori
 The \texttt{change\_value} thread is responsible for setting the ``true'' target in the control loop, as well as the actual adaptations to it.
 All threads aim to operate at 50\si{\hertz}.
 
-\begin{figure}[htb]
+\begin{figure}
     \centering
     \def\svgwidth{\linewidth}
     \footnotesize\selectfont\input{Thesis/figures/appendix/code_diagram.pdf_tex}
@@ -46,20 +46,24 @@ All threads aim to operate at 50\si{\hertz}.
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/slow-overshoot-metrics.pgf}
-    \caption{}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the \emph{slow-aggressive} controller.}
     \label{fig:slow-overshoot-metrics-full}
 \end{figure*}
 
 \begin{table*}
+    \caption{Numerical values of the metrics for the \emph{slow-aggressive} controller.}
+    \label{tab:slow-overshoot}
     \begin{subtable}[t]{\linewidth}
         \centering
-        \caption{}
+        \caption{Baseline controller}
         \label{tab:slow-overshoot-baseline}
         \input{./Thesis/appendix tables/slow overshoot wo adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
-        \caption{}
+        \vspace*{1em}
+        \caption{Target adapter}
         \label{tab:slow-overshoot-adapter}
         \input{./Thesis/appendix tables/slow overshoot w adapter}
     \end{subtable}
@@ -69,37 +73,142 @@ All threads aim to operate at 50\si{\hertz}.
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/under-tuned-metrics.pgf}
-    \caption{}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the \emph{under-tuned} controller.}
     \label{fig:under-tuned-metrics-full}
 \end{figure*}
 
+\begin{table*}
+    \caption{Numerical values of the metrics for the \emph{under-tuned} controller.}
+    \label{tab:under-tuned}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:under-tuned-baseline}
+        \input{./Thesis/appendix tables/under-tuned wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:under-tuned-adapter}
+        \input{./Thesis/appendix tables/under-tuned w adapter}
+    \end{subtable}
+\end{table*}
+
+        \vspace*{1em}
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/25--25-50--50-metrics.pgf}
-    \caption{}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the 25--25 and 50--50\si{\mm} perforations.}
     \label{fig:25--25-50--50-metrics-full}
 \end{figure*}
+
+\begin{table*}
+    \caption{Numerical values of the metrics for the 25--25 and 50--50\si{\mm} perforations.}
+    \label{tab:25--25-50--50}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:25--25-baseline}
+        \input{./Thesis/appendix tables/25--25 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:25--25-adapter}
+        \input{./Thesis/appendix tables/25--25 w adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Baseline controller}
+        \label{tab:50--50-baseline}
+        \input{./Thesis/appendix tables/50--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:50--50-adapter}
+        \input{./Thesis/appendix tables/50--50 w adapter}
+    \end{subtable}
+\end{table*}
 
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/150--50-200--50-metrics.pgf}
-    \caption{}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the 150--50 and 200--50\si{\mm} perforations.}
     \label{fig:150--50-200--50-metrics-full}
 \end{figure*}
+
+\begin{table*}
+    \caption{Numerical values of the metrics for the 150--50 and 200--50\si{\mm} perforations.}
+    \label{tab:150--50-200--50}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:150--50-baseline}
+        \input{./Thesis/appendix tables/150--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:150--50-adapter}
+        \input{./Thesis/appendix tables/150--50 w adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Baseline controller}
+        \label{tab:200--50-baseline}
+        \input{./Thesis/appendix tables/200--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:200--50-adapter}
+        \input{./Thesis/appendix tables/200--50 w adapter}
+    \end{subtable}
+\end{table*}
 
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/crawling-gait-metrics.pgf}
-    \caption{}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the crawling gait experiment.}
     \label{fig:crawling-gait-metrics-full}
 \end{figure*}
 
-\begin{table}
+\begin{table*}
     \centering
-    \caption{}
-    \label{tab:}
-    \input{./Thesis/appendix tables/crawling gait wo adapter}
-    \input{./Thesis/appendix tables/crawling gait w adapter pretrained}
-    \input{./Thesis/appendix tables/crawling gait w adapter online}
-\end{table}
+    \caption{Numerical values of the metrics for the crawling gait experiment.}
+    \label{tab:crawling-gait}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:crawling-gait-baseline}
+        \input{./Thesis/appendix tables/crawling gait wo adapter}
+    \end{subtable}
+    \begin{subtable}[tl]{.49\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Pretrained target adapter}
+        \label{tab:crawling-gait-adapter}
+        \input{./Thesis/appendix tables/crawling gait w adapter pretrained}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[tr]{.49\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Online trained target adapter}
+        \label{tab:crawling-gait-online}
+        \input{./Thesis/appendix tables/crawling gait w adapter online}
+    \end{subtable}
+\end{table*}
 
