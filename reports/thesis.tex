@@ -3,6 +3,8 @@
 %\PassOptionsToPackage{final}{changes}        % for disabling changes markup
 %\PassOptionsToPackage{disable}{todonotes}   % for disabling todonotes markup
 
+\RequirePackage{pdfmanagement-testphase}\DeclareDocumentMetadata{}
+
 % Preamble
 \documentclass[noroman, 11pt]{tudelft-report}
 
@@ -14,7 +16,7 @@
 \usepackage{fontspec}
 \usepackage{lipsum}
 \usepackage{hyperref}
-\usepackage{xr}
+\usepackage{xr-hyper}
 \usepackage{pdfpages}
 \usepackage{etoolbox}
 \usepackage{geometry}
@@ -24,14 +26,15 @@
 \usepackage{multirow}
 \usepackage{tabularx}
 \usepackage{cleveref}
+\usepackage{newpax}
 \usepackage{float}
 \usepackage{subcaption}
 \usepackage{pgf}
 \usepackage[section]{placeins}
 
+\newpaxsetup{usefileattributes=true}
 
 \externaldocument{thesis-paper}
-\newfontfamily{\textimes}{TeX Gyre Termes}
 
 % easy citing
 \renewcommand{\cite}{\parencite}
@@ -75,31 +78,19 @@
 %\vfill
 %}
 
-
 \begin{document}
-\makecover
+    \frontmatter
 
-\frontmatter
+    \makecover
 
-\input{Thesis/title}
+    \input{Thesis/title}
 
-\input{Thesis/preface}
+    \input{Thesis/preface}
 
-\include{Thesis/frontmatter}
+    \include{Thesis/frontmatter}
 
-\mainmatter
-
-%\addcontentsline{toc}{chapter}{Lifelong Learning for a Kresling-Origami Robot}
-
-
-\begingroup
-\let\orignumberline\numberline
-\renewcommand{\numberline}[1]{}
-\includepdf[pages=-, addtotoc={
-    1, chapter, 0, Lifelong Learning for a Kresling-Origami Robot, mainmatter
-}]{out/thesis-paper.pdf}
-\endgroup
-
+    \mainmatter
+    \includepdf[pages=-, pagecommand={\thispagestyle{empty}}]{out/thesis-paper.pdf}
 
 %\appendix
 

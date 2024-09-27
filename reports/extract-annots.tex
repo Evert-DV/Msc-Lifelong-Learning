@@ -1,0 +1,21 @@
+%! Author = evert
+%! Date = 27/09/2024
+
+% Preamble
+\documentclass{article}
+\usepackage{luacode}
+
+% load the lua code
+\directlua{require("newpax")}
+% write .newpax files for newpax.sty
+\directlua
+{
+newpax.writenewpax("./out/thesis-paper")
+}
+
+% Document
+\begin{document}
+
+
+
+\end{document}

@@ -1,20 +1,54 @@
 \tableofcontents
 \addcontentsline{toc}{chapter}{Contents}
+\addtocontents{toc}{\protect\contentsline{chapter}{List of Figures}{~\pageref*{thelof}}{chapter*.3}}
+\addtocontents{toc}{\protect\contentsline{chapter}{List of Tables}{~\pageref*{thelot}}{chapter*.4}}
+\addtocontents{toc}{\protect\contentsline{chapter}{Lifelong Learning for a Kresling-Origami Robot}{1}{page.1}}
+
+
+
 \makeatletter
-    \begingroup
-        \let\addvspace\relax
-%        \input{../auxil/thesis.toc}%
-        \input{../auxil/thesis-paper.toc}%
-    \endgroup
+\begingroup
+    \let\OldContentsline\contentsline
+    % Redefine \contentsline to adjust hyperlinks%
+    \renewcommand{\contentsline}[4]{%
+        % Use the original \contentsline with the new target
+        \addtocontents{toc}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
+    }
+    \let\addvspace\relax
+    \input{../auxil/thesis-paper.toc}%
+    \let\contentsline\relax
+\endgroup
 \makeatother
 
 
-\listoffigures
-\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures\label{thelof}
 \makeatletter
-    \begingroup
-        \let\addvspace\relax
-%        \input{../auxil/thesis.toc}%
-        \input{../auxil/thesis-paper.lof}%
-    \endgroup
+\begingroup
+    \let\OldContentsline\contentsline
+    % Redefine \contentsline to adjust hyperlinks%
+    \renewcommand{\contentsline}[4]{%
+    % Use the original \contentsline with the new target
+        \addtocontents{lof}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
+    }
+    \let\addvspace\relax
+    \input{../auxil/thesis-paper.lof}%
+    \let\contentsline\relax
+\endgroup
+\makeatother
+
+
+\listoftables
+\label{thelot}
+\makeatletter
+\begingroup
+    \let\OldContentsline\contentsline
+    % Redefine \contentsline to adjust hyperlinks%
+    \renewcommand{\contentsline}[4]{%
+    % Use the original \contentsline with the new target
+        \addtocontents{lot}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
+    }
+    \let\addvspace\relax
+    \input{../auxil/thesis-paper.lot}%
+    \let\contentsline\relax
+\endgroup
 \makeatother

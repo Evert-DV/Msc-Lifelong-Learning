@@ -2,6 +2,7 @@ The performance of the target adapter is evaluated over three types of experimen
 In the first type, the PID controller's tuning is varied, while maintaining consistent KOS characteristics (\Cref{subsec:varying-pid}).
 For the second group of experiments, the system dynamics are varied, namely the degree of perforation in the folds of the KOS, while keeping the PID controller identical across tests (\Cref{subsec:varying-kos}).
 Finally, the performance is tested for a crawling gait to observe the effect of the method in a highly restricted setting (\Cref{subsec:crawling-gait}).
+For the comprehensive set of results, refer to~\Cref{app:results-ext}.
 \todo[inline]{FOR ENTIRE SECTION: quantify the results: x\% improvement of y, etc.}  % TODO QUANTIFY!!!
 
 \subsection{Varying the PID Controller}\label{subsec:varying-pid}
@@ -11,28 +12,28 @@ During this experiment, the values of the targets in the random sequence are int
 The robot has 5\si{\second} to reach and settle around a target before it is provided with the next target in the sequence.
 
 \subsubsection{A controller that is slow but aggressive}
-The first PID controller has a disproportionally high integral gain, resulting in \emph{aggressive} but \emph{slow to respond} behavior.
+The first PID controller has a disproportionally high integral gain, resulting in an aggressive but slow to respond controller.
 This controller yields particularly interesting results in combination with the bistable nature of the KOS.
-\Cref{fig:slow-overshoot-overlay} shows the signal response from the reference controller, illustrating the behavior of the controller.
-In comparison, the signal obtained from the controller-adapter combination is shown in \Cref{fig:slow-overshoot-overlay}.\todo{rewrite}  % TODO: rewrite
+\Cref{fig:slow-overshoot-overlay} shows the comparison between the signal responses from the baseline controller and adapted controller, illustrating the behavior of the controller.
 
 \begin{figure}
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/slow-overshoot-overlay}
     \vspace*{-2em}
-    \caption{}
+    \caption{Qualitative comparison between the behavior of the baseline controller and target adapted controller for the \emph{slow-aggressive} PID controller.}
     \label{fig:slow-overshoot-overlay}
 \end{figure}
 
-During the full 2\si{\hour} duration of the experiment, the evaluation of each 5\si{\minute} sequence was recorded.
+During the full 2\si{\hour} duration of the experiment, each 5\si{\minute} sequence was recorded and evaluated using the metrics discussed in ~\Cref{subsec:metrics}.
 The result can be seen in \Cref{fig:slow-overshoot-metrics}.
 
 \begin{figure*}
     \centering
     \input{Thesis/figures/results/slow-overshoot-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for an \emph{aggressive} but \emph{under-responsive} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Numerical values can be found in~\Cref{app:results-ext}.}
+    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for an \emph{aggressive} but \emph{under-responsive} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:slow-overshoot-metrics-full} and~\Cref{tab:slow-overshoot}, respectively.}
     \label{fig:slow-overshoot-metrics}
+    \todo[inline]{just MO, MAE, MAV, (and NTV,) 1 column}
 \end{figure*}
 
 Note the immediate (after the first 5\si{\minute}) improvement in overshoot and absolute error.
@@ -66,7 +67,7 @@ The evolution of the metrics is shown in~\Cref{fig:under-tuned-metrics}.
     \centering
     \input{Thesis/figures/results/under-tuned-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the duration of the experiment for an \emph{under-tuned} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Numerical values can be found in~\Cref{app:results-ext}.}
+    \caption{Metrics evolution over the duration of the experiment for an \emph{under-tuned} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets.Plots for all metrics and numerical values can be found in~\Cref{fig:under-tuned-metrics-full} and~\Cref{tab:under-tuned}, respectively.}
     \label{fig:under-tuned-metrics}
 \end{figure*}
 
@@ -95,7 +96,7 @@ The evolution of the metrics over the course of the 1\si{\hour} experiment is sh
     \centering
     \input{Thesis/figures/results/25--25-50--50-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the 1\si{\hour} duration of the experiment for KOSs in a lower state of degradation (0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Numerical values can be found in~\Cref{app:results-ext}.}
+    \caption{Metrics evolution over the 1\si{\hour} duration of the experiment for KOSs in a lower state of degradation (0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:25--25-50--50-metrics-full} and~\Cref{tab:25--25-50--50}, respectively.}
     \label{fig:25--25-50--50-metrics}
 \end{figure*}
 
@@ -142,7 +143,7 @@ In fact, the only metric where the target adapter metrics are smaller than those
     \centering
     \input{Thesis/figures/results/150--50-200--50-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for KOSs in a higher state of degradation (1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Numerical values can be found in~\Cref{app:results-ext}.}
+    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for KOSs in a higher state of degradation (1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:150--50-200--50-metrics-full} and~\Cref{tab:150--50-200--50}, respectively.}
     \label{fig:150--50-200--50-metrics}
 \end{figure*}
 
@@ -199,7 +200,7 @@ These improvements come at the cost of significantly higher overshoot.
     \centering
     \input{Thesis/figures/results/crawling-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the 20\si{\minute} duration of the crawling-gait experiment, with the average of both adapted controllers overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets, in this case alternating between values near to -18 and -8 degrees, respectively. Numerical values can be found in~\Cref{app:results-ext}.}
+    \caption{Metrics evolution over the 20\si{\minute} duration of the crawling-gait experiment, with the average of both adapted controllers overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets, in this case alternating between values near to -18 and -8 degrees, respectively. Plots for all metrics and numerical values can be found in~\Cref{fig:crawling-gait-metrics-full} and~\Cref{tab:crawling-gait}, respectively.}
     \label{fig:crawling-metrics}
 \end{figure*}
 

@@ -35,7 +35,7 @@ def main():
     # Define controller
     # controller = PIDController(2500, 100, 10200)
     controller = PIDController(300, 10, 50)
-#     controller = PIDController(300, 40, 5)
+    # controller = PIDController(300, 40, 5)
 
     # Define reference controller
     # reference_controller = PIDController(2500, 100, 10200)
@@ -284,15 +284,15 @@ def main():
 
     plt.style.use('vibrant')
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    mpl.use("pgf")
-    mpl.rcParams.update({
-        "pgf.texsystem": "xelatex",
-        'font.size': 8,
-        'text.usetex': True,
-        'pgf.rcfonts': False,
-        "pgf.preamble": r"\usepackage{amsmath}"
-                        r"\usepackage{lmodern}"
-    })
+    # mpl.use("pgf")
+    # mpl.rcParams.update({
+    #     "pgf.texsystem": "xelatex",
+    #     'font.size': 8,
+    #     'text.usetex': True,
+    #     'pgf.rcfonts': False,
+    #     "pgf.preamble": r"\usepackage{amsmath}"
+    #                     r"\usepackage{lmodern}"
+    # })
     tex_line_width = 3.48
     tex_text_width = 7.17
 
@@ -314,14 +314,14 @@ def main():
 
     ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (5, 2)), color=colors[0], alpha=.8, linewidth=.7)
     ref_sig, = ax[0].plot(t, reference_signal[:, 0], linestyle=(0, (2, 2)), color=colors[1], alpha=.8, linewidth=.7)
-    adapted_target, = ax[0].plot(t, adapted_targets[:, 0], color=colors[-3], linewidth=.75)
+    adapted_target, = ax[0].plot(t, adapted_targets[:, 0], color=colors[-3], linewidth=.7)
     sig, = ax[0].plot(t, signal[:, 0], color=colors[1], linewidth=.7)
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]")
     ax[0].tick_params(axis='both', labelsize=6)
     ax[0].set_xlim(49, 56)
-    ax[0].set_ylim(8, 12)
-    ax[1].set_ylim(-1100, 1100)
+    ax[0].set_ylim(8., 12.)
+    ax[1].set_ylim(-1500, 1700)
 
     u, = ax[1].plot(t, adapted_controls, color=colors[2], alpha=1., linewidth=.7)
     ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (3, 3)), color=colors[-2], linewidth=.7)
