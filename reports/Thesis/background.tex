@@ -18,7 +18,7 @@ Broadly speaking, the approaches can be divided into four categories, which are 
 Methods that result in a ``blackbox'' control policy, often obtained through reinforcement learning, where a policy is found by trying to optimize a \emph{reward} function~\parencite{Bhagat2019}.
 Methods that model the dynamics of the system, to be used in combination with other controllers or to optimize an ML-based policy (e.g.~\textcite{Gillespie2018,Thuruthel2019}, respectively).
 Special architectures, such as parameter adaptation or estimation mechanism, and iterative learning control, where a separate module capable of learning is combined with a base controller~\parencite{Annaswamy2021, Li2005}.
-Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method to be less \emph{destructive} (e.g.~\emph{Learning-without-forgetting},~\cite{Li2016}), or by implementing some form of library that can be accessed to store and retrieve information or parameters, as in e.g.~\textcite{Wang2022}.
+Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method to be less \emph{destructive} (e.g.~\emph{learning without forgetting},~\cite{Li2016}), or by implementing some form of library that can be accessed to store and retrieve information or parameters, as in e.g.~\textcite{Wang2022}.
 
 
 The techniques most similar to the method discussed in this paper are parameter adaptation/estimation and iterative learning control (ILC).
@@ -50,7 +50,7 @@ With the help of only three parameters, the design map shown in~\Cref{fig:design
 
 \begin{figure}
         \centering
-        \def\svgwidth{.75\linewidth}
+        \def\svgwidth{.7\linewidth}
         \footnotesize\selectfont\input{Thesis/figures/related work/parameters.pdf_tex}
         \caption{Design map for a KOS with 6 sides reproduced from~\textcite{Masana2019} and the corresponding parameters from the folding pattern, with mountain creases in blue and valley creases in dashed red.}
         \label{fig:design-params}

@@ -3,9 +3,6 @@ The method proposed in this paper aims to provide a way of improving a given con
 In addition, the aim is not to replace the controller entirely but to introduce an additional module to the control scheme that enables lifelong robustness to evolving system dynamics.
 The advantage of such a method is that it could be applied to any system as a \emph{plug-and-play} module.
 
-\todo[inline]{duscuss the \emph{why} of it}
-
-
 The manner in which this will be achieved is by \emph{target adaptation}.
 An \emph{adapter} module modifies the target used by the controller to improve its performance.
 Consider a scenario where a controller yields a control action $u$ to reach a certain desired target state $\mathbf{x}_d$ within a certain time window.
@@ -34,7 +31,11 @@ For this adapted target, the controller now yields a larger action $u^*$ that \e
     \caption{Target adaptation.}
 \end{figure}
 
-The adapter is implemented as a feedforward neural network with to hidden layers with non-linear activations.
+At a glance, this method resembles that of iterative learning control (ILC).
+However, in ILC, the adaptation to the reference signal is directly related to the error signal, resulting in effective behavior for a very constricted task setting, where the same task is repeated over and over.
+Here, the goal is to have a more universal improvement in performance, and to detach the method from the error signal.
+
+To achieve this, the adapter is implemented as a feedforward neural network with to hidden layers with non-linear activations.
 To train this model to learn suitable target adaptations, interactions of the controller with the system are recorded.
 Specifically, a buffer stores the recorded system states with corresponding targets.
 The model is then provided with pairs of system states that are obtained from the buffer and are spaced by a certain time window $\mathbf{x}_t$ and $\mathbf{x}_{t+\text{window}}$.
@@ -69,7 +70,11 @@ The idea is now that the trained model will produce a $\bm{\Delta}$ that--when a
 In short, given a current state $\mathbf{x}_t$ and a future state $\mathbf{x}_{t+\textit{window}}$, the model learned to produce the desired target.
 Thus, when presented with $\mathbf{x}_t$ and $\mathbf{x}_{t+\textit{window}}=\mathbf{x}_d$ (supposedly reached within the time window) it provides the (adapted) target that would ``push'' the controller toward that result.
 
-The reason for predicting the difference $\bm{\Delta}$ between the state $\mathbf{x}_{t+\textit{window}}$ and the desired target, rather than a direct prediction of the target, can also be clarified now:
-By designing the model's output to be the difference $\bm{\Delta}$, the model can be initialized with parameters all close to zero (essentially leaving the desired target unchanged) and then steadily improve online as interactions of the controller and system are recorded, without the need for a pretraining phase.
+This approach is thus completely detached from the error signal, and allows for non-repetitive settings, as opposed to ILC.
+ILC, however, also provides an approach of adapting the controller's action $u$ directly.
+Trying to mimic this approach similarly to the target adaptation method described, one could train an adapter to predict a control action, or a series of actions, based on a state pair.
+The downside to this approach is merely a matter of personal opinion: as the adapter improves, it would essentially replace the controller (during deployment, it receives the state and target, and produces an action), therefore, the target adaptation was considered the more \emph{elegant} approach.
 
+Finally, the reason for predicting the difference $\bm{\Delta}$ between the state $\mathbf{x}_{t+\textit{window}}$ and the desired target, rather than a direct prediction of the target, should also be clarified now:
+By designing the target adapter's output to be the difference $\bm{\Delta}$, the model can be initialized with parameters all close to zero (essentially leaving the desired target unchanged) and then steadily improve online as interactions of the controller and system are recorded, without the need for a pretraining phase.
 
