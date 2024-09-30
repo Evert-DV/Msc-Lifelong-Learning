@@ -1,21 +1,30 @@
 \subsection{Soft Robotics}\label{subsec:soft-robots}
 \todo[inline]{challenges}
-\lipsum[1-2]
-~\cite{Sun2021,Hartmann2021,Hawkes2017,Ze2022,Yang2021}
+
+
 
 \subsection{Lifelong Learning}\label{subsec:lifelong-learning}
-\todo[inline]{parameter adaptation}
-\todo[inline]{iterative learning control}
-\lipsum[3-4]
-~\cite{Annaswamy2021,Nazeer2023,Lesort2020}
-% model learning
-% predictive controllers
+Many approaches to lifelong learning can be found in literature, with machine learning being an integral part in all of them.
+Broadly speaking, the approaches can be divided into four categories, which are not necessarily mutually exclusive:
+Methods that result in a ``blackbox'' control policy, often obtained through reinforcement learning, where a policy is found by trying to optimize a \emph{reward} function~\parencite{Bhagat2019,Ibarz2021}.
+Methods that model the dynamics of the system, to be used in combination with other controllers~\parencite{Gillespie2018,Nguyen2011,Romeres2016} or to optimize an ML-based policy~\parencite{Thuruthel2019,Lu2020}.
+Special architectures, such as parameter adaptation or estimation mechanism, and iterative learning control, where a separate module capable of learning is combined with a base controller~\parencite{Annaswamy2021, Li2005}.
+Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method~\parencite{Li2016, Jung2016} to be less \emph{destructive}, or by implementing some form of library that can be accessed to store and retrieve information or parameters~\parencite{Wang2022, Sprechmann2018}.
+
+
+The techniques most similar to the method discussed in this paper are parameter adaptation/estimation and iterative learning control (ILC).
+In parameter adaptation, ML-based methods are used to directly tune the internal parameters of a controller.
+The various techniques used to achieve this rely on observing the interactions of the controller with the system or having access to the feedback signal of the controller~\parencite{Annaswamy2021}.
+Furthermore, the estimation mechanism must be designed specifically for the parameters of the controller in question.
+Iterative learning control on the other hand only uses the feedback signal to improve a controller's performance.
+It achieves this by changing either the controller's reference signal (i.e.~the target) or its control action, based on the observed error during a single trial~\parencite{Li2005}.
+By iteratively applying this approach, the controller's performance can be improved.
+However, ILC is limited to systems that are highly repetitive; i.e.~the same task is repeated many times.
+
 
 \subsection{Kresling Origami}\label{subsec:kresling-origami}
 \todo[inline]{usage in soft-robotics}
-~\cite{Bhovad2019,Hu2022,Masana1993,Pagano2017,Kaufmann2022}
+
 \todo[inline]{bistable behavior}
-~\cite{Zhang2018,Kidambi2020}
+
 \todo[inline]{design parameters}
-~\cite{Masana2019}
-\lipsum[5-6]
