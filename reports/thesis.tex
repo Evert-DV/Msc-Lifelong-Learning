@@ -58,17 +58,17 @@
 \setdeletedmarkup{\textcolor{BrickRed}{\sout{#1}}}
 
 % graphics path
-\graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}}
+\graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}, {./Thesis/figures/}}
 
 % Example title setup
-\title{Lifelong Learning for an Origami Robot}
-\newcommand{\thesubtitle}{Supervised Learning of Target Adaptations}
-\subtitle[tudelft-black]{\thesubtitle}
-\author{E. De Vroey}
+\title[tudelft-white]{Lifelong Learning for a Kresling-Origami Robot}
+\newcommand{\thesubtitle}{A Plug-and-play Module for Supervised Learning of Target Adaptations}
+\subtitle[tudelft-sea-green]{\thesubtitle}
+\author[tudelft-white]{E. De Vroey}
 \date{\today}
 \newcommand{\studentnumber}{4685156}
 \affiliation{Technische Universiteit Delft}
-\coverimage{tank.jpg}
+\coverimage{colloquium.jpg}
 %\covertext[tudelft-black]{
 %\textbf{Cover Text} \\
 %possibly \\
@@ -90,7 +90,8 @@
     \include{Thesis/frontmatter}
 
     \mainmatter
-    \includepdf[pages=-, pagecommand={\thispagestyle{empty}}]{out/thesis-paper.pdf}
+    \pdfbookmark{Lifelong Learning for a Kresling-Origami Robot}{}
+%    \includepdf[pages=-, pagecommand={\thispagestyle{empty}}]{out/thesis-paper.pdf}
 
 %\appendix
 

@@ -204,18 +204,18 @@
 %% Define the TU Delft house style colors.
 \definecolor{tudelft-cyan}{cmyk}{1,0,0,0}
 \definecolor{tudelft-black}{cmyk}{0,0,0,1}
-\definecolor{tudelft-white}{cmyk}{0,0,0,0}
-\definecolor{tudelft-sea-green}{cmyk}{0.54,0,0.32,0}
+\definecolor{tudelft-white}{cmyk}{0,0,0,0} %%
+\definecolor{tudelft-sea-green}{cmyk}{0.54,0,0.32,0} %%
 \definecolor{tudelft-green}{cmyk}{1,0.15,0.4,0}
 \definecolor{tudelft-dark-blue}{cmyk}{1,0.66,0,0.4}
 \definecolor{tudelft-purple}{cmyk}{0.98,1,0,0.35}
 \definecolor{tudelft-turquoise}{cmyk}{0.82,0,0.21,0.08}
-\definecolor{tudelft-sky-blue}{cmyk}{0.45,0,0.06,0.06}
+\definecolor{tudelft-sky-blue}{cmyk}{0.45,0,0.06,0.06} %%
 \definecolor{tudelft-lavendel}{cmyk}{0.45,0.2,0,0.07}
 \definecolor{tudelft-orange}{cmyk}{0.02,0.56,0.84,0}
 \definecolor{tudelft-warm-purple}{cmyk}{0.58,1,0,0.02}
 \definecolor{tudelft-fuchsia}{cmyk}{0.19,1,0,0.19}
-\definecolor{tudelft-bright-green}{cmyk}{0.36,0,1,0}
+\definecolor{tudelft-bright-green}{cmyk}{0.36,0,1,0} %
 \definecolor{tudelft-yellow}{cmyk}{0.02,0,0.54,0}
 
 \def\@pagecolor{tudelft-cyan}
@@ -278,7 +278,7 @@
 \setlength\@cover@spinewidth{0.375in}
 %% Width and height of the boxes on the front and back cover.
 \newlength\@cover@frontboxwidth
-\setlength\@cover@frontboxwidth{4.375in}
+\setlength\@cover@frontboxwidth{5in}
 \newlength\@cover@frontboxheight
 \setlength\@cover@frontboxheight{2.1875in}
 \newlength\@cover@fronttextwidth
@@ -343,7 +343,7 @@
         \setlength\@cover@imagewidth{0.5\paperwidth}
         \addtolength\@cover@imagewidth{0.5\@cover@spinewidth}
         \else
-        \setlength\@cover@imagewidth{\paperwidth}
+        \setlength\@cover@imagewidth{\paperheight}
         \fi
         %% If a cover image was specified, attach it to the top right of the
         %% front cover.
@@ -351,18 +351,18 @@
         \ifKV@cover@back
         {\ifKV@cover@split
         \node[anchor=north west,inner sep=0pt] at (current page.center) {
-            \includegraphics[width=\@cover@imagewidth]{\@cover@image}};
+            \includegraphics[height=\@cover@imagewidth]{\@cover@image}};
         \else
         \node at (current page.north east)[anchor=north east,inner sep=0pt]{
-            \includegraphics[width=\@cover@imagewidth]{\@cover@image}};
+            \includegraphics[height=\@cover@imagewidth]{\@cover@image}};
         \fi}
         \else
         {\ifKV@cover@split
         \node[anchor=north west,inner sep=0pt] at (current page.west) {
-            \includegraphics[width=\@cover@imagewidth]{\@cover@image}};
+            \includegraphics[height=\@cover@imagewidth]{\@cover@image}};
         \else
         \node at (current page.north east)[anchor=north east,inner sep=0pt]{
-            \includegraphics[width=\@cover@imagewidth]{\@cover@image}};
+            \includegraphics[height=\@cover@imagewidth]{\@cover@image}};
         \fi}
         \fi
         \fi
@@ -480,13 +480,14 @@
         \node at (front top left)[anchor=north west,inner sep=\@cover@margin]{
             \begin{minipage}[t][\@cover@fronttextheight]{\@cover@fronttextwidth}
             %% Print the title and optional subtitle at the top in white.
-            {\largetitlestyle\color{\@titlecolor}\fontsize{96}{96}\selectfont\@title}
+            {\largetitlestyle\color{\@titlecolor}\fontsize{74}{74}\selectfont\raggedleft{\@title}}
                 %                {\tudsffamily\color{\@titlecolor}\fontsize{96}{96}\selectfont\@title}
                 \ifx\@subtitle\undefined\else
-                \\[3mm]
-                {\tudsffamily\color{\@subtitlecolor}\fontsize{22}{32}\selectfont\@subtitle}
+                \\[10mm]
+                {\tudsffamily\color{\@subtitlecolor}\fontsize{24}{24}\selectfont\@subtitle}
                 \fi
                 %% Print the author at the bottom in cyan.
+                \\[10mm]
                 \vfill
                 %                {\tudtitlefamily\color{\@authorcolor}\fontsize{26}{26}\selectfont\@author}
                 {\largetitlestyle\color{\@authorcolor}\fontsize{26}{26}\selectfont\@author}
