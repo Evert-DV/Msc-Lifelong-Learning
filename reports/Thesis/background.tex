@@ -1,15 +1,24 @@
 \subsection{Soft Robotics}\label{subsec:soft-robots}
-\todo[inline]{challenges}
+Soft robotics is a field that has gained much interest over the past decade.
+Soft robots are constructed from deformable, soft materials which offer advantages in fields such as human-robot interaction, where their inherent compliance makes them safe to interact with.
+Other use-cases range from manipulating fragile objects, to medical treatment delivery inside the human body, and search-and-rescue~\parencite{Kim2021,Ze2022,Hawkes2017}.
 
+Origami robots are a subset of soft robots.
+Inspired by the Japanese art of paper-folding, these robots rely on creases in their materials for both structural integrity and actuation methods.
+This allows for highly miniaturized designs that can self-deploy and can be actuated using affordable, lightweight mechanisms~\parencite{Tang2022a}.
+
+Of course, although the materials used often bend rather than break, they \emph{are} prone to deteriorate faster than their rigid counterparts.
+Hence, combined with the aforementioned difficulty of modeling the dynamics, the usefulness of lifelong learning in this field becomes obvious.
+Additionally, the rapid deterioration makes soft robots a fast and economical playground for testing lifelong learning techniques as well.
 
 
 \subsection{Lifelong Learning}\label{subsec:lifelong-learning}
 Many approaches to lifelong learning can be found in literature, with machine learning being an integral part in all of them.
 Broadly speaking, the approaches can be divided into four categories, which are not necessarily mutually exclusive:
-Methods that result in a ``blackbox'' control policy, often obtained through reinforcement learning, where a policy is found by trying to optimize a \emph{reward} function~\parencite{Bhagat2019,Ibarz2021}.
-Methods that model the dynamics of the system, to be used in combination with other controllers~\parencite{Gillespie2018,Nguyen2011,Romeres2016} or to optimize an ML-based policy~\parencite{Thuruthel2019,Lu2020}.
+Methods that result in a ``blackbox'' control policy, often obtained through reinforcement learning, where a policy is found by trying to optimize a \emph{reward} function~\parencite{Bhagat2019}.
+Methods that model the dynamics of the system, to be used in combination with other controllers or to optimize an ML-based policy (e.g.~\textcite{Gillespie2018,Thuruthel2019}, respectively).
 Special architectures, such as parameter adaptation or estimation mechanism, and iterative learning control, where a separate module capable of learning is combined with a base controller~\parencite{Annaswamy2021, Li2005}.
-Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method~\parencite{Li2016, Jung2016} to be less \emph{destructive}, or by implementing some form of library that can be accessed to store and retrieve information or parameters~\parencite{Wang2022, Sprechmann2018}.
+Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method to be less \emph{destructive} (e.g.~\emph{Learning-without-forgetting},~\cite{Li2016}), or by implementing some form of library that can be accessed to store and retrieve information or parameters, as in e.g.~\textcite{Wang2022}.
 
 
 The techniques most similar to the method discussed in this paper are parameter adaptation/estimation and iterative learning control (ILC).
@@ -23,8 +32,29 @@ However, ILC is limited to systems that are highly repetitive; i.e.~the same tas
 
 
 \subsection{Kresling Origami}\label{subsec:kresling-origami}
-\todo[inline]{usage in soft-robotics}
+The Kresling origami pattern is folding-pattern (~\Cref{fig:design-params}, \emph{top-right}) used to create deployable cylindrical structures, also known as bellows (\Cref{fig:kos}).
+The pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
 
-\todo[inline]{bistable behavior}
+\begin{figure}
+        \centering
+        \includegraphics[width=0.4\linewidth]{kos}
+        \caption{Fully constructed 6-sided KOS.}
+        \label{fig:kos}
+\end{figure}
 
-\todo[inline]{design parameters}
+Due to the strain induced on the folds when twisting or compressing the structure formed by the pattern, it forms a torsional and translational spring with nonlinear stiffness.
+Depending on the specific design parameters, the spring can be designed to be either mono- or bistable~\parencite{Masana2019}:
+Monostable M1, M2 and M3 type springs differ in their stable deployment height being zero, non-zero and non-zero, respectively, and their stable potential energy being non-zero, zero and non-zero, respectively.
+Bistable types B1 and B2 differ in their contracted stable height being non-zero and zero, respectively, and their respective potential energy being zero and non-zero.
+With the help of only three parameters, the design map shown in~\Cref{fig:design-params} can be created from which a pattern can be designed that conforms to any of these categories.
+
+\begin{figure}
+        \centering
+        \def\svgwidth{.75\linewidth}
+        \footnotesize\selectfont\input{Thesis/figures/related work/parameters.pdf_tex}
+        \caption{Design map for a KOS with 6 sides reproduced from~\textcite{Masana2019} and the corresponding parameters from the folding pattern, with mountain creases in blue and valley creases in dashed red.}
+        \label{fig:design-params}
+\end{figure}
+
+The bistable behavior of the KOS is a feature that has made the pattern popular in applications varying from mechanical switches, to aerospace structures and soft robots~\parencite{Masana1993}.
+The demonstrator robotic crawler in this paper is inspired by similar robots such as from~\textcite{Pagano2017,Ze2022}.
