@@ -93,7 +93,7 @@ All threads aim to operate at 50\si{\hertz}.
     \end{subtable}
 \end{table*}
 
-        \vspace*{1em}
+
 \begin{figure*}
     \centering
     \input{./Thesis/figures/appendix/25--25-50--50-metrics.pgf}
@@ -107,28 +107,28 @@ All threads aim to operate at 50\si{\hertz}.
     \label{tab:25--25-50--50}
     \begin{subtable}[t]{\linewidth}
         \centering
-        \caption{Baseline controller}
+        \caption{25--25\si{\mm} Baseline controller}
         \label{tab:25--25-baseline}
         \input{./Thesis/appendix tables/25--25 wo adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Target adapter}
+        \caption{25--25\si{\mm} Target adapter}
         \label{tab:25--25-adapter}
         \input{./Thesis/appendix tables/25--25 w adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Baseline controller}
+        \caption{50--50\si{\mm} Baseline controller}
         \label{tab:50--50-baseline}
         \input{./Thesis/appendix tables/50--50 wo adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Target adapter}
+        \caption{50--50\si{\mm} Target adapter}
         \label{tab:50--50-adapter}
         \input{./Thesis/appendix tables/50--50 w adapter}
     \end{subtable}
@@ -147,28 +147,28 @@ All threads aim to operate at 50\si{\hertz}.
     \label{tab:150--50-200--50}
     \begin{subtable}[t]{\linewidth}
         \centering
-        \caption{Baseline controller}
+        \caption{150--50\si{\mm} Baseline controller}
         \label{tab:150--50-baseline}
         \input{./Thesis/appendix tables/150--50 wo adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Target adapter}
+        \caption{150--50\si{\mm} Target adapter}
         \label{tab:150--50-adapter}
         \input{./Thesis/appendix tables/150--50 w adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Baseline controller}
+        \caption{200--50\si{\mm} Baseline controller}
         \label{tab:200--50-baseline}
         \input{./Thesis/appendix tables/200--50 wo adapter}
     \end{subtable}
     \begin{subtable}[t]{\linewidth}
         \centering
         \vspace*{1em}
-        \caption{Target adapter}
+        \caption{200--50\si{\mm} Target adapter}
         \label{tab:200--50-adapter}
         \input{./Thesis/appendix tables/200--50 w adapter}
     \end{subtable}
@@ -211,3 +211,27 @@ All threads aim to operate at 50\si{\hertz}.
 
 
 \section{Comparing KOSs}\label[appendix]{app:KOS-refs}
+\todo[inline]{ref minute plots and tables}  % TODO: ref min plots and tables
+
+\section{KOS Design and Template}\label[appendix]{app:kos-design}
+The KOSs used during the experiments used the following design parameters, as related to the definition from~\Cref{subsec:kresling-origami}:
+
+\begin{center}
+    \begin{tabular}[!h]{rl}
+        $a_0$       & 25\si{\mm}\\
+        $a_0/b_0$   & 1.5\\
+        $\alpha_0$  & 28 degrees
+    \end{tabular}
+\end{center}
+
+A template for constructing this KOS can be found at the end of the document.
+
+\emph{Instructions}:\\
+\begin{enumerate}
+    \item Tear out the template along its outer contours.
+    \item Fold the Kresling pattern: The parallelogram's diagonals are valley folds, the sides are mountain folds.
+    \item Form a cylinder and glue the flaps at the ends to the inside of their respective counterpart.
+    \item Insert the extensions at the top and bottom of the cylinder through the slits in the two base hexagons.
+    \item Fold the extensions outward and glue them to the bases.
+    \item For extra strength, an extra (cardboard) hexagonal base can be glued to the top and bottom of the KOS.
+\end{enumerate}

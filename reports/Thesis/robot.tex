@@ -1,6 +1,6 @@
 \subsection{Mechanical Details}\label{subsec:mechanical-details}
-As mentioned in \Cref{sec:background}\todo{discuss this in \Cref{sec:background}}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
-To evaluate the method described in \Cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using kresling origami as a key part of its functionality.
+As mentioned in~\Cref{subsec:soft-robots}, origami robots—and by extension, soft robots—are a suitable use-case for lifelong learning techniques.
+To evaluate the method described in~\Cref{sec:methodology}, a robot was designed that serves as a good analogue to the toy problem, whilst also using Kresling origami as a key part of its functionality.
 \Cref{fig:robot-overview} provides important nomenclature for reference.
 
 \begin{figure}
@@ -52,12 +52,13 @@ To evaluate the method described in \Cref{sec:methodology}, a robot was designed
 \end{figure}
 
 The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\Cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation mechanism in between.
+The KOSs in question are of the bistable B1 type (~\Cref{subsec:kresling-origami}) with perforated folds to facilitate actuation (refer to~\Cref{app:kos-design} for design details and templates).
 Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet'' (see~\Cref{fig:extend-contract}, \emph{top}).
 To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
 Rather, the state of the KOSs is the state that will be controlled.
 
 A KOS can be actuated both by linear motion (pushing or pulling on the spring) and by rotational motion (twisting).
-Since the two motions are directly related (\Cref{subsec:kresling-origami})\todo{\Cref{subsec:kresling-origami}}, a contracting or expanding motion can be measured as the angle of the KOS' twist.
+Since the two motions are directly related (i.e.~twist-buckling, discussed in~\Cref{subsec:kresling-origami}), a contracting or expanding motion can be measured as the angle of the KOS' twist.
 The twist is induced by turning a rotating arm (\ref{item:arm}) which is connected to the ends of the KOSs by two links (\ref{item:link}) that hook into eye-screws (\ref{item:eye}).
 To turn the arm, a micro servo motor (\ref{item:servo}) is employed.
 In the toy problem, the controller yields a force to exert on the system in order to reach the target position.
@@ -93,9 +94,6 @@ However, the design is such that the servo's mechanical limit corresponds to a $
         \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
     \label{fig:extend-contract}
 \end{figure}
-
-\subsection{KOS characteristics}\label{subsec:kos-characteristics}
-\todo[inline]{section on the KOS specifics}  % TODO: KOS characteristics
 
 \subsection{Software Implementation}\label{subsec:software-implement}
 The software implementation consists of two main components: The nominal control of the robot, and the target adaptation.

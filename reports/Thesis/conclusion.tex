@@ -6,7 +6,7 @@ In simulation, it was shown that such an approach offers near instantaneous impr
 
 The tests on a demonstrator robot, with a design relying on Kresling origami springs, show that the method is robust to varying controller tuning and varying system dynamics.
 The target adapter module tends to make passive controllers more aggressive, and vice versa, resulting in a consistent performance.
-Usage of the method on a constrained operational domain shows that both pretrained and online trained adapters manage to improve the performance, with a preference for the latter\todo{discuss pretrain and online difference in discussion}.  % TODO: pre vs online trained
+Usage of the method on a constrained operational domain shows that both pretrained and online trained adapters manage to improve the performance, with a preference for the latter.
 
 A limitation is presented in the form of the sampling frequency at which the signal response is stored for training the module: The frequency has to be high enough to capture enough detail.
 If the sampling frequency is too low \emph{and} the recorded data contains some unstable oscillations, the adapter is unable to find meaningful relationships between the state pairs and targets it uses for updating itself.
