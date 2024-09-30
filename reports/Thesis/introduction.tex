@@ -4,6 +4,7 @@
     \caption{}
     \label{fig:cool-robot}
 \end{figure}
+\todo[inline]{Cooler figure, caption}
 
 Lifelong learning, the ability of a system to continuously adapt to new information throughout its lifetime, is a much sought-after feature for many applications.
 Rather than relying on policies that are \emph{set in stone}, these systems learn and evolve autonomously, changing and improving their behaviors as they encounter new tasks or environments.
@@ -17,7 +18,7 @@ The materials used in the construction of soft robots are by design less sturdy 
 
 In addition, the complex system dynamics introduced by the unconventional robot configurations and use of materials make modeling their dynamics and control a difficult task.
 Deriving an analytical model for the dynamics of a soft robot can become so complicated to the point that it is impractical.
-Soft-robotics applications therefore heavily rely on the use of machine learning (ML) methods~\cite{Kim2021}.
+Soft-robotics applications therefore heavily rely on the use of machine learning (ML) methods~\cite{Kim2021,Bhagat2019}.
 These ``blackbox'' techniques offer the possibility of modeling the robot's dynamics and allow for continuous adaptation but are often very opaque or complex, even though the task or environment setting of the soft robot could be something fairly simple.
 
 This paper proposes a method of enhancing a traditional controller with ML abilities.
@@ -27,15 +28,17 @@ The module then only needs to improve the performance of the controller, without
 The controller works in cooperation with the ML-module, separating the interpretable basic control from the opaque learning and adapting.
 
 Techniques like parameter adaptation work much in the same way.
-An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Sprechmann2018,Annaswamy2021}.
+An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Sprechmann2018,Annaswamy2021}.\todo{\cite{Sprechmann2018} potentially unnessecary} % TODO: remove sprechmann?
 However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned), and such a module must thus be designed separately for each controller.
 
 The proposed method tries to mitigate this downside by offering a ``plug-and-play'' module that can improve a controller's performance by simply adapting the desired target it receives.
 In this way, no previous knowledge on the type or tuning of the controller is required.
 In other words, as long as the fundamental assumptions of a controller are satisfied—i.e.~it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
 
-\todo[inline]{KOS specific collection in Mendeley: \cite{Kaufmann2022,Kidambi2020,Masana1993,Masana2019,Bhovad2019}]}  % TODO: Cite
-As a demonstration of the technique, this target adaptation approach is tested on a demonstrator origami robot, constructed in part from paper and which relies on the widespread Kresling pattern for its design.
-The Kresling origami spring (KOS) is characterized by its non-linear stiffness with deflection and bistable behavior, making it an interesting playground for testing the adaptability of the method to more complex dynamics.
+With soft robots offering many advantages in miniaturization~\parencite{Tang2022a}, the physical space for controllers with heavy computational power is limited.
+The ``plug-and-play'' module offers the advantage of externalizing the heavy computational task from the soft robot, which allows the (miniaturized) robot to just run a basic controller with low computational capabilities.
 
+As a demonstration of the technique, this target adaptation approach is tested on a demonstrator origami robot, constructed in part from paper and which relies on the widespread Kresling pattern~\parencite{Kresling2012} for its design.
+The Kresling origami spring (KOS) is characterized by its non-linear stiffness with deflection and bistable behavior~\parencite{Masana2019}, making it an interesting building block for many soft-robotics applications~\parencite{Masana1993}.
+The demonstrator robot is thus a good representation of a large cross-section in soft robot designs, as well as a useful playground for testing the adaptability of the method to more complex dynamics.
 
