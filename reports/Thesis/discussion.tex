@@ -1,5 +1,5 @@
-\Cref{sec:results} provides some short interpretation and discussion on the various results presented there.
-
+\Cref{sec:results} provided some short interpretation and discussion on the various results presented there.
+This section will provide insight in the general trends observed and discuss the limitations of the method that were encountered.
 
 \subsection{Key Insights}\label{subsec:key-insights}
 A general trend in the effect of the target adapter can be observed: Whenever a controller-system configuration
@@ -48,6 +48,20 @@ By constantly retraining the adapter on features derived from its own influence 
 This idea is supported by the observation that the evolution of the metrics for adapted controllers tends to stagnate (most clearly visible in~\Cref{fig:slow-overshoot-metrics,fig:under-tuned-metrics,fig:25--25-50--50-metrics}).
 Supposedly, the adapted controller finds a good compromise between moderate and aggressive behavior, and is able to maintain a consistent performance from that point onward.
 
+Another insight is provided by the difference between the pretrained and online trained adapter in the crawling gait experiment.
+In~\Cref{subsec:crawling-gait},~\Cref{fig:crawling-metrics}, the metrics of the pretrained and online implementation drift apart as the experiment progresses.
+However, the qualitative results display very little difference between both implementations, except at the very start of the experiment: The pretrained adapter immediately adapts the target, but in a counter-productive manner, as seen in~\Cref{fig:pre-vs-online}, whereas the online trained adapter first makes no adaptions at all.
+
+\begin{figure}
+    \centering
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/pre-vs-online-pre}
+    \vspace*{-2em}
+    \caption{Minute 1 of the pretrained adapter for the crawling gait experiment. Adaptations are immediately added to the target, resulting in worse behavior.}
+    \label{fig:pre-vs-online}
+\end{figure}
+
+The pretrained implementation is able to recover within one or two updates, however.
+Nonetheless, this counter-productive behavior, and the need for pretraining data makes a fully online implemented adapter the more attractive solution.
 
 \subsection{Limitations}\label{subsec:limitations}
 As discussed in~\Cref{subsec:varying-kos}, the experiment using 1.5--0.5 \& 2--0.5\si{\mm} perforations in combination with a highly responsive PID controller yielded better results for the reference controller than for the adapted controller.
@@ -67,7 +81,8 @@ Similarly, the 0.25--0.25 and 0.5--0.5\si{\mm} perforations effectively prevent 
 
 \begin{figure}
     \centering
-%    \input{Thesis/figures/discussion/limitation.pgf}
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/limitation}
+    \vspace*{-2em}
     \caption{A close-up of the 2--0.5\si{\mm} experiment.
     The oscillations in the signal response are recorded at an insufficient frequency to contain any meaningful relationship between spaced-out state pairs and the target.
     As a result, the adapter's output becomes more chaotic as well, further polluting the training data.}
