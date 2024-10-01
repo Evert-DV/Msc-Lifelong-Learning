@@ -25,28 +25,37 @@ The techniques most similar to the method discussed in this paper are parameter 
 In parameter adaptation, ML-based methods are used to directly tune the internal parameters of a controller.
 The various techniques used to achieve this rely on observing the interactions of the controller with the system or having access to the feedback signal of the controller~\parencite{Annaswamy2021}.
 Furthermore, the estimation mechanism must be designed specifically for the parameters of the controller in question.
-Iterative learning control on the other hand only uses the feedback signal to improve a controller's performance.
+Iterative learning control on the other hand only uses the error signal to improve a controller's performance.
 It achieves this by changing either the controller's reference signal (i.e.~the target) or its control action, based on the observed error during a single trial~\parencite{Li2005}.
 By iteratively applying this approach, the controller's performance can be improved.
 However, ILC is limited to systems that are highly repetitive; i.e.~the same task is repeated many times.
 
 
 \subsection{Kresling Origami}\label{subsec:kresling-origami}
-The Kresling origami pattern is folding-pattern (~\Cref{fig:design-params}, \emph{top-right}) used to create deployable cylindrical structures, also known as bellows (\Cref{fig:kos}).
-The pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
+The Kresling origami pattern is folding-pattern used to create deployable cylindrical structures (also known as bellows) such as the one in~\Cref{fig:kos}.
+As shown in ~\Cref{fig:twis-buckle}, the pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
 
 \begin{figure}
-        \centering
-        \includegraphics[width=0.4\linewidth]{kos}
-        \caption{Fully constructed 6-sided KOS.}
-        \label{fig:kos}
+        \begin{subfigure}[t]{.48\linewidth}
+                \centering
+                \includegraphics[trim={0, 0.5mm, 0, 2mm}, clip, width=\linewidth]{kos}
+                \caption{Fully constructed 6-sided KOS.}
+                \label{fig:kos}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{.48\linewidth}
+                \centering
+                \includegraphics[width=\linewidth]{twist-buckling}
+                \caption{Twist-buckling crease pattern. Obtained from~\textcite{Kresling2008}.}
+                \label{fig:twis-buckle}
+        \end{subfigure}
 \end{figure}
 
 Due to the strain induced on the folds when twisting or compressing the structure formed by the pattern, it forms a torsional and translational spring with nonlinear stiffness.
-Depending on the specific design parameters, the spring can be designed to be either mono- or bistable~\parencite{Masana2019}:
+The pattern can be defined by three parameters (~\Cref{fig:design-params}, \emph{top-right}), depending on which the spring can be designed to be either mono- or bistable~\parencite{Masana2019}:
 Monostable M1, M2 and M3 type springs differ in their stable deployment height being zero, non-zero and non-zero, respectively, and their stable potential energy being non-zero, zero and non-zero, respectively.
 Bistable types B1 and B2 differ in their contracted stable height being non-zero and zero, respectively, and their respective potential energy being zero and non-zero.
-With the help of only three parameters, the design map shown in~\Cref{fig:design-params} can be created from which a pattern can be designed that conforms to any of these categories.
+With the help of only three parameters, the map of feasible designs is shown in~\Cref{fig:design-params} can be created from which a pattern can be designed that conforms to any of these categories.
 
 \begin{figure}
         \centering
