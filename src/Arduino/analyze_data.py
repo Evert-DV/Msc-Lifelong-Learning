@@ -6,20 +6,22 @@ import matplotlib as mpl
 import scienceplots
 from botocore.compat import file_type
 from matplotlib import pyplot as plt
+from matplotlib.transforms import Bbox, TransformedBbox, BboxTransformTo
 from adjustText import adjust_text, expand_axes_to_fit
+from rich.cells import cell_len
 
 plt.style.use('vibrant')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-# mpl.use("pgf")
-# mpl.rcParams.update({
-#     "pgf.texsystem": "xelatex",
-#     'font.size': 8,
-#     'text.usetex': True,
-#     'pgf.rcfonts': False,
-#     "pgf.preamble": r"\usepackage{amsmath}"
-#                     r"\usepackage{lmodern}"
-#                     r"\usepackage{siunitx}"
-# })
+mpl.use("pgf")
+mpl.rcParams.update({
+    "pgf.texsystem": "xelatex",
+    'font.size': 8,
+    'text.usetex': True,
+    'pgf.rcfonts': False,
+    "pgf.preamble": r"\usepackage{amsmath}"
+                    r"\usepackage{lmodern}"
+                    r"\usepackage{siunitx}"
+})
 tex_line_width = 3.48
 tex_text_width = 7.17
 
@@ -27,16 +29,16 @@ root = os.getcwd() + '\\..\\..\\'
 data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
-    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",  # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",  # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
+    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",       # <-- appendix?
@@ -47,9 +49,9 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",  # <-- crawling gait
-    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained",  # <-- crawling gait, + qualitative
-    "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",  # <-- crawling gait
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",  # <-- crawling gait
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained", # <-- crawling gait, + qualitative
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",  # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
     # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",  # <-- varying PID
@@ -68,8 +70,8 @@ data_folders = [
     # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",  # <-- varying perf, + qualitative
     # "Dynamics data\\150-50 perforation\\",
 ]
-file_name = "auto_save_1"
-file = f"{data_folders[1]}/{file_name}.npy"
+file_name = "auto_save_0"
+file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
 count, beta, omega, control_action, targets, true_targets = 6 * [None]
@@ -197,7 +199,7 @@ def plot_file(files):
     x_lines = []
     u_lines = []
 
-    offsets = [.000, .00078]
+    offsets = [.000, .000]
 
     for i, file in enumerate(files):
         data, count, beta, omega, control_action, targets, true_targets = get_file_data(file)
@@ -239,11 +241,12 @@ def plot_file(files):
     # signal_ax[0].set_ylim([-21, -5.5])  # crawling gait
     # signal_ax[0].set_xlim([.183, .215])   # 50--50
     # signal_ax[0].set_ylim([-8.5, -3.7])   # 50--50
-    signal_ax[0].set_xlim([.096, .128])  # slow over (2)
-    signal_ax[0].set_ylim([-27, -7.5])  # slow over (2)
-    # signal_ax[0].set_xlim([33450, 33950])
-    # signal_ax[0].set_xlim([73950, 74400])
-    # signal_ax[0].set_ylim([-15.5, -2])
+    # signal_ax[0].set_xlim([.096, .128])  # slow over (2)
+    # signal_ax[0].set_ylim([-27, -7.5])  # slow over (2)
+    # signal_ax[0].set_xlim([0.64, 0.685])  # limitation
+    # signal_ax[0].set_ylim([-22, -13.5])  # limitation
+    signal_ax[0].set_xlim([0, 0.198])  # pre vs online
+    signal_ax[0].set_ylim([-20, -4])  # pre vs online
     signal_fig.legend(handles=[*t_lines, *x_lines, *u_lines],
                       labels=["PID target", "Adapter target", "PID signal", "Adapter signal", "PID control",
                               "Adapter control"],
@@ -251,7 +254,7 @@ def plot_file(files):
 
     signal_fig.tight_layout()
     if mpl.get_backend() == 'pgf':
-        plt.savefig(f'{root}\\reports\\Thesis\\figures\\discussion\\slow-overshoot-overlay.pgf', bbox_inches='tight',
+        plt.savefig(f'{root}\\reports\\Thesis\\figures\\discussion\\pre-vs-online-pre.pgf', bbox_inches='tight',
                     dpi=300)
 
     # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
@@ -324,21 +327,22 @@ def generate_latex_table(data, columns, file_path):
             table_columns = [columns[0]] + columns[start_idx:end_idx]
 
             # Write the LaTeX table code
-            f.write("\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}l|" + "r" * (len(table_columns) - 1) + "}\n")
+            f.write(
+                "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}l|" + "r" * (len(table_columns) - 1) + "}\n")
             f.write("    \\toprule\n")
             f.write("    " + " & ".join([f"\\textbf{{{col}}}" for col in table_columns]) + " \\\\\n")
             f.write("    \\midrule\n")
             for row in data:
                 row_data = [row[0]] + row[start_idx:end_idx]
-                formatted_row = ["{:.2f}".format(value) if isinstance(value, (int, float)) else str(value) for value in row_data]
+                formatted_row = ["{:.2f}".format(value) if isinstance(value, (int, float)) else str(value) for value in
+                                 row_data]
                 formatted_row[0] = f"\\textbf{{{formatted_row[0]}}}"  # Make the first column bold
                 f.write("    " + " & ".join(formatted_row) + " \\\\\n")
             f.write("    \\bottomrule\n")
             f.write("\\end{tabular*}\n\n")  # Add a newline between tables
 
 
-
-def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save', do_latex=True):
+def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save', do_latex=False):
     files = [f for f in os.listdir(data_folder) if file_type in f and f.endswith(".npy")]
     files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
 
@@ -369,7 +373,7 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
         columns = df.columns.tolist()
         data = df.values.tolist()
         latex_file_path = os.path.join(f"{root}\\reports\\Thesis\\appendix tables\\",
-                                       f'crawling gait {os.path.basename(data_folder)}.tex')
+                                       f'ref crawling gait {os.path.basename(data_folder)}.tex')
         generate_latex_table(data, columns, latex_file_path)
 
     if do_plot:
@@ -394,7 +398,7 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
 
 def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='auto_save'):
     dfs = [pd.read_excel(file) for file in excel_files]
-    metrics_headers = dfs[0]["Metric"].tolist()
+    metrics_headers = [dfs[0]["Metric"][i] for i in [0, 1, 2, 3, 4, 5]]  # [MRT, MST, MO, MAE, MAV, NTV]
     file_names = [df.columns[1:] for df in dfs]
 
     # Find the longest common prefix
@@ -413,9 +417,11 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         x_ticks_list.append(x_ticks)
         combined_ticks.update(x_ticks)
 
-    fig, axes = plt.subplots((len(metrics_headers) + 1) // 2, 2,
-                             figsize=(tex_text_width, len(metrics_headers) * 0.28 * tex_line_width / 2),
+    n_cols = 2
+    fig, axes = plt.subplots(len(metrics_headers) // n_cols, n_cols,
+                             figsize=(tex_text_width, len(metrics_headers) * 0.28 * tex_line_width / n_cols),
                              sharex=True)
+
     axes = axes.flatten()
     for ax, header in zip(axes, metrics_headers):
         texts = []
@@ -432,8 +438,8 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
             txt = ax.text(
                 x_last,
                 y_last,
-                # '-'.join([str(float(f) / 100) for f in label.strip().split(' ')[0].split('-')]),
-                label.strip().split(' ')[-1],
+                '-'.join([str(float(f) / 100) for f in label.strip().split(' ')[0].split('-')]),
+                # label.strip().split(' ')[-1],
                 fontsize=6,
                 color=line.get_color(),
                 alpha=1.,
@@ -441,10 +447,10 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
                 va='bottom'
             )
             texts.append(txt)  # Add to the list of texts
-            # texts[0].set_visible(False)  # Hide the first text annotation
 
         # Adjust the text positions to prevent overlapping
         adjust_text(texts, ax=ax, expand_axes=True, avoid_self=False)
+        # texts[0].set_visible(False)  # Hide the first text annotation
 
         # Determine the maximum length of the data
         max_length_wo_adapter = max([df.shape[1] for df, label in zip(dfs, short_labels) if 'wo adapter' in label])
@@ -481,14 +487,15 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
         fig.delaxes(ax)
 
     # Set x-label for the last subplot in each column
-    axes[len(metrics_headers) - 2].set_xlabel('Time [min]')
+    if n_cols == 2:
+        axes[len(metrics_headers) - 2].set_xlabel('Time [min]')
     axes[len(metrics_headers) - 1].set_xlabel('Time [min]')
 
     fig.legend(handles=[wo_adapter_lines, w_adapter_lines], labels=["w/o adapter", "w/ adapter"], loc='lower left',
                frameon=False, bbox_to_anchor=(0., -0.05), handlelength=1.25)
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, f'crawling-gait-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    plot_file = os.path.join(save_folder, f'ref-25--25-50--50-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     if mpl.get_backend() == 'pgf':
         plt.savefig(plot_file, dpi=300, bbox_inches='tight')
@@ -505,7 +512,7 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
     all_metrics = []
 
     for folder in data_folders:
-        files = [f for f in os.listdir(folder) if file_type in f and f.endswith(".npy")]
+        files = [f for f in os.listdir(folder) if file_type in f and f.endswith("_0.npy")]
         files.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
         labels += [os.path.join(folder, file) for file in files]
 
@@ -514,33 +521,35 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
     all_metrics = np.concatenate(all_metrics, axis=0)
     # all_metrics /= np.max(all_metrics, axis=0)
-    all_metrics /= [5, 5, 25, 25, 25 * 50 * 60, 8 * 60, 1800 / 1.9, 1800]  # TODO: IAE normalization
+    all_metrics /= [5, 5, 25, 25, 8 * 60, 1800 / 1.9]
     vmax = np.linalg.norm(np.ones(all_metrics.shape[-1]))
 
     # Find the longest common prefix
     common_prefix = os.path.commonpath(labels)
-    short_labels = [label.replace(common_prefix, '').replace('\\', ' ').replace('_', ' ').strip('.npy') for label in
+    short_labels = [label.replace(common_prefix, '').split(os.sep) for label in
                     labels]
+    # short_labels = [l[1] for l in short_labels]
+    short_labels = [' '.join(['-'.join([str(float(f) / 100) for f in l[1].strip().split(' ')[0].split('-')]), l[-2]]) for l in short_labels]
 
     distances = np.empty((len(all_metrics), len(all_metrics)))
     for i, metric_vec in enumerate(all_metrics):
         for j, metric_vec2 in enumerate(all_metrics):
             distances[i, j] = np.linalg.norm(metric_vec - metric_vec2, axis=-1)
 
-    fig = plt.figure(figsize=(tex_line_width, 0.8 * tex_line_width) if mpl.get_backend() == 'pgf' else (10, 8))
-    cax = plt.imshow(distances, vmin=0, vmax=vmax, cmap='viridis', aspect='auto')
+    n_cells = len(short_labels)
+    fig = plt.figure(
+    # figsize=(tex_line_width, 0.8 * tex_line_width)
+    figsize=(min(tex_line_width, 2.2/2.56 + (1.2 + n_cells) * 1.2 / 2.56), 1.6/2.56 + n_cells * 1.2 / 2.56)
+    )
+
+    cax = plt.imshow(distances, vmin=0, vmax=vmax, cmap='viridis', aspect='equal')
     cbar = fig.colorbar(cax, label='metric distance')
     cbar.ax.tick_params(labelsize=6)
-    cbar.ax.yaxis.label.set_size(6)
-
-    num_rows, num_cols = distances.shape
-    cell_width = fig.get_size_inches()[0] / num_cols
-    cell_height = fig.get_size_inches()[1] / num_rows
-    font_size = min(min(cell_width, cell_height) * 15, 9)  # Adjust the multiplier as needed
+    # cbar.ax.yaxis.label.set_size(6)
 
     for i in range(distances.shape[0]):
         for j in range(distances.shape[1]):
-            plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white', fontsize=font_size)
+            plt.text(j, i, f'{distances[i, j]:.2f}', ha='center', va='center', color='white')
 
     plt.xticks(np.arange(distances.shape[1]), labels=short_labels, fontsize=6, rotation=45, ha='right',
                rotation_mode='anchor')
@@ -548,16 +557,17 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
     plt.tight_layout()
 
-    plt.savefig(f'{root}\\tmp\\metrics_similarity.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    if mpl.get_backend() == 'pgf':
+        plt.savefig(f'{root}\\reports\\Thesis\\figures\\appendix\\ref_dist_150-200.pgf', bbox_inches='tight', dpi=300)
     # plt.show()
 
 
 def main():
     # plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
     # metrics(file, do_print=True, do_plot=True)
-    compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\appendix', file_type='auto_save')
+    # compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\appendix', file_type='ref_minute')
     # compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
-    # metrics_similarity(data_folders, file_type='ref_minute')
+    metrics_similarity(data_folders, file_type='ref_minute')
 
 
 if __name__ == '__main__':

@@ -63,9 +63,11 @@ All threads aim to operate at 50\si{\hertz}.
     \label{fig:code-diagram}
 \end{figure}
 
-
+\FloatBarrier
+\onecolumn
 \section{Extended Test Results}\label[appendix]{app:results-ext}
-\begin{figure*}
+
+\begin{figure*}[htb]
     \centering
     \input{./Thesis/figures/appendix/slow-overshoot-metrics.pgf}
     \vspace*{-2em}
@@ -73,7 +75,8 @@ All threads aim to operate at 50\si{\hertz}.
     \label{fig:slow-overshoot-metrics-full}
 \end{figure*}
 
-\begin{table*}
+
+\begin{table*}[htb]
     \caption{Numerical values of the metrics for the \emph{slow-aggressive} controller.}
     \label{tab:slow-overshoot}
     \begin{subtable}[t]{\linewidth}
@@ -92,7 +95,7 @@ All threads aim to operate at 50\si{\hertz}.
 \end{table*}
 
 
-\begin{figure*}
+\begin{figure*}[htb]
     \centering
     \input{./Thesis/figures/appendix/under-tuned-metrics.pgf}
     \vspace*{-2em}
@@ -100,7 +103,7 @@ All threads aim to operate at 50\si{\hertz}.
     \label{fig:under-tuned-metrics-full}
 \end{figure*}
 
-\begin{table*}
+\begin{table*}[htb]
     \caption{Numerical values of the metrics for the \emph{under-tuned} controller.}
     \label{tab:under-tuned}
     \begin{subtable}[t]{\linewidth}
@@ -207,6 +210,8 @@ All threads aim to operate at 50\si{\hertz}.
     \label{fig:crawling-gait-metrics-full}
 \end{figure*}
 
+\twocolumn
+
 \begin{table*}
     \centering
     \caption{Numerical values of the metrics for the crawling gait experiment.}
@@ -234,9 +239,8 @@ All threads aim to operate at 50\si{\hertz}.
     \end{subtable}
 \end{table*}
 
+
 \FloatBarrier
-
-
 \section{KOS Reference Recordings}\label[appendix]{app:KOS-refs}
 Before and during each experiment, with intervals of 30\si{\minute}, a minute of reference data was recorded.
 This meant pausing the experiment, disabling the adapter, and evaluating the performance metrics on a preset 1\si{\minute} sequence.
@@ -245,7 +249,7 @@ These measurements serve as a basis for comparing the relevant KOSs involved in 
 The measurements presented are the numeric values of these evaluations, as well as visual representations of the distance in the normalized ``metric space'' between the vectors represented by the evaluation of the first reference minute, i.e.~\emph{before} the experiment has started.
 Values used for normalizing the components of the metric vector were: 5 (theoretical maximum rise time), 5 (theoretical maximum settling time), 25 (physical maximum overshoot for the actuation arm), 25 (physical maximum error for the actuation arm), 480 (maximum servo velocity), 1800 (maximum control output).
 
-\begin{table}[H]
+\begin{table}
     \centering
     \caption{Numerical values of the reference minute metrics for the \emph{slow-aggressive} PID experiment.}
     \label{tab:ref-slow-over}
@@ -262,7 +266,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-\begin{figure}[!htb]
+\begin{figure}
     \centering
     \input{Thesis/figures/appendix/ref_dist_slow-over.pgf}
     \vspace*{-1em}
@@ -271,7 +275,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{table}[htb]
+\begin{table}
     \centering
     \caption{Numerical values of the reference minute metrics for the \emph{under-tuned} PID experiment.}
     \begin{subtable}{\linewidth}
@@ -299,7 +303,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\begin{table}[htb]
+\begin{table}
     \centering
     \caption{Numerical values of the reference minute metrics for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
     \label{tab:ref-25-50}
@@ -326,7 +330,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{table}[htb]
+\begin{table}
     \centering
     \caption{Numerical values of the reference minute metrics for the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
     \label{tab:ref-150-200}
@@ -352,7 +356,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{table}[htb]
+\begin{table}
     \centering
     \caption{Numerical values of the reference minute metrics for the crawling gait experiment.}
     \label{tab:ref-crawl}
@@ -386,38 +390,38 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \label{fig:ref-crawl}
 \end{figure}
 
-\begin{figure*}
-    \centering
-    \input{Thesis/figures/appendix/ref-slow-overshoot-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Reference minute metrics evolution of the \emph{slow-aggressive} PID experiment.}
-    \label{fig:ref-metrics-slow-over}
-\end{figure*}
+%\begin{figure*}
+%    \centering
+%    \input{Thesis/figures/appendix/ref-slow-overshoot-metrics.pgf}
+%    \vspace*{-2em}
+%    \caption{Reference minute metrics evolution of the \emph{slow-aggressive} PID experiment.}
+%    \label{fig:ref-metrics-slow-over}
+%\end{figure*}
+%
+%\begin{figure*}
+%    \centering
+%    \input{Thesis/figures/appendix/ref-under-tuned-metrics.pgf}
+%    \vspace*{-2em}
+%    \caption{Reference minute metrics evolution of the \emph{under-tuned} PID experiment.}
+%    \label{fig:ref-metrics-soft}
+%\end{figure*}
+%
+%\begin{figure*}
+%    \centering
+%    \input{Thesis/figures/appendix/ref-150--50-200--50-metrics.pgf}
+%    \vspace*{-2em}
+%    \caption{Reference minute metrics evolution of the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
+%    \label{fig:ref-150-200-metrics}
+%\end{figure*}
+%
+%\begin{figure*}
+%    \centering
+%    \input{Thesis/figures/appendix/ref-crawling-gait-metrics.pgf}
+%    \vspace*{-2em}
+%    \caption{Reference minute metrics evolution of the crawling gait experiment.}
+%    \label{fig:ref-metrics-crawl}
+%\end{figure*}
 
-\begin{figure*}
-    \centering
-    \input{Thesis/figures/appendix/ref-under-tuned-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Reference minute metrics evolution of the \emph{under-tuned} PID experiment.}
-    \label{fig:ref-metrics-soft}
-\end{figure*}
 
-\begin{figure*}
-    \centering
-    \input{Thesis/figures/appendix/ref-150--50-200--50-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Reference minute metrics evolution of the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
-    \label{fig:ref-150-200-metrics}
-\end{figure*}
-
-\begin{figure*}
-    \centering
-    \input{Thesis/figures/appendix/ref-crawling-gait-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Reference minute metrics evolution of the crawling gait experiment.}
-    \label{fig:ref-metrics-crawl}
-\end{figure*}
-
-\FloatBarrier
 
 
