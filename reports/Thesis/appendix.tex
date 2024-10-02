@@ -1,3 +1,28 @@
+\section{KOS Design and Template}\label[appendix]{app:kos-design}
+The KOSs used during the experiments used the following design parameters, as related to the design map from~\Cref{subsec:kresling-origami}:
+
+\begin{center}
+    \begin{tabular}[!h]{rl}
+        $a_0$      & 25~\si{\mm} \\
+        $a_0/b_0$  & 1.5         \\
+        $\alpha_0$ & 28 degrees
+    \end{tabular}
+\end{center}
+
+The springs were constructed from 160\si{\gram\per\square\meter} paper.
+A template for constructing this KOS can be found at the end of the document.\\
+
+\emph{Instructions}:\\
+\begin{enumerate}
+    \item Tear out the template along its outer contours.
+    \item Fold the Kresling pattern: The parallelogram's diagonals are valley folds, the sides are mountain folds.
+    \item Form a cylinder and glue the flaps at the ends to the inside of their respective counterpart.
+    \item Insert the extensions at the top and bottom of the cylinder through the slits in the two base hexagons.
+    \item Fold the extensions outward and glue them to the bases.
+    \item For extra strength, an extra (cardboard) hexagonal base can be glued to the top and bottom of the KOS.
+\end{enumerate}
+
+
 \section{Software implementation}\label[appendix]{app:code-structure}
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
 The adapter is implemented and trained using Keras with the PyTorch backend. % TODO: cite python and packages?
@@ -209,29 +234,190 @@ All threads aim to operate at 50\si{\hertz}.
     \end{subtable}
 \end{table*}
 
+\FloatBarrier
 
-\section{Comparing KOSs}\label[appendix]{app:KOS-refs}
-\todo[inline]{ref minute plots and tables}  % TODO: ref min plots and tables
 
-\section{KOS Design and Template}\label[appendix]{app:kos-design}
-The KOSs used during the experiments used the following design parameters, as related to the definition from~\Cref{subsec:kresling-origami}:
+\section{KOS Reference Recordings}\label[appendix]{app:KOS-refs}
+Before and during each experiment, with intervals of 30\si{\minute}, a minute of reference data was recorded.
+This meant pausing the experiment, disabling the adapter, and evaluating the performance metrics on a preset 1\si{\minute} sequence.
+These measurements serve as a basis for comparing the relevant KOSs involved in each experiment, since they are suposed to be reasonably similar to each other (\Cref{subsec:validity}).
 
-\begin{center}
-    \begin{tabular}[!h]{rl}
-        $a_0$       & 25\si{\mm}\\
-        $a_0/b_0$   & 1.5\\
-        $\alpha_0$  & 28 degrees
-    \end{tabular}
-\end{center}
+The measurements presented are the numeric values of these evaluations, as well as visual representations of the distance in the normalized ``metric space'' between the vectors represented by the evaluation of the first reference minute, i.e.~\emph{before} the experiment has started.
+Values used for normalizing the components of the metric vector were: 5 (theoretical maximum rise time), 5 (theoretical maximum settling time), 25 (physical maximum overshoot for the actuation arm), 25 (physical maximum error for the actuation arm), 480 (maximum servo velocity), 1800 (maximum control output).
 
-A template for constructing this KOS can be found at the end of the document.
+\begin{table}[H]
+    \centering
+    \caption{Numerical values of the reference minute metrics for the \emph{slow-aggressive} PID experiment.}
+    \label{tab:ref-slow-over}
+    \begin{subtable}{\linewidth}
+        \centering\vspace*{1em}
+        \caption{Baseline controller}
+        \input{Thesis/appendix tables/ref slow overshoot w adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) target adapter}
+        \input{Thesis/appendix tables/ref slow overshoot wo adapter}
+    \end{subtable}
+\end{table}
 
-\emph{Instructions}:\\
-\begin{enumerate}
-    \item Tear out the template along its outer contours.
-    \item Fold the Kresling pattern: The parallelogram's diagonals are valley folds, the sides are mountain folds.
-    \item Form a cylinder and glue the flaps at the ends to the inside of their respective counterpart.
-    \item Insert the extensions at the top and bottom of the cylinder through the slits in the two base hexagons.
-    \item Fold the extensions outward and glue them to the bases.
-    \item For extra strength, an extra (cardboard) hexagonal base can be glued to the top and bottom of the KOS.
-\end{enumerate}
+\begin{figure}[!htb]
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_slow-over.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the \emph{slow-aggressive} PID experiment.}
+    \label{fig:ref-slow-over}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[htb]
+    \centering
+    \caption{Numerical values of the reference minute metrics for the \emph{under-tuned} PID experiment.}
+    \begin{subtable}{\linewidth}
+        \centering\vspace*{1em}
+        \caption{Baseline controller}
+        \label{tab:ref-soft-baseline}
+        \input{Thesis/appendix tables/ref under-tuned w adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) target adapter}
+        \label{tab:ref-soft-adapter}
+        \input{Thesis/appendix tables/ref under-tuned wo adapter}
+    \end{subtable}
+\end{table}
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_soft.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the \emph{under-tuned} PID experiment.}
+    \label{fig:ref-soft}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{table}[htb]
+    \centering
+    \caption{Numerical values of the reference minute metrics for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
+    \label{tab:ref-25-50}
+    \begin{subtable}{.45\linewidth}
+        \centering\vspace*{1em}
+        \caption{Baseline controller}
+        \input{Thesis/appendix tables/ref 25--25-50--50 w adapter}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[t]{.45\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) target adapter}
+        \input{Thesis/appendix tables/ref 25--25-50--50 wo adapter}
+    \end{subtable}
+\end{table}
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_25-50.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
+    \label{fig:ref-25-50}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[htb]
+    \centering
+    \caption{Numerical values of the reference minute metrics for the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
+    \label{tab:ref-150-200}
+    \begin{subtable}{\linewidth}
+        \centering\vspace*{1em}
+        \caption{Baseline controller}
+        \input{Thesis/appendix tables/ref 150--50-200-50 w adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) target adapter}
+        \input{Thesis/appendix tables/ref 150--50-200-50 wo adapter}
+    \end{subtable}
+\end{table}
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_150-200.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
+    \label{fig:ref-150-200}
+\end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[htb]
+    \centering
+    \caption{Numerical values of the reference minute metrics for the crawling gait experiment.}
+    \label{tab:ref-crawl}
+    \begin{subtable}[b]{0.45\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Baseline controller}
+        \input{Thesis/appendix tables/ref crawling gait wo adapter}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[b]{0.25\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) pretrained target adapter}
+        \input{Thesis/appendix tables/ref crawling gait w adapter pretrained}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[b]{0.25\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{(Disabled) online target adapter}
+        \input{Thesis/appendix tables/ref crawling gait w adapter online}
+    \end{subtable}
+\end{table}
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_crawl.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the crawling gait experiment.}
+    \label{fig:ref-crawl}
+\end{figure}
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/appendix/ref-slow-overshoot-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Reference minute metrics evolution of the \emph{slow-aggressive} PID experiment.}
+    \label{fig:ref-metrics-slow-over}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/appendix/ref-under-tuned-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Reference minute metrics evolution of the \emph{under-tuned} PID experiment.}
+    \label{fig:ref-metrics-soft}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/appendix/ref-150--50-200--50-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Reference minute metrics evolution of the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
+    \label{fig:ref-150-200-metrics}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \input{Thesis/figures/appendix/ref-crawling-gait-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Reference minute metrics evolution of the crawling gait experiment.}
+    \label{fig:ref-metrics-crawl}
+\end{figure*}
+
+\FloatBarrier
+
+
