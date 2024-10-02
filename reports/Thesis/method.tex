@@ -32,7 +32,7 @@ For this adapted target, the controller now yields a larger action $u^*$ that \e
 \end{figure}
 
 At a glance, this method resembles that of iterative learning control (ILC).
-However, in ILC, the adaptation to the reference signal is directly related to the error signal, resulting in effective behavior for a very constricted task setting, where the same task is repeated over and over.
+However, in ILC, the adaptation to the reference signal is directly proportional to the error signal, resulting in effective behavior for a very constricted task setting, where the same task is repeated over and over.
 Here, the goal is to have a more universal improvement in performance, and to detach the method from the error signal.
 
 To achieve this, the adapter is implemented as a feedforward neural network with to hidden layers with non-linear activations.

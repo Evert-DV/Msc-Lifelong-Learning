@@ -52,8 +52,8 @@ To evaluate the method described in~\Cref{sec:methodology}, a robot was designed
 \end{figure}
 
 The robot is a simple crawler consisting of two Kresling origami springs (KOS) (\Cref{fig:nomen-robot},~\cref{item:kos}) that are mirror images of each other, connected in series, with the actuation mechanism in between.
-The KOSs in question are of the bistable B1 type (~\Cref{subsec:kresling-origami}) with perforated folds to facilitate actuation (refer to~\Cref{app:kos-design} for design details and templates).
-Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet'' (see~\Cref{fig:extend-contract}, \emph{top}).
+The KOSs in question are of the bistable B1 type (\Cref{subsec:kresling-origami}) with perforated folds to facilitate actuation (refer to~\Cref{app:kos-design} for design details and templates).
+Both springs can expand and contract in sync, producing a crawling-like motion when combined with specially designed ``feet'' (see~\Cref{fig:cool-robot} in~\Cref{sec:introduction}).
 To demonstrate target adaptation, however, the movement of the robot as a whole is not very important.
 Rather, the state of the KOSs is the state that will be controlled.
 
@@ -74,12 +74,6 @@ Furthermore, there are mechanical limits for the rotation of both the actuation 
 However, the design is such that the servo's mechanical limit corresponds to a $\theta$ below the actuation arm's limit.
 
 \begin{figure}
-    \begin{subfigure}[tc]{\linewidth}
-        \centering
-        \includegraphics[width=.45\linewidth]{feet}
-    \end{subfigure}
-    \vspace*{.5em}
-    \vfill
     \begin{subfigure}[tl]{0.49\linewidth}
         \centering
         \includegraphics[width=\linewidth]{extended}
@@ -89,8 +83,7 @@ However, the design is such that the servo's mechanical limit corresponds to a $
         \centering
         \includegraphics[width=\linewidth]{contracted}
     \end{subfigure}
-    \caption{\emph{Top}: The ``feet'' of the robot grip when dragged backwards, but slide when pushed forward, allowing the robot to move forward, also known as \emph{two-anchor crawling}~\parencite{Calisti2017}.
-        \emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.
+    \caption{\emph{Left}: The robot at its fully extended state, corresponding to the ``home'' position of the servo and actuation arm.
         \emph{Right}: The fully contracted robot, corresponding to the maximum (capped) servo output, near the mechanical limit of the actuation arm.}
     \label{fig:extend-contract}
 \end{figure}
