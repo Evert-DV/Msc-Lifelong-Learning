@@ -59,10 +59,10 @@
     \put(0,0){\includegraphics[width=\unitlength,page=2]{introductory figure.pdf}}%
     \put(0.21177008,0.29905209){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}expand\end{tabular}}}}%
     \put(0.71364861,0.29609987){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}contract\end{tabular}}}}%
-    \put(0.0209887,0.23853434){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
-    \put(0.41344599,0.23526724){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
-    \put(0.54426514,0.23526724){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
-    \put(0.90680117,0.23853434){\color[rgb]{1,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
+    \put(0.0209887,0.23853434){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
+    \put(0.41344599,0.23526724){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
+    \put(0.54426514,0.23526724){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
+    \put(0.90680117,0.23853434){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{introductory figure.pdf}}%
   \end{picture}%
 \endgroup%
