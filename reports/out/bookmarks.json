@@ -1,0 +1,211 @@
+{
+	"header": {
+		"source": "merged.pdf",
+		"version": "pdfcpu v0.8.1 dev",
+		"creation": "2024-10-02 14:24:06 CEST",
+		"title": "Lifelong Learning for a Kresling-Origami Robot",
+		"author": "E. De Vroey",
+		"creator": "LaTeX with hyperref",
+		"producer": "pdfcpu v0.8.1 dev"
+	},
+	"bookmarks": [
+		{
+			"title": "Frontmatter",
+			"page": 1,
+			"kids": [
+				{
+					"title": "Aknowledgments",
+					"page": 5
+				},
+				{
+					"title": "Contents",
+					"page": 7
+				},
+				{
+					"title": "List of Figures",
+					"page": 9
+				},
+				{
+					"title": "List of Tables",
+					"page": 13
+				}
+			]
+		},
+		{
+			"title": "Lifelong Learning for a Kresling-Origami Robot",
+			"page": 15,
+			"kids": [
+				{
+					"title": "Introduction",
+					"page": 15
+				},
+				{
+					"title": "Related Work",
+					"page": 16,
+					"kids": [
+						{
+							"title": "Soft Robotics",
+							"page": 16
+						},
+						{
+							"title": "Lifelong Learning",
+							"page": 16
+						},
+						{
+							"title": "Kresling Origami",
+							"page": 16
+						}
+					]
+				},
+				{
+					"title": "Methodology",
+					"page": 17,
+					"kids": [
+						{
+							"title": "Target Adaptations",
+							"page": 17
+						}
+					]
+				},
+				{
+					"title": "Illustrative Problem",
+					"page": 18,
+					"kids": [
+						{
+							"title": "A case where the controller is too aggressive",
+							"page": 18
+						},
+						{
+							"title": "A case where the controller is under-responsive",
+							"page": 19
+						}
+					]
+				},
+				{
+					"title": "A Kresling Origami Robot",
+					"page": 20,
+					"kids": [
+						{
+							"title": "Mechanical Details",
+							"page": 20
+						},
+						{
+							"title": "Software Implementation",
+							"page": 21
+						}
+					]
+				},
+				{
+					"title": "Experimental Setup",
+					"page": 21,
+					"kids": [
+						{
+							"title": "Sign Conventions and Unit Clarification",
+							"page": 21
+						},
+						{
+							"title": "Performance Metrics",
+							"page": 22
+						}
+					]
+				},
+				{
+					"title": "Experiments and Results",
+					"page": 22,
+					"kids": [
+						{
+							"title": "Varying the PID Controller",
+							"page": 22,
+							"kids": [
+								{
+									"title": "A controller that is slow but aggressive",
+									"page": 22
+								},
+								{
+									"title": "An under-tuned controller",
+									"page": 23
+								}
+							]
+						},
+						{
+							"title": "Varying the System Dynamics",
+							"page": 24,
+							"kids": [
+								{
+									"title": "0.25–0.25 \u0026 0.5–0.5 Perforations",
+									"page": 24
+								},
+								{
+									"title": "1.5–0.5 \u0026 2–0.5 Perforations",
+									"page": 25
+								}
+							]
+						},
+						{
+							"title": "Crawling Gait",
+							"page": 25
+						}
+					]
+				},
+				{
+					"title": "Discussion",
+					"page": 26,
+					"kids": [
+						{
+							"title": "Key Insights",
+							"page": 27
+						},
+						{
+							"title": "Limitations",
+							"page": 27
+						},
+						{
+							"title": "Validity of the Results",
+							"page": 28,
+							"kids": [
+								{
+									"title": "Reproducibility of Identical KOS",
+									"page": 28
+								},
+								{
+									"title": "Uninterpreted Results",
+									"page": 28
+								}
+							]
+						}
+					]
+				},
+				{
+					"title": "Conclusion",
+					"page": 29
+				},
+				{
+					"title": "Appendix A: KOS Design and Template",
+					"page": 30
+				},
+				{
+					"title": "Appendix B: Software implementation",
+					"page": 30,
+					"kids": [
+						{
+							"title": "Nominal Control on the Arduino",
+							"page": 30
+						},
+						{
+							"title": "Target Adaptation on the External Computer",
+							"page": 30
+						}
+					]
+				},
+				{
+					"title": "Appendix C: Extended Test Results",
+					"page": 31
+				},
+				{
+					"title": "Appendix D: KOS Reference Recordings",
+					"page": 37
+				}
+			]
+		}
+	]
+}
