@@ -51,14 +51,14 @@ The evolution of some interesting metrics can be seen in \Cref{fig:slow-overshoo
 
 Note the immediate (after the first 5\si{\minute}) improvement in overshoot and absolute error.
 The controller with target adapter initially has very low overshoots, but then evolves toward a stable behavior that retains small position errors and consistent overshoot values.
-As time progresses, the metric values for the unadaptive reference controller generally decrease.
+As time progresses, the metric values for the unadaptive baseline controller generally decrease.
 The adapted controller, however, seems to achieve this level of performance from the start.
 
 \paragraph*{Interpretation}
 The conjecture is that the potential barrier between the two stable states of the KOS slows down the controller's response, resulting in a higher control input.
 As the barrier is overcome, the KOS now complements the controller's action, resulting in the overshoot.
 Depending on the vicinity of the target to the KOS's potential barrier, the controller can enter an unstable state.
-As the potential barrier to transition between the two stable states of the KOS decreases (due to deterioration), the reference controller has less difficulty maintaining a stable response.
+As the potential barrier to transition between the two stable states of the KOS decreases (due to deterioration), the baseline controller has less difficulty maintaining a stable response.
 This explains the decrease in settling time, absolute velocity, and total variance, which reflect the decreasing irregularities in the signal and the controller’s corrective actions.
 The target adapter effectively shifts the target closer to the system's current state, facilitating a smoother transition to the desired state with reduced overshoot, thereby minimizing the risk of the controller entering an unstable cycle.
 From~\Cref{fig:slow-overshoot-overlay} it seems that this mechanism is most effective after the first overshoot.
@@ -91,8 +91,8 @@ The evolution of the mean rise time, overshoot, and total variance is shown in~\
     \label{fig:under-tuned-metrics}
 \end{figure}
 
-The controller with adapter clearly has lower rise times and absolute errors than the reference, but also exhibits an increase in overshoots.
-It should be noted that the large relative increase in overshoot stems from the reference controller haveing close to no or even slightly negative overshoot.
+The controller with adapter clearly has lower rise times and absolute errors than the baseline, but also exhibits an increase in overshoots.
+It should be noted that the large relative increase in overshoot stems from the baseline controller having close to no or even slightly negative overshoot.
 The adapted controller results in consistently higher total variance, rising further as the experiment progresses.
 \Cref{fig:under-tuned} displays the comparison between the baseline controller and the controller with target adapter.
 
@@ -147,7 +147,7 @@ The evolution of the mean rise time, overshoot, and total variance over the cour
 
 The metrics display similar trends to those observed for the \emph{under-tuned} controller:
 On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
-Another observation is that the difference in the reference controller's performance between the two experiments drifts further apart over the full duration.
+Another observation is that the difference in the baseline controller's performance between the two experiments drifts further apart over the full duration.
 However, the adapted controller's performance over the two experiments appears less varied.
 
 \paragraph*{Interpretation}
@@ -160,7 +160,7 @@ The targets are shifted toward more extreme positions, resulting in the lower ri
 %        \centering
 %        \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/50--50-ref}
 %        \vspace*{-2em}
-%        \caption{Reference signal.}
+%        \caption{baseline signal.}
 %        \label{fig:50--50-ref}
 %    \end{subfigure}
 %    \begin{subfigure}[t]{\linewidth}
@@ -194,8 +194,8 @@ Like for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} experiment, the results pre
     \end{tabular}
 \end{table}
 
-These results show that the general performance of the target adapter consists of higher settling times, overshoot, mean absolute velocity and total variance compared to the reference, especially as the experiments progress.
-In fact, the only metric that has a significantly lower value for the target adapter than for the reference, is the rise time.
+These results show that the general performance of the target adapter consists of higher settling times, overshoot, mean absolute velocity and total variance compared to the baseline, especially as the experiments progress.
+In fact, the only metric that has a significantly lower value for the target adapter than for the baseline, is the rise time.
 \Cref{fig:150--50-200--50-metrics} shows that the decrease in mean absolute error is only present for the 2--0.5\si{\mm} perforated KOSs.
 
 \begin{figure}
@@ -235,7 +235,7 @@ Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute
 \paragraph*{Interpretation}
 In the case of the ``heavily deteriorated'' KOSs, the target adaptation seems to degrade the performance.
 The improved rise times can be attributed to the highly oscillatory nature of the signal response, rather than genuine performance gains.
-However, the fact that the target adapter shows improvement over the reference controller in the early stages of deterioration is promising.
+However, the fact that the target adapter shows improvement over the baseline controller in the early stages of deterioration is promising.
 The highly responsive PID controller is quick to react, reducing the need for extreme adaptations as seen in the previous experiments.
 As the KOS further degrades, it sometimes enters an unstable cycle: much alike the ones seen in~\Cref{fig:slow-overshoot-overlay},~\Cref{subsec:varying-pid}, but at a higher frequency.
 This results in training data that contains many contradicting features, which results in increased noise in the adapter's predictions.
@@ -248,7 +248,7 @@ To introduce variability and avoid identical datapoints, a small normally distri
 The goal of this experiment is to evaluate how a constrained operational setting affects the adapter's compensation for the overshooting effect caused by the potential barrier.
 The experiment uses a KOS with a perforation 1.5--0.5\si{\mm} and the highly responsive PID, tuned to this perforation.
 Given the rapid degradation of the potential barrier in the early stages, the experiment only runs for 20\si{\minute}.
-A reference controller is compared with two target adapter configurations: one pretrained and then fine-tuned online,
+A baseline controller is compared with two target adapter configurations: one pretrained and then fine-tuned online,
 and one that is entirely trained online.
 
 The effect of the target adapter is given by~\Cref{tab:crawling-gait-percent}.
@@ -267,7 +267,7 @@ The effect of the target adapter is given by~\Cref{tab:crawling-gait-percent}.
     \end{tabular}
 \end{table}
 
-The results show consistently lower rise and settling times, and mean absolute error for both implementations of the target adapter compared to the reference controller.
+The results show consistently lower rise and settling times, and mean absolute error for both implementations of the target adapter compared to the baseline controller.
 These improvements come at the cost of significantly higher overshoot.
 The difference in metrics for the pretrained and online trained implementations appears negligible, except for the mean overshoot, mean absolute velocity, and normalized total variance, as shown by~\Cref{fig:crawling-metrics}.
 
@@ -280,10 +280,10 @@ The difference in metrics for the pretrained and online trained implementations 
 \end{figure}
 
 Signal responses are shown in~\Cref{fig:crawl-qualitative}, note that the adapted signal is only shown for the fully online trained adapter, but it is very similar to that of the pretrained adapter.
-The improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the reference controller having an unstable signal.
-In fact, the signal from the reference resembles that of an under-tuned controller.
+The improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the baseline controller having an unstable signal.
+In fact, the signal from the baseline controller resembles that of an under-tuned controller.
 Target adaptations appear to be minimal, being only visual in close-ups of the signal.
-This corresponds to the relatively low difference in total variance between reference and adapted controllers, observed in the metric evolution.
+This corresponds to the relatively low difference in total variance between baseline and adapted controllers, observed in the metric evolution.
 
 \begin{figure}
     \centering
@@ -295,5 +295,5 @@ This corresponds to the relatively low difference in total variance between refe
 
 \paragraph*{Interpretation}
 Although the adaptations made to the targets appear negligible for both the pretrained as the online trained adapter, the metrics and signal response show a definite improvement.
-However, the cause of how these minor adaptations result in the observed improvements is not immediately apparent: the reference controller shows signs of being under-tuned, but the adapter does not produce adaptations similar to those of an under-tuned controller in~\Cref{subsec:varying-pid}.
+However, the cause of how these minor adaptations result in the observed improvements is not immediately apparent: the baseline controller shows signs of being under-tuned, but the adapter does not produce adaptations similar to those of an under-tuned controller in~\Cref{subsec:varying-pid}.
 On the other hand, the consistent improvements seen across both adapter configurations challenge the notion that these improvements are merely coincidental.

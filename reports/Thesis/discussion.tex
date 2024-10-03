@@ -31,7 +31,7 @@ Thus, even though target adaptions are made, the overall controller effort is de
 \Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
 Again, a resemblance to the equivalent scenario in~\Cref{subsec:toy-aggressive} can be observed.
 The contradicting results from the 2--0.5 \& 1.5--0.5\si{\mm} perforations, see~\Cref{fig:150--50-200--50-metrics}, will be addressed in~\Cref{subsec:limitations}.
-However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the reference in the early stages, and it is during this phase that the same trends described earlier can be observed.
+However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the baseline in the early stages, and it is during this phase that the same trends described earlier can be observed.
 
 \begin{figure}
     \centering
@@ -64,12 +64,12 @@ The pretrained implementation is able to recover within one or two updates, howe
 Nonetheless, this counter-productive behavior, and the need for pretraining data makes a fully online implemented adapter the more attractive solution.
 
 \subsection{Limitations}\label{subsec:limitations}
-As discussed in~\Cref{subsec:varying-kos}, the experiment using 1.5--0.5 \& 2--0.5\si{\mm} perforations in combination with a highly responsive PID controller yielded better results for the reference controller than for the adapted controller.
+As discussed in~\Cref{subsec:varying-kos}, the experiment using 1.5--0.5 \& 2--0.5\si{\mm} perforations in combination with a highly responsive PID controller yielded better results for the baseline controller than for the adapted controller.
 The hypothesis is that the training data obtained from the signal response gradually contains more conflicting features, as illustrated by~\Cref{fig:limitation}.
 As the controller is highly responsive, the frequency at which the signal response is stored in the buffer is too low to capture sufficient detail.
 
 However, this high responsiveness alone is not solely responsible for the adapter's deteriorating performance, since the adapter initially manages to slightly improve performance.
-The same reference controller is used in the 0.25--0.25 \& 0.5--0.5\si{\mm} perforation experiments, as well as in the crawling gait experiments (\Cref{subsec:varying-kos,subsec:crawling-gait}, respectively).
+The same baseline controller is used in the 0.25--0.25 \& 0.5--0.5\si{\mm} perforation experiments, as well as in the crawling gait experiments (\Cref{subsec:varying-kos,subsec:crawling-gait}, respectively).
 It seems to be the specific combination of a highly responsive controller--or conversely, a low sampling rate for the buffer--with a more deteriorated KOS that leads to the issue.
 Once the system enters an unstable feedback loop, the oscillations occur so frequently that any meaningful relationship between sequential datapoints is lost, an observation which becomes clear by comparing~\Cref{fig:slow-overshoot-closeup,fig:limitation}.
 As a result, training features obtained from near-identical regions in the signal response can vay drastically.
@@ -94,7 +94,7 @@ Similarly, the 0.25--0.25 and 0.5--0.5\si{\mm} perforations effectively prevent 
 Several important aspects regarding the validity of the results should be addressed.
 
 \subsubsection{Reproducibility of Identical KOS}
-Since a key part of understanding the results is the use of a reference controller as a baseline, it is important to confirm that the comparisons are representative.
+Since a key part of understanding the results is the use of a PID controller as a baseline, it is important to confirm that the comparisons are representative.
 \Cref{sec:experimental-setup} already stressed that identical target sequences were used for each comparison.
 The focus thus shifts to the possible differences in the characteristics of supposedly identical KOSs.
 
