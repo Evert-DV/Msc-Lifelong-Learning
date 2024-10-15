@@ -1,8 +1,7 @@
 For each experiment, a minimum of two sets of KOSs was required:
 One set serving as a baseline, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
 All experiments used a 60\si{\second} buffer and 15\si{\second} intervals between adapter updates, with the first update at 60\si{\second}.
-The adapter trained on prediction windows of 3, 5, 10, 15, and 25 steps.
-The \emph{true} target, with values depending on the experiment, was updated every 5\si{\second}, following a predefined random sequence.
+The adapter trained on prediction windows of 3, 5, 10, and 15 steps.
 This sequence amounts to 5\si{\minute} of deployment time and is repeated according to the full experiment duration.
 The signals corresponding to each 5\si{\minute} sequence are recorded and saved for evaluation.
 This way, the evolution of the performance metrics can be studied, and a fair comparison between the baseline PID controller and adapted controller is ensured.
@@ -54,7 +53,7 @@ Since the interactions between the Arduino and computer and the several threads 
 %This means that an increment of 1 in the counter corresponds to an estimated 0.02\si{\second}, allowing for the approximation of elapsed time based on the counter value.
 
 \subsection{Performance Metrics}\label{subsec:metrics}
-The performance metrics used to evaluate the 5\si{\minute} sequences are the mean rise time (MRT), mean settling time (MST), mean overshoot (MO), mean absolute error (MAE), mean absolute velocity (MAV), and normalized total variance (NTV).
+The performance metrics used to evaluate the 5\si{\minute} sequences are the mean rise time (MRT), mean settling time (MST) of the system response, mean overshoot (MO) of the system response, mean absolute error (MAE) of the system response, mean absolute velocity (MAV) of the system response, and normalized total variance (NTV) of the control signal, which are common metrics for evaluating controller performance~\parencite{Alfaro2016, Marshall1978}.
 
 The mean rise time is calculated as the mean of all the rise times corresponding to each target in the 5\si{\minute} sequence.
 The rise time is defined as the time it takes the robot to come within 10\% of the target state, as calculated from the initial position.
