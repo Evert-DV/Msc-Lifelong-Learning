@@ -14,7 +14,7 @@ This ability makes lifelong learning a powerful tool for systems that operate in
 Not in the least for robotics.
 
 Robots, like all mechanical systems, wear down over time—joints become more compliant, motors weaken, and sensors lose precision.
-Traditionally, maintaining a robot’s performance might require manual software updates or recalibrations every so often.
+Traditionally, maintaining a robot’s performance might require manual software updates or recalibrations every so often~\parencite{Lao2023}.
 But as robots become more complex, especially in fields like soft robotics, where flexible, compliant materials introduce additional challenges, the need for autonomous adaptation becomes clear:
 By design, the materials used in the construction of soft robots are less sturdy and thus more prone to much faster deterioration, making manual updates or recalibrations impractical.
 
@@ -30,15 +30,15 @@ The module then only needs to improve the performance of the controller, without
 The controller works in cooperation with the ML-module, separating the interpretable basic control from the opaque learning and adapting.
 
 Techniques like parameter adaptation work much in the same way.
-An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Annaswamy2021}.
+An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Annaswamy2021,Landau2011}.
 However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned), and such a module must thus be designed separately for each controller.
 
 The proposed method tries to mitigate this downside by offering a ``plug-and-play'' module that can improve a controller's performance by simply adapting the desired target it receives (\Cref{fig:cool-robot}, \emph{bottom}).
 In this way, no previous knowledge on the type or tuning of the controller is required.
-In other words, as long as the fundamental assumptions of a controller are satisfied—i.e.~it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
+In other words, as long as the fundamental assumptions of a controller are satisfied—i.e., it requires a state and a target as input and yields a control action—the method can remain completely agnostic to the specific controller being used.
 
-With soft robots offering many advantages in miniaturization~\parencite{Tang2022a}, the physical space for controllers with heavy computational power is limited.
-The ``plug-and-play'' module offers the advantage of externalizing the heavy computational task from the soft robot, which allows the (miniaturized) robot to just run a basic controller with low computational capabilities.
+As~\textcite{Tang2022a} point out, with soft robots offering many advantages in miniaturization, the physical space for controllers with heavy computational power can be limited.
+The ``plug-and-play'' module offers thus offers another advantage: externalizing the heavy computational task from the soft robot, which allows a (miniaturized) robot to just run a basic controller with low computational capabilities.
 
 As a demonstration of the technique, this target adaptation approach is tested on a demonstrator origami robot, constructed in part from paper and which relies on the widespread Kresling pattern~\parencite{Kresling2008} for its design (\Cref{fig:cool-robot}, \emph{top}).
 The Kresling origami spring (KOS) is characterized by its non-linear stiffness with deflection and bistable behavior~\parencite{Masana2019}, making it an interesting building block for many soft-robotics applications~\parencite{Masana1993}.

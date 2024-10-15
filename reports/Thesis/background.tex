@@ -1,3 +1,5 @@
+This section will provide a useful background and context for the Kresling origami robot (\Cref{subsec:soft-robots,subsec:kresling-origami}) as well as a brief overview and comparison of related methods concerning lifelong learning (\Cref{subsec:lifelong-learning}).
+
 \subsection{Soft Robotics}\label{subsec:soft-robots}
 Soft robotics is a field that has gained much interest over the past decade.
 Soft robots are constructed from deformable, soft materials which offer advantages in fields such as human-robot interaction, where their inherent compliance makes them safe to interact with.
@@ -8,7 +10,7 @@ Inspired by the Japanese art of paper-folding, these robots rely on creases in t
 This allows for highly miniaturized designs that can self-deploy and can be actuated using affordable, lightweight mechanisms~\parencite{Tang2022a}.
 
 Of course, although the materials used often bend rather than break, they \emph{are} prone to deteriorate faster than their rigid counterparts.
-Hence, combined with the aforementioned difficulty of modeling the dynamics, the usefulness of lifelong learning in this field becomes obvious.
+Hence, combined with the aforementioned difficulty of modeling the dynamics, the usefulness of lifelong learning in this field becomes obvious~\parencite{Kim2021}.
 Additionally, the rapid deterioration and widely available materials make soft robots a fast and economical playground for testing lifelong learning techniques as well.
 
 
@@ -16,24 +18,21 @@ Additionally, the rapid deterioration and widely available materials make soft r
 Many approaches to lifelong learning can be found in literature, with machine learning being an integral part in nearly all of them~\parencite{Lesort2020}.
 Broadly speaking, the approaches can be divided into four categories, which are not necessarily mutually exclusive:
 Methods that result in a ``black-box'' control policy, often obtained through reinforcement learning, where a policy is found by trying to optimize a \emph{reward} function~\parencite{Bhagat2019}.
-Methods that model the dynamics of the system, to be used in combination with other controllers or to optimize an ML-based policy (e.g.~\textcite{Gillespie2018,Thuruthel2019}, respectively).
-Special architectures, such as the parameter adaptation or estimation mechanism, and iterative learning control, where a separate module capable of learning is combined with a base controller~\parencite{Annaswamy2021, Li2005}.
-Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method to be less destructive (e.g.~\emph{learning without forgetting} from~\textcite{Li2016}), or by implementing some form of library that can be accessed to store and retrieve information or parameters, as in e.g.~\textcite{Wang2022}.
-
+Methods that model the dynamics of the system, to be used in combination with other controllers or to optimize an ML-based policy (e.g.,~\textcite{Gillespie2018,Thuruthel2019}, respectively).
+Special architectures, such as the parameter adaptation or estimation mechanism, and iterative learning control, where a separate module capable of learning is combined with a base controller~\parencite{Landau2011, Li2005}.
+Finally, the use of mechanisms that invoke some kind of memory, either by modifying the update method to be less destructive (e.g., \emph{learning without forgetting} from~\textcite{Li2016}), or by implementing some form of library that can be accessed to store and retrieve information or parameters, as in e.g.~\textcite{Wang2022}.
 
 The techniques most similar to the method discussed in this paper are parameter adaptation/estimation and iterative learning control (ILC).
 In parameter adaptation, ML-based methods are used to directly tune the internal parameters of a controller.
 The various techniques used to achieve this rely on observing the interactions of the controller with the system or having access to the feedback signal of the controller~\parencite{Annaswamy2021}.
 Furthermore, the estimation mechanism must be designed specifically for the parameters of the controller in question.
 Iterative learning control on the other hand only uses the error signal to improve a controller's performance.
-It achieves this by changing either the controller's reference signal (i.e.~the target) or its control action, based on the observed error during a single trial~\parencite{Li2005}.
+It achieves this by changing either the controller's reference signal (i.e., the target) or its control action, based on the observed error during a previous trial~\parencite{Li2005}.
 By iteratively applying this approach, the controller's performance can be improved.
-However, ILC is limited to systems that are highly repetitive; i.e.~the same task is repeated many times.
+However, ILC is limited to systems that are highly repetitive, i.e., the same task is repeated many times; a constraint that the proposed method will try to circumvent.
 
 
 \subsection{Kresling Origami}\label{subsec:kresling-origami}
-The Kresling origami pattern is folding-pattern used to create deployable cylindrical structures (also known as bellows) such as the one in~\Cref{fig:kos}.
-As shown in ~\Cref{fig:twis-buckle}, the pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
 
 \begin{figure}
         \begin{subfigure}[t]{.48\linewidth}
@@ -49,15 +48,19 @@ As shown in ~\Cref{fig:twis-buckle}, the pattern is based on the creases that na
                 \caption{Twist-buckling crease pattern. Obtained from~\textcite{Kresling2008}.}
                 \label{fig:twis-buckle}
         \end{subfigure}
-        \caption{Kresling Origami}
+        \caption{Kresling origami pattern}
 \end{figure}
 
+The Kresling origami pattern is folding-pattern used to create deployable cylindrical structures (also known as bellows) such as the one in~\Cref{fig:kos}.
+As shown in ~\Cref{fig:twis-buckle}, the pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
+
 Due to the strain induced on the folds when twisting or compressing the structure formed by the pattern, it forms a torsional and translational spring with nonlinear stiffness.
-The pattern can be defined by three parameters (~\Cref{fig:design-params}, \emph{top-right}), depending on which the spring can be designed to be either mono- or bistable~\parencite{Masana2019}:
+The pattern can be defined by three parameters (\Cref{fig:design-params}, \emph{top-right}), depending on which the spring can be designed to be either mono- or bistable~\parencite{Masana2019}:
 Monostable M1, M2 and M3 type springs differ in their stable deployment height being zero, non-zero and non-zero, respectively, and their stable potential energy being non-zero, zero and non-zero, respectively.
 Bistable types B1 and B2 differ in their contracted stable height being non-zero and zero, respectively, and their respective potential energy being zero and non-zero.
 With the help of only three parameters, the map of feasible designs shown in~\Cref{fig:design-params} can be created.
 Using this design map, a pattern can be designed that conforms to any of these categories.
+The springs used for the robot in this paper are of type B1 (\Cref{app:kos-design}).
 
 \begin{figure}
         \centering
