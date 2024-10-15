@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{259.48517567bp}%
+    \setlength{\unitlength}{251.43174299bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,22 +50,22 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,1.05028716)%
+  \begin{picture}(1,1.08392808)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{features2.pdf}}%
-    \put(0.32318352,0.75746944){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\ldots\end{tabular}}}}%
+    \put(0.58246217,0.78173102){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\ldots\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{features2.pdf}}%
-    \put(0.32318352,0.96078341){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\ldots\end{tabular}}}}%
+    \put(0.58246217,0.9915572){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\ldots\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{features2.pdf}}%
-    \put(0.05831363,0.9219195){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\bigl\{$\end{tabular}}}}%
+    \put(0.30910843,0.9447016){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\bigl\{$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=4]{features2.pdf}}%
-    \put(0.46896344,0.23618373){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{subtract}\end{tabular}}}}%
+    \put(0.73291143,0.24374844){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{subtract}\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=5]{features2.pdf}}%
-    \put(0.75610765,0.03311245){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}labels:  $\Delta$\end{tabular}}}}%
-    \put(0.75742249,0.51964291){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}features:  state pairs\end{tabular}}}}%
-    \put(0.76528827,0.95468763){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}buffer:   \end{tabular}}}}%
-    \put(0.91368463,0.97553539){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}states\\targets \end{tabular}}}}%
+    \put(0.22654851,0.03417266){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}labels:  $\Delta$\end{tabular}}}}%
+    \put(0.22606639,0.53628683){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}features:  state pairs\end{tabular}}}}%
+    \put(0.07786718,0.98526623){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}buffer:\end{tabular}}}}%
+    \put(0.22606639,1.00678175){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}states\\targets \end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=6]{features2.pdf}}%
   \end{picture}%
 \endgroup%

@@ -10,11 +10,11 @@ The mass is suspended in a hanging position with gravity acting on it continuous
     \label{fig:toy-setup}
 \end{figure}
 
-The system state $\mathbf{x}$ consists of the position and velocity $x,\,\dot{x}$, respectively.
+The system state $\mathbf{x}$ consists of the position $x$ and velocity $\dot{x}$.
 The controller aims to reach targets of the form $\mathbf{x}_d = [x_d,\, 0]$, but controls position only.
 At regular intervals, a random target position $x_d$ is generated for the controller to reach and maintain.
-Each timestep, the adapter calculates the required $\Delta$, and the controller computes the control action based on the current position and the adapted target position.
-The system's response to this control input is simulated and the tuple $(x_0, \dot{x}_0, u, x_d, 0)$ is added to the buffer.
+Each timestep, the adapter calculates the required $\Delta$ to be added to the intended target \emph{position}, and the controller computes the control action based on the current position and the adapted target position.
+The system's response to this control input is simulated and the tuple $(\mathbf{x}_0,\,\mathbf{x}_d)$ is added to the buffer.
 This buffer stores a limited number of tuples corresponding to a specified window of the most recent data:
 Once capacity is reached, the oldest element is removed at every timestep.
 At regular update intervals, the adapter is trained on the data in the buffer.
@@ -45,21 +45,13 @@ The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-proble
 
         $\Delta \gets adapter.predict([\mathbf{x}_0, \mathbf{x}_d])$\;
         $u \gets controller.compute\_control(\mathbf{x}_0, \mathbf{x}_d + [\Delta, 0])$\;
-        Simulate the system response $\mathbf{x}$\;
+        Simulate the system $\mathbf{x} \gets response(\mathbf{x}_0, u)$\;
         Update system parameters\;
-        Append $(\mathbf{x}_0, u, \mathbf{x}_d)$ to \textit{buffer}\;
+        Append $(\mathbf{x}_0, \mathbf{x}_d)$ to \textit{buffer}\;
         $\mathbf{x}_0 \gets \mathbf{x}$\;
     }
 \end{algorithm}
 
-The simulation ran for 60\si{\second} at 50\si{\hertz}.
-The target was changed every 5\si{\second}, and the adapter was trained fully online, updating every 15\si{\second}.
-Training features were created for multiple prediction windows, this means the training features consisted of pairs $[\mathbf{x}_t, \mathbf{x}_{t+\textit{window}}]$ for windows of 3, 5, 10, 15, and 25.
-The buffer's budget corresponded to the past 30\si{\second} of data.
-As a baseline, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
-To both the baseline and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
-
-\subsection{An Over-Tuned Controller}\label{subsec:toy-aggressive}
 \begin{figure*}
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot}
@@ -70,6 +62,14 @@ To both the baseline and adapted signal, a small amount of Gaussian noise was ad
     \label{fig:toy-plot}
 \end{figure*}
 
+The simulation ran for 60\si{\second} at 50\si{\hertz}.
+The target was changed every 5\si{\second}, and the adapter was trained fully online, updating every 15\si{\second}.
+Training features were created for multiple prediction windows, this means the training features consisted of pairs $[\mathbf{x}_t, \mathbf{x}_{t+\textit{window}}]$ for windows of 3, 5, 10, 15, and 25.
+The buffer's budget corresponded to the past 30\si{\second} of data.
+As a baseline, a second controller and system were also simulated, identical to the described simulation, but without the addition of an adapter.
+To both the baseline and adapted signal, a small amount of Gaussian noise was added to simulate measurement noise.
+
+\subsection{An Over-Tuned Controller}\label{subsec:toy-aggressive}
 For a first simulation, a combination of a system and controller was chosen where the controller's gains were tuned too high.
 In~\Cref{fig:toy-plot}, the result of the simulation can be observed.
 At the start, due to the near-zero initialization of the adapter's parameters, the signal response of the system controlled by the adapted controller is indistinguishable from that of the baseline PID controller.
@@ -80,22 +80,16 @@ Since the baseline PID controller is too aggressive, the signal overshoots and o
 In contrast, the adapter counters this by bringing the target closer to the current state.
 This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target position\footnote{Rather, the labeled $\Delta = x_{d} - x_{t+\emph{window}}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+\emph{window}}$.
 Therefore, upon receiving the input feature $[\mathbf{x}_t, \mathbf{x}_d]$
-%(representing $\mathbf{x}_d$ being reached from $\mathbf{x}_t$ within 10 timesteps),
 it produces and adapted target position in between $x_t$ and $x_d$.
 As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
 
-\begin{figure}
+\begin{figure}[htb]
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot_closeup}
     \vspace*{-2em}
     \caption{A close-up of the second to last target in the one-minute simulation. The effects of the adapter can be more clearly observed: The overshoot (seen in the baseline PID signal) is countered by bringing the target closer to the current state.}
     \label{fig:toy-plot-closeup}
 \end{figure}
-
-\subsection{An Under-Tuned Controller}\label{subsec:toy-damped}
-For a second simulation, the system and controller were designed such that the controller was more conservative or \emph{under-tuned}.
-Additionally, the signal produced by the baseline PID controller has a clear steady-state error.
-The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
 
 \begin{figure*}
     \centering
@@ -105,6 +99,11 @@ The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
     \emph{Bottom}: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered baseline PID control inputs.}
     \label{fig:toy-plot-damped}
 \end{figure*}
+
+\subsection{An Under-Tuned Controller}\label{subsec:toy-damped}
+For a second simulation, the system and controller were designed such that the controller was more conservative or \emph{under-tuned}.
+Additionally, the signal produced by the baseline PID controller has a clear steady-state error.
+The result of the simulation can be found in~\Cref{fig:toy-plot-damped}.
 
 Once more, the adapter is able to improve the controller's performance after just a single update.
 In~\Cref{fig:toy-plot-damped-closeup} it can be seen that the adapted target is adjusted away from the current state.
@@ -121,3 +120,9 @@ These features are the result of the steady-state error present in the signal, l
     \caption{A close-up of the second to last target in the one-minute simulation. The target is initially moved further from the current state to `pull' it towards the desired state in a shorter period. In addition, the adapted target is offset from the desired state as to counter the steady-state error seen in the baseline PID signal.}
     \label{fig:toy-plot-damped-closeup}
 \end{figure}
+
+\subsection{Preliminary Conclusions}\label{subsec:prelminary-conclusion}
+These qualitative results show that the adapter is able to improve controller's behavior in a simple \emph{simulated} dynamic system.
+The adapter is also making target adaptations that are intuitive and logical, given the specific settings of the system and controller.
+The simulations thus provide a good foundation that the method is at least reasonable.
+For a real-world test of the method, a demonstrator robot is required (\Cref{sec:origami-robot}) and a good test setup with a comprehensive set of metrics to quantify the results (\Cref{sec:experimental-setup}).

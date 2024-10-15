@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{351.5028105bp}%
+    \setlength{\unitlength}{271.10654816bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,19 +50,19 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.3762176)%
+  \begin{picture}(1,0.2795947)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{target_adaption_deploy.pdf}}%
-    \put(0.37465634,0.05675795){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t}$\end{tabular}}}}%
-    \put(0.60225756,0.2093339){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{goal:} reach target at $t + \textit{window}$\end{tabular}}}}%
-    \put(0.70835302,0.28349735){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\bigr\}$ predicted \end{tabular}}}}%
+    \put(0.72641791,0.2285542){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l} $\bigr\}$ predicted \end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{target_adaption_deploy.pdf}}%
-    \put(0.30689678,0.35381651){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}adapted target\end{tabular}}}}%
+    \put(0.24049144,0.25910574){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}\emph{adapted target}\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{target_adaption_deploy.pdf}}%
-    \put(0.00000009,0.25715974){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{target}\end{tabular}}}}%
-    \put(0.00000009,0.00658583){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{signal}\end{tabular}}}}%
+    \put(0.24049144,0.20872617){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}\textit{target}\end{tabular}}}}%
+    \put(0.30435435,0.06195756){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}\textit{signal}\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=4]{target_adaption_deploy.pdf}}%
-    \put(0.88721007,0.28349735){\color[rgb]{0.17254902,0.62745098,0.17254902}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
+    \put(0.90892641,0.2285542){\color[rgb]{0.17254902,0.62745098,0.17254902}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
+    \put(0.39486356,0.03498911){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t}$\end{tabular}}}}%
+    \put(0.66406119,0.17509199){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t+\textit{window}}$\end{tabular}}}}%
   \end{picture}%
 \endgroup%

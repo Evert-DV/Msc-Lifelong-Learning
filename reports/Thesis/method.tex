@@ -14,9 +14,9 @@ For this adapted target, the controller now yields a larger action $u^*$ that \e
     \centering
     \begin{subfigure}[t]{\linewidth}
         \centering
-        \def\svgwidth{0.85\linewidth}
+        \def\svgwidth{0.9\linewidth}
         \footnotesize\selectfont\input{Thesis/figures/method/target_adaption_deploy.pdf_tex}
-        \caption{By supplying the model with the controller's target position and current state $x_{t}$, it yields a $\Delta$ that can be added to the current target, which will supposedly result in the controller reaching the target within the specified window.}
+        \caption{The goal: Reach the target within the specified window. By supplying the model with the controller's target position and current state $x_{t}$, it yields a $\Delta$ that can be added to the current target.}
         \label{fig:target-adaptation}
         \vspace*{1em} % Add white space between figures
     \end{subfigure}
@@ -72,7 +72,8 @@ Thus, when presented with $\mathbf{x}_t$ and $\mathbf{x}_{t+\textit{window}}=\ma
 This approach is thus completely detached from the error signal, and allows for non-repetitive settings, as opposed to ILC.
 ILC, however, also provides an approach of adapting the controller's action $u$ directly.
 Trying to mimic this approach similarly to the target adaptation method described, one could train an adapter to predict a control action, or a series of actions, based on a state pair.
-The downside to this approach is merely a matter of personal opinion: as the adapter improves, it would essentially replace the controller (during deployment, it receives the state and target, and produces an action), therefore, the target adaptation was considered the more elegant approach.
+The downside to this approach is that as the adapter improves, it would essentially replace the controller (during deployment, it receives the state and target, and produces an action), which is one of the outcomes to be avoided, as stated earlier.
+Therefore, the target adaptation was considered the more elegant approach.
 
 Finally, the reason for predicting the difference $\bm{\Delta}$ between the state $\mathbf{x}_{t+\textit{window}}$ and the desired target, rather than a direct prediction of the target, should also be clarified now:
 By designing the target adapter's output to be the difference $\bm{\Delta}$, the model can be initialized with parameters all close to zero (essentially leaving the desired target unchanged) and then steadily improve online as interactions of the controller and system are recorded, without the need for a pretraining phase.

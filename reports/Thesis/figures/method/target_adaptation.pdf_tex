@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{247.8127427bp}%
+    \setlength{\unitlength}{252.6576269bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,17 +50,17 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.4822724)%
+  \begin{picture}(1,0.46630931)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{target_adaptation.pdf}}%
-    \put(0.32841946,0.00742942){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t}$\end{tabular}}}}%
-    \put(0.66667679,0.3012709){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t + \textit{window}}$\end{tabular}}}}%
-    \put(0.00000001,0.45657113){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{target}\end{tabular}}}}%
-    \put(0.29149702,0.40627076){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Bigr\}$\end{tabular}}}}%
+    \put(0.25996503,0.00683359){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t}$\end{tabular}}}}%
+    \put(0.69918102,0.31326359){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$x_{t + \textit{window}}$\end{tabular}}}}%
+    \put(0.15506426,0.44432438){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}\textit{target}\end{tabular}}}}%
+    \put(0.2750076,0.39668458){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Bigr\}$\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{target_adaptation.pdf}}%
-    \put(0.00000001,0.01301578){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\textit{signal}\end{tabular}}}}%
+    \put(0.15506425,0.00927446){\color[rgb]{0,0,0}\makebox(0,0)[rt]{\lineheight{1.25}\smash{\begin{tabular}[t]{r}\textit{signal}\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{target_adaptation.pdf}}%
-    \put(0.34751794,0.40627076){\color[rgb]{0.17254902,0.62745098,0.17254902}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
+    \put(0.32401739,0.39226294){\color[rgb]{0.17254902,0.62745098,0.17254902}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
   \end{picture}%
 \endgroup%
