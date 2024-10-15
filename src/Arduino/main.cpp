@@ -6,8 +6,8 @@
 
 AS5600 as5600;
 Servo servo_9;
-PidController controller(-.01, -1., -.001); // Initialize the PID controller (slow overshoot)
-//PidController controller(-.35, -.3, -.002); // Initialize the PID controller (default)
+PidController controller(-.01, -2., -.00); // Initialize the PID controller (slow overshoot)
+//PidController controller(-.35, -.3, -.00); // Initialize the PID controller (default)
 //PidController controller(-.45, -.4, .0); // Initialize the PID controller (barely stable)
 //PidController controller(-.6, -.45, .0); // Initialize the PID controller (hard)
 //PidController controller(-.15, -.15, .0); // Initialize the PID controller (soft)
@@ -23,7 +23,7 @@ double beta0;
 double omega;
 //unsigned long lastTime;
 //unsigned long currentTime;
-double dt = 0.017;
+double dt;
 bool first = true;
 unsigned long int counter = 0;
 
@@ -45,7 +45,7 @@ void setup() {
         b = as5600.isConnected();
     }
 
-    delay(500);
+    delay(1000);
     beta0 = as5600.rawAngle() * AS5600_RAW_TO_DEGREES;
     beta = 0;
     omega = 0;

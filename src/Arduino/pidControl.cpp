@@ -9,7 +9,7 @@ double PidController::computeControl(double state, double target, double dt) {
     double controlForce;
 
     double error = target - state;
-    integral_error_ *= .99;
+    integral_error_ *= .999;
     integral_error_ += error * dt;
     double derivative_error = (error / abs(error)) * (abs(error) - abs(previous_error_)) / dt;
     previous_error_ = error;

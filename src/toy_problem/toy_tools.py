@@ -150,7 +150,7 @@ def prep_data(data, prediction_window=None, state_size=2, target_size=1, true_ta
         # array[..., window:, -target_size:] - array[..., window:, :target_size] for array in
         # windowed_data for window in window_list   # take labels from x_t+window
         array[..., :-window, -target_size:] - array[..., window:, :target_size] for array in
-        windowed_data for window in window_list     # take labels from x_t
+        windowed_data for window in window_list     # take labels x_d,t - x_t+w
     )
 
     if val_split is not None:

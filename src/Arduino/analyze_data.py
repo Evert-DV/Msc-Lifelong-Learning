@@ -4,24 +4,21 @@ import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import scienceplots
-from botocore.compat import file_type
 from matplotlib import pyplot as plt
-from matplotlib.transforms import Bbox, TransformedBbox, BboxTransformTo
 from adjustText import adjust_text, expand_axes_to_fit
-from rich.cells import cell_len
 
 plt.style.use('vibrant')
 colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-mpl.use("pgf")
-mpl.rcParams.update({
-    "pgf.texsystem": "xelatex",
-    'font.size': 8,
-    'text.usetex': True,
-    'pgf.rcfonts': False,
-    "pgf.preamble": r"\usepackage{amsmath}"
-                    r"\usepackage{lmodern}"
-                    r"\usepackage{siunitx}"
-})
+# mpl.use("pgf")
+# mpl.rcParams.update({
+#     "pgf.texsystem": "xelatex",
+#     'font.size': 8,
+#     'text.usetex': True,
+#     'pgf.rcfonts': False,
+#     "pgf.preamble": r"\usepackage{amsmath}"
+#                     r"\usepackage{lmodern}"
+#                     r"\usepackage{siunitx}"
+# })
 tex_line_width = 3.48
 tex_text_width = 7.17
 
@@ -29,16 +26,16 @@ root = os.getcwd() + '\\..\\..\\'
 data_folders = [
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\250-30 perforation\\PID 150-50\\EOL\\w adapter",
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
-    "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\wo adapter",  # <-- varying perf, auto_save_10 is filtered here
+    # "Dynamics data\\200-50 perforation\\PID 150-50\\EOL\\w adapter",  # <-- varying perf, + qualitative late stage
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 2\\w adapter",
-    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
-    "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\wo adapter",       # <-- limitations
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL extra 3\\w adapter",        # <-- limitations
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\wo adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\EOL short window\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\no adapter to adapter",       # <-- appendix?
@@ -48,7 +45,7 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 150-50\\3 step model\\w adapter 2",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\wo adapter",  # <-- as 12 is copy of as 13
     # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter",       # <--
-    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w kb",
+    # "Dynamics data\\150-50 perforation\\PID 150-50\\KB\\w adapter +kb",
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\wo adapter",  # <-- crawling gait
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter pretrained", # <-- crawling gait, + qualitative
     # "Dynamics data\\150-50 perforation\\PID 150-50\\crawling gait\\w adapter online",  # <-- crawling gait
@@ -56,10 +53,12 @@ data_folders = [
     # "Dynamics data\\150-50 perforation\\PID 75-75\\EOL w adapter",
     # "Dynamics data\\150-50 perforation\\PID soft\\wo adapter",  # <-- varying PID
     # "Dynamics data\\150-50 perforation\\PID soft\\w adapter",   # <-- varying PID, + qualitative, (auto_save_4 copy of as 5)
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",  # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",  # <-- varying PID, qualitative, self-correcting
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\wo adapter",    # <-- varying PID
-    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\w adapter",  # <-- varying PID
+    "Dynamics data\\150-50 perforation\\PID slow overshoot\\wo adapter",  # <-- varying PID
+    "Dynamics data\\150-50 perforation\\PID slow overshoot\\w adapter",  # <-- varying PID, qualitative, self-correcting
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\",
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 3\\wo adapter",
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 3\\w adapter",
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\wo adapter",       # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID hard\\EOL\\w adapter",        # <-- limitations ?
     # "Dynamics data\\150-50 perforation\\PID barely stable\\wo adapter",
@@ -68,9 +67,9 @@ data_folders = [
     # "Dynamics data\\25-25 perforation\\PID 150-50\\w adapter",  # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\wo adapter",  # <-- varying perf
     # "Dynamics data\\50-50 perforation\\PID 150-50\\w adapter",  # <-- varying perf, + qualitative
-    # "Dynamics data\\150-50 perforation\\",
+    # "Dynamics data\\150-50 perforation\\PID slow overshoot 2\\",
 ]
-file_name = "auto_save_0"
+file_name = "auto_save_18"
 file = f"{data_folders[0]}/{file_name}.npy"
 
 mean_rise_time, mean_settle_time, mean_overshoot, ae, mae, iae, cae, mav, ntv, mca = 10 * [None]
@@ -235,7 +234,7 @@ def plot_file(files):
     # signal_ax[0].set_xlim([0.286, 0.386])  # PID soft
     # signal_ax[0].set_xlim([.82, .92])  # 200-50
     # signal_ax[0].set_ylim([-25, -7.5])  # 200-50
-    # signal_ax[0].set_xlim([.145, .245])  # slow overshoot
+    # signal_ax[0].set_xlim([.335, .395])  # slow overshoot
     # signal_ax[0].set_ylim([-27, -1])  # slow overshoot
     # signal_ax[0].set_xlim([.53, .63])   # crawling gait
     # signal_ax[0].set_ylim([-21, -5.5])  # crawling gait
@@ -245,8 +244,8 @@ def plot_file(files):
     # signal_ax[0].set_ylim([-27, -7.5])  # slow over (2)
     # signal_ax[0].set_xlim([0.64, 0.685])  # limitation
     # signal_ax[0].set_ylim([-22, -13.5])  # limitation
-    signal_ax[0].set_xlim([0, 0.198])  # pre vs online
-    signal_ax[0].set_ylim([-20, -4])  # pre vs online
+    # signal_ax[0].set_xlim([0, 0.198])  # pre vs online
+    # signal_ax[0].set_ylim([-20, -4])  # pre vs online
     signal_fig.legend(handles=[*t_lines, *x_lines, *u_lines],
                       labels=["PID target", "Adapter target", "PID signal", "Adapter signal", "PID control",
                               "Adapter control"],
@@ -254,7 +253,7 @@ def plot_file(files):
 
     signal_fig.tight_layout()
     if mpl.get_backend() == 'pgf':
-        plt.savefig(f'{root}\\reports\\Thesis\\figures\\discussion\\pre-vs-online-pre.pgf', bbox_inches='tight',
+        plt.savefig(f'{root}\\reports\\Thesis\\figures\\results\\slow-overshoot-overlay.pgf', bbox_inches='tight',
                     dpi=300)
 
     # ise_fig, ise_ax = plt.subplots(3, 1, figsize=(
@@ -373,7 +372,7 @@ def make_xls(data_folder, save_folder=None, do_plot=False, file_type='auto_save'
         columns = df.columns.tolist()
         data = df.values.tolist()
         latex_file_path = os.path.join(f"{root}\\reports\\Thesis\\appendix tables\\",
-                                       f'ref crawling gait {os.path.basename(data_folder)}.tex')
+                                       f'ref slow overshoot {os.path.basename(data_folder)}.tex')
         generate_latex_table(data, columns, latex_file_path)
 
     if do_plot:
@@ -411,7 +410,7 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
     combined_ticks = set()
     for file_name in file_names:
         if file_type == 'auto_save':
-            x_ticks = [5 + 5 * int(file.split('_')[-1].split('.')[0]) for file in file_name]
+            x_ticks = [-25 + 5 * int(file.split('_')[-1].split('.')[0]) for file in file_name]
         else:
             x_ticks = [int(file.split('_')[-1].strip('.npy')) for file in file_name]
         x_ticks_list.append(x_ticks)
@@ -419,7 +418,8 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
 
     n_cols = 2
     fig, axes = plt.subplots(len(metrics_headers) // n_cols, n_cols,
-                             figsize=(tex_text_width, len(metrics_headers) * 0.28 * tex_line_width / n_cols),
+                             figsize=(tex_line_width if n_cols == 1 else tex_text_width,
+                                      len(metrics_headers) * 0.28 * tex_line_width / n_cols),
                              sharex=True)
 
     axes = axes.flatten()
@@ -435,21 +435,21 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
             y_last = y_values[-1]
 
             # Create the text annotation
-            txt = ax.text(
-                x_last,
-                y_last,
-                '-'.join([str(float(f) / 100) for f in label.strip().split(' ')[0].split('-')]),
-                # label.strip().split(' ')[-1],
-                fontsize=6,
-                color=line.get_color(),
-                alpha=1.,
-                ha='left',
-                va='bottom'
-            )
-            texts.append(txt)  # Add to the list of texts
-
-        # Adjust the text positions to prevent overlapping
-        adjust_text(texts, ax=ax, expand_axes=True, avoid_self=False)
+        #     txt = ax.text(
+        #         x_last,
+        #         y_last,
+        #         # '-'.join([str(float(f) / 100) for f in label.strip().split(' ')[0].split('-')]),
+        #         label.strip().split(' ')[-1],
+        #         fontsize=6,
+        #         color=line.get_color(),
+        #         alpha=1.,
+        #         ha='left',
+        #         va='bottom'
+        #     )
+        #     texts.append(txt)  # Add to the list of texts
+        #
+        # # Adjust the text positions to prevent overlapping
+        # adjust_text(texts, ax=ax, expand_axes=True, avoid_self=False)
         # texts[0].set_visible(False)  # Hide the first text annotation
 
         # Determine the maximum length of the data
@@ -495,7 +495,7 @@ def plot_metrics_evolution(excel_files, save_folder=f'{root}\\tmp', file_type='a
                frameon=False, bbox_to_anchor=(0., -0.05), handlelength=1.25)
 
     fig.tight_layout()
-    plot_file = os.path.join(save_folder, f'ref-25--25-50--50-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
+    plot_file = os.path.join(save_folder, f'slow-overshoot-metrics.{"pgf" if mpl.get_backend() == "pgf" else "png"}')
 
     if mpl.get_backend() == 'pgf':
         plt.savefig(plot_file, dpi=300, bbox_inches='tight')
@@ -528,8 +528,8 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
     common_prefix = os.path.commonpath(labels)
     short_labels = [label.replace(common_prefix, '').split(os.sep) for label in
                     labels]
-    # short_labels = [l[1] for l in short_labels]
-    short_labels = [' '.join(['-'.join([str(float(f) / 100) for f in l[1].strip().split(' ')[0].split('-')]), l[-2]]) for l in short_labels]
+    short_labels = [l[1] for l in short_labels]
+    # short_labels = [' '.join(['-'.join([str(float(f) / 100) for f in l[1].strip().split(' ')[0].split('-')]), l[-2]]) for l in short_labels]
 
     distances = np.empty((len(all_metrics), len(all_metrics)))
     for i, metric_vec in enumerate(all_metrics):
@@ -538,8 +538,8 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
 
     n_cells = len(short_labels)
     fig = plt.figure(
-    # figsize=(tex_line_width, 0.8 * tex_line_width)
-    figsize=(min(tex_line_width, 2.2/2.56 + (1.2 + n_cells) * 1.2 / 2.56), 1.6/2.56 + n_cells * 1.2 / 2.56)
+        # figsize=(tex_line_width, 0.8 * tex_line_width)
+        figsize=(min(tex_line_width, 2.2 / 2.56 + (1.2 + n_cells) * .9 / 2.56), 1.6 / 2.56 + n_cells * .9 / 2.56)
     )
 
     cax = plt.imshow(distances, vmin=0, vmax=vmax, cmap='viridis', aspect='equal')
@@ -558,16 +558,16 @@ def metrics_similarity(data_folders, file_type='ref_minute'):
     plt.tight_layout()
 
     if mpl.get_backend() == 'pgf':
-        plt.savefig(f'{root}\\reports\\Thesis\\figures\\appendix\\ref_dist_150-200.pgf', bbox_inches='tight', dpi=300)
+        plt.savefig(f'{root}\\reports\\Thesis\\figures\\appendix\\ref_dist_slow-over.pgf', bbox_inches='tight', dpi=300)
     # plt.show()
 
 
 def main():
     # plot_file([f"{folder}/{file_name}.npy" for folder in data_folders])
-    # metrics(file, do_print=True, do_plot=True)
-    # compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\appendix', file_type='ref_minute')
+    # metrics(file, do_print=True, do_plot=False)
+    compare_metrics(data_folders, f'{root}\\reports\\Thesis\\figures\\results', file_type='auto_save')
     # compare_metrics(data_folders, f'{root}\\tmp', file_type='ref_minute')
-    metrics_similarity(data_folders, file_type='ref_minute')
+    # metrics_similarity(data_folders, file_type='ref_minute')
 
 
 if __name__ == '__main__':

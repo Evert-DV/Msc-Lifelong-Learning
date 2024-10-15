@@ -35,17 +35,17 @@ recorded_data = []
 buffer = []
 
 root = os.getcwd()
-model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID slow overshoot/'
-save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID slow overshoot/w adapter/'
+model_dir = f'{root}/src/Arduino/Models/150-50 perf/PID slow overshoot/tmp'
+save_dir = f'{root}/src/Arduino/Dynamics data/150-50 perforation/PID slow overshoot 3/wo adapter'
 print(root)
 
 # Load vanilla model
-prediction_window = [2, 3, 5, 10, 15]
+prediction_window = [5, 10, 15]
 adapter = TargetAdapter(state_size=2, target_size=1)
 # adapter = keras.models.load_model(f'{model_dir}/adapter_{prediction_window}.keras')
 
 # Load deployed model weights
-adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
+# adapter.load_weights(f'{model_dir}/deployed_adapter_{prediction_window}.weights.h5')
 
 # Load VAE model
 autoencoder = VariationalAutoEncoder(5, 2)
@@ -112,7 +112,7 @@ def listen_echo():
             new_omega = float(latest_value[-2])
             read_target = float(latest_value[-1])
 
-            if time.time() - print_time > 0.5:
+            if time.time() - print_time > 1.:
                 print(
                     f"\rState: {old_state:.1f}, {old_omega:.1f}\tControl action: {control_action:.0f}"
                     f"\tNew state: {new_state}, {new_omega:.1f}\tTarget: {read_target:.1f}", end="")
@@ -178,7 +178,7 @@ def change_value():
 
     save_count = 18
     target_count = 0
-    generated_targets = max(1, run_time // 5) * np.random.randint(-25, -3, int(min(run_time,
+    generated_targets = max(1, run_time // 5) * np.random.randint(-23, -3, int(min(run_time,
                                                                                    5) * 12)).tolist()  # n mins of random targets
     # generated_targets = int(run_time * 60 / 10) * [-8, -18] + np.random.normal(0., .2, int(run_time * 60 / 5)) # crawling gait
 
@@ -194,7 +194,6 @@ def change_value():
                 globals().update(running=False)
                 break
             true_target = generated_targets[target_count]
-            target = true_target
             print(f"\n{10 * '='} TRUE TARGET: {true_target} {10 * '='}")
             target_t = time.time()
 
@@ -206,6 +205,8 @@ def change_value():
             adapter_input = ops.array([new_state, new_omega, to_reach, 0.])[None]
             delta_target = adapter.predict(adapter_input, verbose=0)[0][0]
             target = true_target + delta_target
+        else:
+            target = true_target
 
         if time.time() - save_t > 300:
             save_recorded_data(f"auto_save_{save_count}")
@@ -384,7 +385,7 @@ def update_adapter():
             temp_adapter.set_weights(adapter.get_weights())
 
             with buffer_lock:
-                update_buffer = ops.array(buffer)[..., :-1]
+                update_buffer = ops.array(buffer)[..., [0,1,2,3,4,-1]]
                 true_target_list = ops.array(buffer)[..., -1:].tolist()
 
             features, labels = prep_data(update_buffer, prediction_window, state_size=2, target_size=1,
