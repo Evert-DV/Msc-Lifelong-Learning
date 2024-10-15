@@ -50,19 +50,20 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.17633101)%
+  \begin{picture}(1,0.17633213)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{diagram.pdf}}%
-    \put(0.24772244,0.09028701){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}adapter\end{tabular}}}}%
+    \put(0.24772244,0.09028696){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}adapter\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{diagram.pdf}}%
-    \put(0.54838808,0.06453049){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}controller\end{tabular}}}}%
-    \put(0.78582749,0.06453049){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}robot\end{tabular}}}}%
-    \put(-0.00112414,0.10691037){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target\end{tabular}}}}%
-    \put(-0.00082315,0.07731362){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state\end{tabular}}}}%
-    \put(0.3834731,0.11616207){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
-    \put(0.91763995,0.09209264){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state$^*$\end{tabular}}}}%
-    \put(0.47751652,0.11616207){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+\end{tabular}}}}%
+    \put(0.54838808,0.06453043){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}controller\end{tabular}}}}%
+    \put(0.78582749,0.06453043){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}robot\end{tabular}}}}%
+    \put(-0.00112414,0.10691032){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}target\end{tabular}}}}%
+    \put(-0.00082315,0.07731357){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state\end{tabular}}}}%
+    \put(0.3834731,0.11616202){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$\Delta$\end{tabular}}}}%
+    \put(0.91763995,0.09209259){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}state*\end{tabular}}}}%
+    \put(0.47751652,0.11616202){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}+\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{diagram.pdf}}%
+    \put(0.69990534,0.10055191){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}$u$\end{tabular}}}}%
   \end{picture}%
 \endgroup%

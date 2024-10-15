@@ -38,7 +38,7 @@
   \newcommand*\fsize{\dimexpr\f@size pt\relax}%
   \newcommand*\lineheight[1]{\fontsize{\fsize}{#1\fsize}\selectfont}%
   \ifx\svgwidth\undefined%
-    \setlength{\unitlength}{247.4974048bp}%
+    \setlength{\unitlength}{245.51742193bp}%
     \ifx\svgscale\undefined%
       \relax%
     \else%
@@ -50,19 +50,22 @@
   \global\let\svgwidth\undefined%
   \global\let\svgscale\undefined%
   \makeatother%
-  \begin{picture}(1,0.60880113)%
+  \begin{picture}(1,0.6066237)%
     \lineheight{1}%
     \setlength\tabcolsep{0pt}%
     \put(0,0){\includegraphics[width=\unitlength,page=1]{introductory figure.pdf}}%
-    \put(0.18183421,0.14229467){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{desired target}\end{tabular}}}}%
-    \put(0.17684377,0.07132658){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{adapted target}\end{tabular}}}}%
+    \put(0.17621358,0.13635508){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{desired target}\end{tabular}}}}%
+    \put(0.17118289,0.06481466){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{adapted target}\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=2]{introductory figure.pdf}}%
-    \put(0.21177008,0.29905209){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}expand\end{tabular}}}}%
-    \put(0.71364861,0.29609987){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}contract\end{tabular}}}}%
-    \put(0.0209887,0.23853434){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
-    \put(0.41344599,0.23526724){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
-    \put(0.54426514,0.23526724){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
-    \put(0.90680117,0.23853434){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
+    \put(0.20639088,0.29437668){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}expand\end{tabular}}}}%
+    \put(0.71231681,0.29140065){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}contract\end{tabular}}}}%
     \put(0,0){\includegraphics[width=\unitlength,page=3]{introductory figure.pdf}}%
+    \put(0.01407093,0.23337087){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
+    \put(0.4096932,0.23007743){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
+    \put(0.54156735,0.23007743){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}slide\end{tabular}}}}%
+    \put(0.90702706,0.23337087){\color[rgb]{0.83137255,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}grip\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=4]{introductory figure.pdf}}%
+    \put(0.5950225,0.16690338){\color[rgb]{0,0,0}\makebox(0,0)[lt]{\lineheight{1.25}\smash{\begin{tabular}[t]{l}\emph{signal response}\end{tabular}}}}%
+    \put(0,0){\includegraphics[width=\unitlength,page=5]{introductory figure.pdf}}%
   \end{picture}%
 \endgroup%

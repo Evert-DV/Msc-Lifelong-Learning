@@ -1,4 +1,4 @@
-\Cref{sec:results} provided some short interpretation and discussion on the various results presented there.
+\Cref{sec:results} already provided some short interpretation and discussion on the various results presented there.
 This section will provide insight in the general trends observed and discuss the limitations of the method that were encountered.
 
 \subsection{Key Insights}\label{subsec:key-insights}
@@ -19,14 +19,14 @@ As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles th
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/50--50-overlay}
     \vspace*{-2em}
     \caption{A close-up from the 0.5--0.5\si{\mm} perforation with target adapter.
-    The signal response generally resembles that of~\Cref{fig:toy-plot-damped-closeup} from the toy problem.}
+    The signal response generally resembles that of~\Cref{fig:toy-plot-damped-closeup} from the simulated problem.}
     \label{fig:under-tuned-closeup}
 \end{figure}
 
-Similarly, systems with an over-aggressive controller, i.e.~the \emph{slow-aggressive} controller experiment and the 2--0.5\si{\mm} \& 1.5--0.5\si{\mm} perforations, exhibit low rise times, but high settling times: the high gains \emph{push} state toward the desired target quickly, and then overcompensate for the high overshoot, resulting in a difficult to maintain a stable response near the target.
-This explains the high controller \emph{effort}.
-The adapter moves the target to less extreme positions, compensating for the overshoot ``in advance''.
-This prevents the system from entering an unstable feedback loop, by preventing the control inputs from getting overly aggressive in the first place.
+Similarly, systems with an over-aggressive controller, i.e.~the \emph{slow-aggressive} controller experiment and the 2--0.5\si{\mm} \& 1.5--0.5\si{\mm} perforations, exhibit low rise times, but high settling times: the high gains ``push'' the state toward the desired target quickly, and then overcompensate for the high overshoot, resulting in an unstable response near the target.
+This explains the high total variance.
+The adapter moves the target to less extreme positions, compensating for the overshoot in advance.
+This prevents the system from entering an unstable feedback loop by preventing the control inputs from getting overly aggressive in the first place.
 Thus, even though target adaptions are made, the overall controller effort is decreased.
 \Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
 Again, a resemblance to the equivalent scenario in~\Cref{subsec:toy-aggressive} can be observed.
@@ -38,7 +38,7 @@ However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/slow-overshoot-overlay}
     \vspace*{-2em}
     \caption{A close-up from the \emph{slow-aggressive} PID controller with target adapter.
-    The manner in which the target is adapted resembles that of~\Cref{fig:toy-plot-closeup} from the toy problem.}
+    The manner in which the target is adapted resembles that of~\Cref{fig:toy-plot-closeup} from the simulated problem.}
     \label{fig:slow-overshoot-closeup}
 \end{figure}
 
@@ -60,7 +60,7 @@ However, the qualitative results display very little difference between both imp
     \label{fig:pre-vs-online}
 \end{figure}
 
-The pretrained implementation is able to recover within one or two updates, however.
+The pretrained implementation is able to recover within one or two updates.
 Nonetheless, this counter-productive behavior, and the need for pretraining data makes a fully online implemented adapter the more attractive solution.
 
 \subsection{Limitations}\label{subsec:limitations}
@@ -72,10 +72,10 @@ However, this high responsiveness alone is not solely responsible for the adapte
 The same baseline controller is used in the 0.25--0.25 \& 0.5--0.5\si{\mm} perforation experiments, as well as in the crawling gait experiments (\Cref{subsec:varying-kos,subsec:crawling-gait}, respectively).
 It seems to be the specific combination of a highly responsive controller--or conversely, a low sampling rate for the buffer--with a more deteriorated KOS that leads to the issue.
 Once the system enters an unstable feedback loop, the oscillations occur so frequently that any meaningful relationship between sequential datapoints is lost, an observation which becomes clear by comparing~\Cref{fig:slow-overshoot-closeup,fig:limitation}.
-As a result, training features obtained from near-identical regions in the signal response can vay drastically.
+As a result, training features obtained from near-identical regions in the signal response can vary drastically.
 The adapter thus starts producing less meaningful adaptations, entering a vicious cycle.
 
-This explains why the combination of 1.5--0.5\si{\mm} perforations and a \emph{slow}-aggressive controller poses no problem, nor does the same perforation combined with the highly responsive controller during the first 30\si{\minute} (also demonstrated by the crawling gait experiment).
+This explains why the combination of 1.5--0.5\si{\mm} perforations and a \emph{slow-aggressive} controller poses no problem, nor does the same perforation combined with the highly responsive controller during the first 30\si{\minute} (also demonstrated by the crawling gait experiment).
 Similarly, the 0.25--0.25 and 0.5--0.5\si{\mm} perforations effectively prevent the controller from entering an unstable state.
 
 
@@ -102,8 +102,8 @@ The KOS templates were all designed with identical parameters, exempting the per
 They were, however, assembled by hand.
 Several steps were taken to mitigate or minimize variability introduced during the assembly.
 
-First, the required KOSs for a certain experiment setting--usually four, since two are required for the reference run, and 2 for the adapter test--were all made in a single \emph{batch}, following a preset routine.
-Additionally, all KOSs were then ``conditioned'' by exactly one cycle of contracting and expanding it.
+First, the required KOSs for a certain experiment setting--usually four, since two are required for the reference run, and 2 for the adapter test--were all made in a single batch, following a preset routine.
+Additionally, all KOSs were then conditioned by exactly one cycle of contracting and expanding it.
 This procedure reduces potential differences in the cutting and assembly process.
 
 Second, the nature of the robot's design requires two KOSs per experiment run: as described in~\Cref{subsec:mechanical-details}, the state of the robot is represented by the angle of the actuation arm.

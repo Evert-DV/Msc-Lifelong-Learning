@@ -26,6 +26,8 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{textcomp}
+\usepackage{microtype}
+\usepackage{multicol}
 
 
 \setmainfont{TeX Gyre Termes}
@@ -48,10 +50,14 @@
         {./Thesis/figures/appendix}, {../src/Arduino/tmp/}}
 
 
-\title{Lifelong Learning for a Kresling-Origami Robot:\\
+\title{Lifelong Learning for a Kresling Origami Robot:\\
 {\LARGE A Plug-and-play Module for Supervised Learning of Target Adaptations}}
 \author{E. De Vroey}
 \date{\today}
+
+\global\exhyphenpenalty=5000
+\global\hyphenpenalty=1000
+\global\tolerance=500
 
 
 \begin{document}
@@ -62,13 +68,13 @@
 %        \ldots
         Soft robots offer a variety of useful applications.
         However, the nature of their design makes them challenging to control using traditional techniques.
-        Many applications therefore rely on machine learning-based methods, learning ``blackbox'' control policies or dynamic models of the robot.
-        This often results in overly complex and opaque solutions for the problem at hand.
+        Many applications therefore rely on machine learning-based methods, learning opaque control policies or dynamic models of the robot.
+        This often results in overly complex and uninterpretable solutions for the problem at hand.
 
         In this paper, a simplified approach is considered:
         Using a common feedforward neural network as a \emph{target adapter} module,
-        learned adaptations are added to the desired targets that are fed to a simple PID controller, essentially \emph{deceiving} it into a better performance.
-        This adapter is completely separate from the controller itself, allowing for relatively simple controllers to control--and adapt to--complex and evolving systems.
+        learned adaptations are added to the desired targets that are fed to a simple PID controller, essentially ``deceiving'' it into a better performance.
+        This adapter is completely separate from the controller itself, allowing for relatively simple controllers to control and adapt to complex and evolving systems.
 
         The approach is tested in simulation on a simple mass-spring-damper control problem, where qualitative results show near-immediate improvement in controller performance.
         The approach is then tested on a demonstrator origami robot, which relies for its functionality on the dynamics of the Kresling origami spring.
@@ -136,4 +142,5 @@
 %    \tableofcontents
 %    \listoffigures
 %    \listoftables
+
 \end{document}
