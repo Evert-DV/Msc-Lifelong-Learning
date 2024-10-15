@@ -10,10 +10,12 @@ The robot is equipped with the standard set of KOSs, using perforations of 1.5--
 During this experiment, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees.
 The robot has 5\si{\second} to reach and settle around a target before it is provided with the next target in the sequence.
 
-\subsubsection{A controller that is slow but aggressive}\todo{redo experiment}
+\subsubsection{A controller that is slow but aggressive}
 The first PID controller has a disproportionally high integral gain, resulting in an aggressive but slow to respond controller.
 This controller yields particularly interesting results in combination with the bistable nature of the KOS.
-\Cref{fig:slow-overshoot-overlay} shows the comparison between the signal responses from the baseline controller and adapted controller, illustrating the behavior of the controller.
+\Cref{fig:slow-overshoot-overlay} shows the comparison between the signal responses from the baseline controller and adapted controller, illustrating the behavior of the controller: The adapted target is brought closer to the system state.
+The effect of this can be seen in the control signal, displaying less oscillatory behavior and (slightly) lower peaks.
+Contrary to the baseline controller's state response, which oscillates wildly, the adapted controller overshoots once or twice and then settles.
 
 \begin{figure}
     \centering
@@ -23,54 +25,68 @@ This controller yields particularly interesting results in combination with the 
     \label{fig:slow-overshoot-overlay}
 \end{figure}
 
-During the full 2\si{\hour} duration of the experiment, each 5\si{\minute} sequence was recorded and evaluated using the metrics discussed in~\Cref{subsec:metrics}.
-\Cref{tab:slow-overhoot-percent} shows the results of implementing the target adapter as percentual differences in the average values of the metrics compared to the baseline controller.
+During the full 90\si{\minute} duration of the experiment, each 5\si{\minute} sequence was recorded and evaluated using the metrics discussed in~\Cref{subsec:metrics}.
+\Cref{tab:slow-overhoot-percent} shows the results of implementing the target adapter as the percentual change in the average values of the metrics compared to the baseline controller.
 
-\begin{table}[htb]
+\begin{table}
     \centering
-    \caption{Percentual differences after applying the target adapter for the \emph{slow-agressive} PID experiment}
+    \caption{Percentual change after applying the target adapter for the \emph{slow-aggressive} PID experiment.}
     \label{tab:slow-overhoot-percent}
     \begin{tabular}{cccccc}
         \toprule
         MRT              & MST             & MO              & MAE              & MAV              & NTV              \\
         \midrule
-        -31\si{\percent} & -8\si{\percent} & -1\si{\percent} & -34\si{\percent} & -39\si{\percent}  & -38\si{\percent}\\
+        +67\si{\percent} & -30\si{\percent} & -33\si{\percent} & -60\si{\percent} & -73\si{\percent}  & -70\si{\percent}\\
         \bottomrule
     \end{tabular}
 \end{table}
 
-The evolution of some interesting metrics can be seen in \Cref{fig:slow-overshoot-metrics}.
+The rise time is the only metric that increases after applying the adapter, all other metrics are consistently lower from the start.
+This is demonstrated in~\Cref{fig:slow-overshoot-metrics}, most notably for the mean absolute error and total variance.
+The settling time also improves immediately, but only decreases significantly after approximately half the duration of the experiment.
 
 \begin{figure}
     \centering
     \input{Thesis/figures/results/slow-overshoot-metrics.pgf}
     \vspace*{-1em}
-    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for an \emph{aggressive} but \emph{under-responsive} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:slow-overshoot-metrics-full} and~\Cref{tab:slow-overshoot}, respectively.}
+    \caption{Metrics evolution over the duration of the experiment for the \emph{slow-aggressive} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:slow-overshoot-metrics-full} and~\Cref{tab:slow-overshoot}, respectively.}
     \label{fig:slow-overshoot-metrics}
 \end{figure}
 
-Note the immediate (after the first 5\si{\minute}) improvement in overshoot and absolute error.
-The controller with target adapter initially has very low overshoots, but then evolves toward a stable behavior that retains small position errors and consistent overshoot values.
-As time progresses, the metric values for the unadaptive baseline controller generally decrease.
-The adapted controller, however, seems to achieve this level of performance from the start.
 
 \paragraph*{Interpretation}
 The conjecture is that the potential barrier between the two stable states of the KOS slows down the controller's response, resulting in a higher control input.
 As the barrier is overcome, the KOS now complements the controller's action, resulting in the overshoot.
 Depending on the vicinity of the target to the KOS's potential barrier, the controller can enter an unstable state.
 As the potential barrier to transition between the two stable states of the KOS decreases (due to deterioration), the baseline controller has less difficulty maintaining a stable response.
-This explains the decrease in settling time, absolute velocity, and total variance, which reflect the decreasing irregularities in the signal and the controller’s corrective actions.
-The target adapter effectively shifts the target closer to the system's current state, facilitating a smoother transition to the desired state with reduced overshoot, thereby minimizing the risk of the controller entering an unstable cycle.
+This explains the baseline's \emph{slight} decrease in settling time, and noticeable decrease in mean absolute error and total variance.
+The target adaptations facilitate a smoother transition to the desired state with higher rise time but reduced overshoot, thereby minimizing the risk of the controller entering an unstable cycle.
 From~\Cref{fig:slow-overshoot-overlay} it seems that this mechanism is most effective after the first overshoot.
-\todo[inline]{results, plot and response of above experiment will have to be rewritten}
 
 \subsubsection{An under-tuned controller}
 The second PID controller is tuned with low gains, resulting in slow and under-responsive behavior.
-The resulting changes in metrics after applying the adapter are presented in~\Cref{tab:under-tuned-percent}
+A visual comparison between the baseline and target adapter can be found in~\Cref{fig:under-tuned}.
+The targets for the adapter controller are shifted to more extreme positions, and then gradually move to the intended target.
+The resulting response is closer to the intended target, and is there faster than the baseline controller's response.
 
-\begin{table}[htb]
+\begin{figure}
     \centering
-    \caption{Percentual differences after applying the target adapter for the \emph{under-tuned} PID experiment}
+    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/under-tuned-overlay}
+    \vspace*{-2em}
+    \caption{Qualitative comparison between the behavior of the baseline controller and target adapted controller for the \emph{under-tuned} PID controller.}
+    \label{fig:under-tuned}
+\end{figure}
+
+The resulting changes in metrics after applying the adapter are presented in~\Cref{tab:under-tuned-percent}.
+The evolution of the mean rise time, overshoot, and total variance is shown in~\Cref{fig:under-tuned-metrics}.
+The controller with adapter clearly has lower rise times and absolute errors than the baseline, but also exhibits an increase in overshoots.
+It should be noted that the large relative increase in overshoot stems from the baseline controller having close to zero or even slightly negative overshoot.
+The adapted controller results in consistently higher total variance, rising further as the experiment progresses.
+A similar steady increase can be observed for the rise time and absolute error of the baseline controller.
+
+\begin{table}
+    \centering
+    \caption{Percentual change after applying the target adapter for the \emph{under-tuned} PID experiment.}
     \label{tab:under-tuned-percent}
     \begin{tabular}{cccccc}
         \toprule
@@ -81,37 +97,20 @@ The resulting changes in metrics after applying the adapter are presented in~\Cr
     \end{tabular}
 \end{table}
 
-The evolution of the mean rise time, overshoot, and total variance is shown in~\Cref{fig:under-tuned-metrics}.
-
 \begin{figure}
     \centering
     \input{Thesis/figures/results/under-tuned-metrics.pgf}
     \vspace*{-2em}
-    \caption{Metrics evolution over the duration of the experiment for an \emph{under-tuned} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:under-tuned-metrics-full} and~\Cref{tab:under-tuned}, respectively.}
+    \caption{Metrics evolution over the duration of the experiment for the \emph{under-tuned} PID controller. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:under-tuned-metrics-full} and~\Cref{tab:under-tuned}, respectively.}
     \label{fig:under-tuned-metrics}
 \end{figure}
 
-The controller with adapter clearly has lower rise times and absolute errors than the baseline, but also exhibits an increase in overshoots.
-It should be noted that the large relative increase in overshoot stems from the baseline controller having close to no or even slightly negative overshoot.
-The adapted controller results in consistently higher total variance, rising further as the experiment progresses.
-\Cref{fig:under-tuned} displays the comparison between the baseline controller and the controller with target adapter.
-
-\begin{figure}
-    \centering
-    \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/under-tuned-overlay}
-    \vspace*{-2em}
-    \caption{Qualitative comparison between the behavior of the baseline controller and target adapted controller for the \emph{under-tuned} PID controller.}
-    \label{fig:under-tuned}
-\end{figure}
-
-
 \paragraph*{Interpretation}
 The signal in~\Cref{fig:under-tuned} shows a clear reason for the lower rise times, namely that the target is shifted to more extreme positions as to yield larger control inputs from the controller.
-This corresponds to the observed larger overshoot and higher mean absolute velocity.
-The adapter makes the controller more \emph{aggressive}, as seen in the increased controller \emph{effort} (total variance).
-However, the adapter also seems to introduce unnecessary adaptations once the steady state is reached, further increasing the mean absolute velocity.
+The adapter makes the controller more aggressive, as seen in the lower rise times, larger overshoot, higher mean absolute velocity, and increased controller \emph{effort} (total variance).
+The adapter also seems to introduce unnecessary adaptations once the steady state is reached, further increasing the mean absolute velocity.
 These small oscillations are insignificant compared to the overall improvement in the mean absolute error resulting from the lower rise time.
-Finally, the steadily increasing rise time of an unadapted controller seems to go hand in hand with a similar steady increase of controller effort for the adapted controller.
+Finally, the steadily increasing rise time and mean absolute error of the unadapted controller going hand in hand with a similar steady increase of adapted controller effort might suggest that the system dynamics during both experiment runs are evolving slightly, but with the adapter compensating for it.
 
 \subsection{Varying the System Dynamics}\label{subsec:varying-kos}
 For the second type of experiment, the PID controller is tuned to a highly responsive performance on a robot with KOS perforations of a 1.5--0.5~\si{\mm} skip-to-cut ratio.
@@ -120,11 +119,16 @@ Once again, the values of the targets in the random sequence are integer values 
 
 \subsubsection{0.25--0.25 \& 0.5--0.5 Perforations}
 The 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations represent KOSs in a state of lower degradation than the standard 1.5-0.5\si{\mm} perforation.
-The results of applying the target adapter to these settings are averaged for both experimentsand are presented in~\Cref{tab:25--25-50--50-percent}.
+The results of applying the target adapter to these settings are averaged for both experiments and are presented in~\Cref{tab:25--25-50--50-percent}.
+The evolution of the mean rise time, overshoot, and total variance over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}, showing the average of the results from both experiments.
+The metrics display similar trends to those observed for the \emph{under-tuned} PID controller:
+On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
+Another observation is that the difference in the baseline controller's performance between the two experiments drifts further apart over the full duration.
+However, the adapted controller's performance over the two experiments appears less varied.
 
-\begin{table}[htb]
+\begin{table}
     \centering
-    \caption{Average percentual differences after applying the target adapter for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} dynamics experiment}
+    \caption{Average percentual change after applying the target adapter for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} dynamics experiment.}
     \label{tab:25--25-50--50-percent}
     \begin{tabular}{cccccc}
         \toprule
@@ -135,8 +139,6 @@ The results of applying the target adapter to these settings are averaged for bo
     \end{tabular}
 \end{table}
 
-The evolution of the mean rise time, overshoot, and total variance over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}, showing the average of the results from both experiments.
-
 \begin{figure}
     \centering
     \input{Thesis/figures/results/25--25-50--50-metrics.pgf}
@@ -145,15 +147,12 @@ The evolution of the mean rise time, overshoot, and total variance over the cour
     \label{fig:25--25-50--50-metrics}
 \end{figure}
 
-The metrics display similar trends to those observed for the \emph{under-tuned} controller:
-On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
-Another observation is that the difference in the baseline controller's performance between the two experiments drifts further apart over the full duration.
-However, the adapted controller's performance over the two experiments appears less varied.
-
 \paragraph*{Interpretation}
-Since the perforations aim to represent a less degraded KOS, i.e.~stiffer, the gains of the PID (tuned to a 1.5--0.5\si{\mm} perforated KOS) are likely set too low.
-The situation is thus analogous to the under-tuned PID experiment, and this shows in the behaviour of the target adapter:
+Since the perforations aim to represent a less degraded KOS, i.e.~a stiffer KOS, the gains of the PID (tuned to a 1.5--0.5\si{\mm} perforated KOS) are likely set too low.
+The situation is thus analogous to the \emph{under-tuned} PID experiment, and this shows in the behavior of the target adapter:
 The targets are shifted toward more extreme positions, resulting in the lower rise time.
+The observation that the metrics for the baseline controller drift further apart between the two experiments is a good sanity check that the dynamics of the springs are indeed different.
+The fact that the target adapter's metrics are less varied is then a good sign that the adapter is able to generalize and bring both systems to a stable performance.
 
 %\begin{figure}
 %    \begin{subfigure}[t]{\linewidth}
@@ -172,55 +171,26 @@ The targets are shifted toward more extreme positions, resulting in the lower ri
 %    \end{subfigure}
 %    \caption{Qualitative comparison of 1\si{\minute} of the signal response for the 0.5--0.5\si{\mm} perforation.}
 %    \label{fig:qualitaitve-50--50}
-%    % TODO: Get in closer or remove figure
 %\end{figure}
 
 \subsubsection{1.5--0.5 \& 2--0.5 Perforations}
 The 2--0.5\si{\mm} perforation aims to resemble a KOS that has been more deteriorated.
 The PID controller is initially tuned for the 1.5--0.5\si{\mm} KOS.
 For the 1.5--0.5\si{\mm} KOS experiment, with the runtime set to 2\si{\hour}, the aim is to assess how the controllers perform as the system gradually shifts into a more over-tuned condition.
-Like for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} experiment, the results presented are averaged over the two settings and can be found in~\Cref{tab:150--50-200--50-percent}.
 
-\begin{table}[htb]
-    \centering
-    \caption{Average percentual differences after applying the target adapter for the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} dynamics experiment}
-    \label{tab:150--50-200--50-percent}
-    \begin{tabular}{cccccc}
-        \toprule
-        MRT              & MST              & MO               & MAE             & MAV              & NTV              \\
-        \midrule
-        -43\si{\percent} & +20\si{\percent} & +53\si{\percent} & -5\si{\percent} & +34\si{\percent}  & +74\si{\percent}\\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-These results show that the general performance of the target adapter consists of higher settling times, overshoot, mean absolute velocity and total variance compared to the baseline, especially as the experiments progress.
-In fact, the only metric that has a significantly lower value for the target adapter than for the baseline, is the rise time.
-\Cref{fig:150--50-200--50-metrics} shows that the decrease in mean absolute error is only present for the 2--0.5\si{\mm} perforated KOSs.
+Inspecting~\Cref{fig:200--50-adapter}, it can be observed that the signal of the adapter rises toward the intended target faster than the baseline signal.
+Overshoots are introduced by the adapter as well, but what draws the most attention is the apparent noise present in the signal.
+By the end of the experiment, the target adaptations have become seemingly random, resulting in a chaotic control signal and system response.
 
 \begin{figure}
-    \centering
-    \input{Thesis/figures/results/150--50-200--50-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for KOSs in a higher state of degradation (1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:150--50-200--50-metrics-full} and~\Cref{tab:150--50-200--50}, respectively.}
-    \label{fig:150--50-200--50-metrics}
-\end{figure}
-
-Inspecting~\Cref{fig:200--50-adapter}, it can be observed that by the end of the experiment, the target adaptations have become significantly noisy, resulting in chaotic behavior.
-The result of this is the increased settling time, mean absolute error, mean absolute velocity, and controller effort.
-However, as shown in~\Cref{fig:150--50-200--50-metrics}, the adapted controller initially demonstrates better performance concerning settling time, overshoot and mean absolute error.
-Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute} of the experiment, the target adapter produces minimal and relatively stable adaptations, leading to improved rise times and lower absolute error.
-
-
-\begin{figure}
-    \begin{subfigure}[tl]{\linewidth}
+    \begin{subfigure}{\linewidth}
         \centering
         \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200--50-overlay-late}
         \vspace*{-2em}
         \caption{A comparison late in the experiment (last 5\si{\minute} sequence).}
         \label{fig:200--50-adapter}
     \end{subfigure}
-    \begin{subfigure}[tl]{\linewidth}
+    \begin{subfigure}{\linewidth}
         \centering
         \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/results/"}}]{Thesis/figures/results/200--50-overlay-early}
         \vspace*{-2em}
@@ -232,12 +202,40 @@ Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute
     \label{fig:200--50-qualitative}
 \end{figure}
 
+Like for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} experiment, the metrics presented are averaged over the two settings and can be found in~\Cref{tab:150--50-200--50-percent}.
+These results show that the general performance of the target adapter consists of higher settling times, overshoot, mean absolute velocity and total variance compared to the baseline, especially as the experiments progress.
+In fact, the only metric that has a significantly lower value for the target adapter than for the baseline, is the rise time.
+\Cref{fig:150--50-200--50-metrics} shows that the decrease in mean absolute error is only present for the 2--0.5\si{\mm} perforated KOSs.
+However, also noteworthy in~\Cref{fig:150--50-200--50-metrics} is that the adapted controller initially demonstrates better performance concerning settling time, overshoot and mean absolute error.
+Indeed,~\Cref{fig:200--50-adapter5} illustrates that, in the first 30\si{\minute} of the experiment, the target adapter produces minimal and relatively stable adaptations, leading to improved rise times and lower absolute error.
+
+\begin{table}
+    \centering
+    \caption{Average percentual change after applying the target adapter for the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} dynamics experiment.}
+    \label{tab:150--50-200--50-percent}
+    \begin{tabular}{cccccc}
+        \toprule
+        MRT              & MST              & MO               & MAE             & MAV              & NTV              \\
+        \midrule
+        -43\si{\percent} & +20\si{\percent} & +53\si{\percent} & -5\si{\percent} & +34\si{\percent}  & +74\si{\percent}\\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}
+    \centering
+    \input{Thesis/figures/results/150--50-200--50-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution over the 2\si{\hour} duration of the experiment for KOSs in a higher state of degradation (1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:150--50-200--50-metrics-full} and~\Cref{tab:150--50-200--50}, respectively.}
+    \label{fig:150--50-200--50-metrics}
+\end{figure}
+
 \paragraph*{Interpretation}
-In the case of the ``heavily deteriorated'' KOSs, the target adaptation seems to degrade the performance.
+In the case of the heavily deteriorated KOSs, the target adaptation seems to degrade the performance.
 The improved rise times can be attributed to the highly oscillatory nature of the signal response, rather than genuine performance gains.
 However, the fact that the target adapter shows improvement over the baseline controller in the early stages of deterioration is promising.
-The highly responsive PID controller is quick to react, reducing the need for extreme adaptations as seen in the previous experiments.
-As the KOS further degrades, it sometimes enters an unstable cycle: much alike the ones seen in~\Cref{fig:slow-overshoot-overlay},~\Cref{subsec:varying-pid}, but at a higher frequency.
+The highly responsive PID controller is quick to react, reducing the need for extreme adaptations like those seen in the previous experiments.
+As the KOS further degrades, it sometimes enters an unstable cycle: much alike the oscillations in~\Cref{fig:slow-overshoot-overlay},~\Cref{subsec:varying-pid}, but at a higher frequency.
 This results in training data that contains many contradicting features, which results in increased noise in the adapter's predictions.
 Noisy targets in turn produce noisy control actions and consequently noisy signal responses.
 
@@ -252,11 +250,13 @@ A baseline controller is compared with two target adapter configurations: one pr
 and one that is entirely trained online.
 
 The effect of the target adapter is given by~\Cref{tab:crawling-gait-percent}.
+The results show consistently lower rise and settling times, and mean absolute error for both implementations of the target adapter compared to the baseline controller.
+These improvements come at the cost of significantly higher overshoot.
+The difference in metrics for the pretrained and online trained implementations appears negligible, except for the mean overshoot, mean absolute velocity, and normalized total variance, as shown by~\Cref{fig:crawling-metrics}.
 
-
-\begin{table}[htb]
+\begin{table}
     \centering
-    \caption{Average percentual differences after applying the target adapter for the crawling gait experiment.}
+    \caption{Average percentual change after applying the target adapter for the crawling gait experiment.}
     \label{tab:crawling-gait-percent}
     \begin{tabular}{cccccc}
         \toprule
@@ -267,10 +267,6 @@ The effect of the target adapter is given by~\Cref{tab:crawling-gait-percent}.
     \end{tabular}
 \end{table}
 
-The results show consistently lower rise and settling times, and mean absolute error for both implementations of the target adapter compared to the baseline controller.
-These improvements come at the cost of significantly higher overshoot.
-The difference in metrics for the pretrained and online trained implementations appears negligible, except for the mean overshoot, mean absolute velocity, and normalized total variance, as shown by~\Cref{fig:crawling-metrics}.
-
 \begin{figure}
     \centering
     \input{Thesis/figures/results/crawling-metrics.pgf}
@@ -280,7 +276,7 @@ The difference in metrics for the pretrained and online trained implementations 
 \end{figure}
 
 Signal responses are shown in~\Cref{fig:crawl-qualitative}, note that the adapted signal is only shown for the fully online trained adapter, but it is very similar to that of the pretrained adapter.
-The improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the baseline controller having an unstable signal.
+An improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the baseline controller having an unstable signal.
 In fact, the signal from the baseline controller resembles that of an under-tuned controller.
 Target adaptations appear to be minimal, being only visual in close-ups of the signal.
 This corresponds to the relatively low difference in total variance between baseline and adapted controllers, observed in the metric evolution.
@@ -295,5 +291,5 @@ This corresponds to the relatively low difference in total variance between base
 
 \paragraph*{Interpretation}
 Although the adaptations made to the targets appear negligible for both the pretrained as the online trained adapter, the metrics and signal response show a definite improvement.
-However, the cause of how these minor adaptations result in the observed improvements is not immediately apparent: the baseline controller shows signs of being under-tuned, but the adapter does not produce adaptations similar to those of an under-tuned controller in~\Cref{subsec:varying-pid}.
+However, the cause of how these minor adaptations result in the observed improvements is not immediately clear: the baseline controller shows signs of being under-tuned, but the adapter does not produce adaptations similar to those of an under-tuned controller in~\Cref{subsec:varying-pid}.
 On the other hand, the consistent improvements seen across both adapter configurations challenge the notion that these improvements are merely coincidental.
