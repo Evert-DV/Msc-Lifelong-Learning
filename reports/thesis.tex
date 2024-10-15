@@ -36,12 +36,14 @@
 
 \externaldocument{thesis-paper}
 
-% easy citing
-\renewcommand{\cite}{\parencite}
-
 \addbibresource{Thesis/library.bib}
 
 \setlength{\headheight}{13.59999pt}
+
+\newcommand{\getexternalref}[1]{
+    \edef\externalpage{\getpagerefnumber{#1}}
+    \hyperlink{page.\externalpage}{\Cref*{#1}}
+}
 
 %\geometry{showframe}
 % Hook into the figure environment
@@ -58,10 +60,10 @@
 \setdeletedmarkup{\textcolor{BrickRed}{\sout{#1}}}
 
 % graphics path
-\graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}, {./Thesis/figures/}}
+\graphicspath{{./Thesis/figures/method}, {../src/Arduino/tmp/}, {./Thesis/figures/}, {./Thesis/figures/appendix}}
 
 % Example title setup
-\title[tudelft-white]{Lifelong Learning for a Kresling-Origami Robot}
+\title[tudelft-white]{Lifelong Learning~for~a Kresling Origami Robot}
 \newcommand{\thesubtitle}{A Plug-and-play Module for Supervised Learning of Target Adaptations}
 \subtitle[tudelft-sea-green]{\thesubtitle}
 \author[tudelft-white]{E. De Vroey}
@@ -69,14 +71,6 @@
 \newcommand{\studentnumber}{4685156}
 \affiliation{Technische Universiteit Delft}
 \coverimage{colloquium.jpg}
-%\covertext[tudelft-black]{
-%\textbf{Cover Text} \\
-%possibly \\
-%spanning
-%multiple
-%lines
-%\vfill
-%}
 
 \begin{document}
     \frontmatter
@@ -87,10 +81,10 @@
 
     \input{Thesis/preface}
 
+    ~\nocite{*}
     \include{Thesis/frontmatter}
 
     \mainmatter
-    \pdfbookmark{Lifelong Learning for a Kresling-Origami Robot}{}
     \includepdf[pages=-, pagecommand={\thispagestyle{empty}}]{out/thesis-paper.pdf}
 
 %\appendix

@@ -436,7 +436,8 @@
         \node at (front top left)[anchor=north west,inner sep=\@cover@margin]{
             \begin{minipage}[t][\@cover@fronttextheight]{\@cover@fronttextwidth}
             %% Print the title and optional subtitle at the top in white.
-            {\titlefont\color{\@titlecolor}\fontsize{58}{58}\selectfont\@title}
+            {
+                \titlefont\color{\@titlecolor}\fontsize{92}{144}\selectfont\@title}
                 \ifx\@subtitle\undefined\else
 %                     \\[3mm]
                 \vfill
@@ -480,7 +481,7 @@
         \node at (front top left)[anchor=north west,inner sep=\@cover@margin]{
             \begin{minipage}[t][\@cover@fronttextheight]{\@cover@fronttextwidth}
             %% Print the title and optional subtitle at the top in white.
-            {\largetitlestyle\color{\@titlecolor}\fontsize{74}{74}\selectfont\raggedleft{\@title}}
+            {\largetitlestyle\color{\@titlecolor}\fontsize{74}{74}\selectfont\@title}
                 %                {\tudsffamily\color{\@titlecolor}\fontsize{96}{96}\selectfont\@title}
                 \ifx\@subtitle\undefined\else
                 \\[10mm]
