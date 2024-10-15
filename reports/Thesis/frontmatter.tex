@@ -1,39 +1,38 @@
 \tableofcontents
 \addcontentsline{toc}{chapter}{Contents}
 
-
-\listoffigures\label{thelof}
-\addcontentsline{toc}{chapter}{List of Figures}
-\makeatletter
-\begingroup
-    \let\OldContentsline\contentsline
-    % Redefine \contentsline to adjust hyperlinks%
-    \renewcommand{\contentsline}[4]{%
-    % Use the original \contentsline with the new target
-        \addtocontents{lof}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
-    }
-    \let\addvspace\relax
-    \input{../auxil/thesis-paper.lof}%
-    \let\contentsline\relax
-\endgroup
-\makeatother
-
-
-\listoftables\label{thelot}
-\addcontentsline{toc}{chapter}{List of Tables}
-\makeatletter
-\begingroup
-    \let\OldContentsline\contentsline
-    % Redefine \contentsline to adjust hyperlinks%
-    \renewcommand{\contentsline}[4]{%
-    % Use the original \contentsline with the new target
-        \addtocontents{lot}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
-    }
-    \let\addvspace\relax
-    \input{../auxil/thesis-paper.lot}%
-    \let\contentsline\relax
-\endgroup
-\makeatother
+%\listoffigures\label{thelof}
+%\addcontentsline{toc}{chapter}{List of Figures}
+%\makeatletter
+%\begingroup
+%    \let\OldContentsline\contentsline
+%    % Redefine \contentsline to adjust hyperlinks%
+%    \renewcommand{\contentsline}[4]{%
+%    % Use the original \contentsline with the new target
+%        \addtocontents{lof}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
+%    }
+%    \let\addvspace\relax
+%    \input{../auxil/thesis-paper.lof}%
+%    \let\contentsline\relax
+%\endgroup
+%\makeatother
+%
+%
+%\listoftables\label{thelot}
+%\addcontentsline{toc}{chapter}{List of Tables}
+%\makeatletter
+%\begingroup
+%    \let\OldContentsline\contentsline
+%    % Redefine \contentsline to adjust hyperlinks%
+%    \renewcommand{\contentsline}[4]{%
+%    % Use the original \contentsline with the new target
+%        \addtocontents{lot}{\protect\contentsline{\protect#1}{\protect#2}{\protect#3}{page.#3}}
+%    }
+%    \let\addvspace\relax
+%    \input{../auxil/thesis-paper.lot}%
+%    \let\contentsline\relax
+%\endgroup
+%\makeatother
 
 \makeatletter
 \addtocontents{toc}{\protect\contentsline{chapter}{\@title}{1}{page.1}}
