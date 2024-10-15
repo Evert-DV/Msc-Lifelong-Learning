@@ -6,8 +6,8 @@ from keras import optimizers, losses
 
 
 def train():
-    pretrain = True
-    data = np.load(f"../../tmp/sim data/m5k20c0.5_seed329.npy")
+    pretrain = False
+    data = np.load(f"../../tmp/sim data/m5k20c87_seed299.npy")
     data = data[..., 1:]  # Remove the counter
     features = ops.array(data)[..., [0, 1, 2, 3, 4]]
     labels = ops.array(data)[..., [0, 1, 2, 3, 4]]

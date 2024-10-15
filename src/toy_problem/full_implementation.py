@@ -13,7 +13,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 def main():
     # Load 'vanilla' adapter model (or included in KB)
-    prediction_window = [3, 5, 10, 15, 25]
+    prediction_window = [2, 3, 5, 10, 15]
     adapter = TargetAdapter(state_size=2, target_size=2)
     # adapter.load_weights('../../tmp/target_adapter.weights.h5')
     optimizer = keras.optimizers.Adam(learning_rate=1.e-3)
@@ -28,25 +28,25 @@ def main():
     autoencoder.compile(optimizer=optimizer, loss=loss_fn)
 
     # Define system
-    # system = System(1, 5000, 1, 5)
-    system = System(5, 20, 10, 5)
-    # system = System(5, 20, 87, 5)
+    # system = System(1, 500, 10, 5)
+    # system = System(5, 20, 10, 5)
+    system = System(5, 20, 87, 5)
 
     # Define controller
-    # controller = PIDController(2500, 100, 10200)
-    controller = PIDController(300, 10, 50)
-    # controller = PIDController(300, 40, 5)
+#     controller = PIDController(1200, 10, 1000)
+    # controller = PIDController(300, 10, 50)
+    controller = PIDController(300, 40, 5)
 
     # Define reference controller
-    # reference_controller = PIDController(2500, 100, 10200)
-    reference_controller = PIDController(300, 10, 50)
-#     reference_controller = PIDController(300, 40, 5)
+#     reference_controller = PIDController(1200, 10, 1000)
+#     reference_controller = PIDController(300, 10, 50)
+    reference_controller = PIDController(300, 40, 5)
 
     # Setup KB
     use_kb = False
     load_kb = False
     if not load_kb:
-        reference_data = np.load(f"../../tmp/sim data/m5k20c0.5_seed329.npy")
+        reference_data = np.load(f"../../tmp/sim data/m5k20c10_seed605.npy")
         x_reference = ops.array(reference_data)[..., [0, 1, 2, 3, 4]].reshape(-1, 5)
         z_mean, z_log_var = autoencoder.dynamics(x_reference)
         cov = sample(z_mean, z_log_var)[1]
@@ -61,8 +61,9 @@ def main():
     thres = np.log(2) / 4
 
     # Setup simulation loop
-    dt = 1 / 50
-    t_end = 60
+    freq = 50
+    dt = 1 / freq
+    t_end = 300
     t = np.arange(0, t_end, dt)
     target = np.array([11., 0.])
     buffer = []
@@ -121,7 +122,7 @@ def main():
         adapted_targets.append(predicted_target)
         control_action = controller.compute_control(x0, predicted_target, dt)
         adapted_controls.append(control_action)
-        x = system.response(x0, control_action, do_update=True) + noise2
+        x = system.response(x0, control_action, dt=dt, do_update=True) + noise2
         signal.append(x)
         x0 = x
 
@@ -129,12 +130,12 @@ def main():
         x0_reference += noise
         reference_control = reference_controller.compute_control(x0_reference, target, dt)
         reference_controls.append(reference_control)
-        x_reference = system.response(x0_reference, reference_control, do_update=True) + noise2
+        x_reference = system.response(x0_reference, reference_control, dt=dt, do_update=True) + noise2
         reference_signal.append(x_reference)
         x0_reference = x_reference
 
         # Buffer data
-        buffer.append([*x0, control_action, *x, *predicted_target])
+        buffer.append([*x0, control_action, *x, *target])
 
         # Adapter update step
         if ti % train_interval == 0 and ti != 0:
@@ -216,13 +217,13 @@ def main():
                 print("Check KB for better match")
                 best_idx, js_divs = search_kb(running_distribution, kb[0])
                 if best_idx != current_kb_idx and js_divs[best_idx] < thres:
-                    print(f"Use KB entry {best_idx} as reference")
                     t_kb_selection.append(ti)
                     reference = kb[0][best_idx]
                     updated_reference = reference.copy()
                     backup_updated_reference = reference.copy()
                     current_kb_idx = best_idx
                     adapter.set_weights(kb[1][best_idx])
+                    print(f"Use KB entry {best_idx} as reference")
                 else:
                     print("No match found\nInitiate new KB entry")
                     reference = running_distribution.copy()
@@ -254,7 +255,8 @@ def main():
             # Update reference
             print("No match found")
             backup_updated_reference = updated_reference.copy()
-            updated_reference.update(z_mean, cov, weight=0.1)
+            # updated_reference.update(z_mean, cov, weight=0.1)
+            updated_reference.update(running_distribution.loc, running_distribution.covariance_matrix, weight=0.1)
             print(f"Updated reference")
 
             # Empty buffer
@@ -296,8 +298,8 @@ def main():
     tex_line_width = 3.48
     tex_text_width = 7.17
 
-    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [2, 1]},
-                           figsize=(tex_line_width, 0.6 * tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
+    fig, ax = plt.subplots(3 if use_kb else 2, 1, gridspec_kw={'height_ratios': [2, 1, 2.5] if use_kb else [2, 1]},
+                           figsize=(tex_text_width, tex_line_width) if mpl.get_backend() == 'pgf' else (16, 8),
                            sharex=True)
 
     if use_kb:
@@ -310,7 +312,7 @@ def main():
                 ax_i.axvline(t_kb, color='tab:green', linestyle='--')
             for t_tres in t_trespassing:
                 ax_i.axvline(t_tres, color='tab:red', linestyle=':')
-            ax_i.axvline(t_change, color='r', linestyle='-')
+            # ax_i.axvline(t_change, color='r', linestyle='-')
 
     ref_target, = ax[0].plot(t, targets[:, 0], linestyle=(0, (5, 2)), color=colors[0], alpha=.8, linewidth=.7)
     ref_sig, = ax[0].plot(t, reference_signal[:, 0], linestyle=(0, (2, 2)), color=colors[1], alpha=.8, linewidth=.7)
@@ -319,9 +321,9 @@ def main():
     # ax[0].legend(fontsize=8, loc='upper left')
     ax[0].set_ylabel("Position [m]")
     ax[0].tick_params(axis='both', labelsize=6)
-    ax[0].set_xlim(49, 56)
-    ax[0].set_ylim(8., 12.)
-    ax[1].set_ylim(-1500, 1700)
+    # ax[0].set_xlim(49, 56)
+    # ax[0].set_ylim(8., 12.)
+    # ax[1].set_ylim(-1500, 1700)
 
     u, = ax[1].plot(t, adapted_controls, color=colors[2], alpha=1., linewidth=.7)
     ref_u, = ax[1].plot(t, reference_controls, linestyle=(0, (3, 3)), color=colors[-2], linewidth=.7)
@@ -335,7 +337,7 @@ def main():
 
     if use_kb:
         selection_lines = ax[2].plot(t_reference_selection, js_selection, linestyle='-.', marker='x', lw=1., alpha=.5)
-        js_loss_lines = ax[2].plot(t[60 * update_interval:][::60 * kb_step], kl_loss, marker='.', markersize=3., lw=1.,
+        js_loss_lines = ax[2].plot(t[freq * update_interval:][::freq * kb_step], kl_loss, marker='.', markersize=3., lw=1.,
                                    alpha=0.7)
         ax[2].axhline(thres, color='k', linestyle='--', lw=.8)
         ax[2].axhline(0., color='k', linestyle='--', lw=.8)
@@ -353,8 +355,8 @@ def main():
                handlelength=1.,
                loc='lower left', frameon=False, ncol=3, bbox_to_anchor=(0., -0.15))
     fig.tight_layout()
-    fig.savefig(f"../../reports/Thesis/figures/toy-problem/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
-                dpi=300, bbox_inches='tight')
+    # fig.savefig(f"../../reports/Thesis/figures/toy-problem/toy_plot_closeup.{'pgf' if mpl.get_backend() == 'pgf' else 'png'}",
+    #             dpi=300, bbox_inches='tight')
     # plt.show()
 
 
@@ -364,7 +366,7 @@ if __name__ == '__main__':
 
     model_location = 'tmp/varautoencoder.keras'
     # seed = np.random.randint(0, 1000)
-    seed = 921
+    seed = 37 # 921
     print(f"Seed: {seed}")
     np.random.seed(seed)
     keras.utils.set_random_seed(seed)

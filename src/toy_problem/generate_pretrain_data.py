@@ -19,10 +19,10 @@ def main():
     controls = []
     data = []
 
-    controller = PIDController(700, 50, 1000)
+    controller = PIDController(300, 40, 5)
     m = 5
     k = 20
-    c = .5
+    c = 87
     # default values: m = 5, k = 10, c = 3, l0 = 5
     system = System(m, k, c, 5)
     system_updates = False
