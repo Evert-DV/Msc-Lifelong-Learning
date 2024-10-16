@@ -254,6 +254,14 @@ The results show consistently lower rise and settling times, and mean absolute e
 These improvements come at the cost of significantly higher overshoot.
 The difference in metrics for the pretrained and online trained implementations appears negligible, except for the mean overshoot, mean absolute velocity, and normalized total variance, as shown by~\Cref{fig:crawling-metrics}.
 
+\begin{figure}
+    \centering
+    \input{Thesis/figures/results/crawling-metrics.pgf}
+    \vspace*{-1em}
+    \caption{Metrics evolution over the 20\si{\minute} duration of the crawling-gait experiment, with the average of both adapted controllers overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets, in this case alternating between values near to -18 and -8 degrees, respectively. Plots for all metrics and numerical values can be found in~\Cref{fig:crawling-gait-metrics-full} and~\Cref{tab:crawling-gait}, respectively.}
+    \label{fig:crawling-metrics}
+\end{figure}
+
 \begin{table}
     \centering
     \caption{Average percentual change after applying the target adapter for the crawling gait experiment.}
@@ -266,14 +274,6 @@ The difference in metrics for the pretrained and online trained implementations 
         \bottomrule
     \end{tabular}
 \end{table}
-
-\begin{figure}
-    \centering
-    \input{Thesis/figures/results/crawling-metrics.pgf}
-    \vspace*{-1em}
-    \caption{Metrics evolution over the 20\si{\minute} duration of the crawling-gait experiment, with the average of both adapted controllers overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets, in this case alternating between values near to -18 and -8 degrees, respectively. Plots for all metrics and numerical values can be found in~\Cref{fig:crawling-gait-metrics-full} and~\Cref{tab:crawling-gait}, respectively.}
-    \label{fig:crawling-metrics}
-\end{figure}
 
 Signal responses are shown in~\Cref{fig:crawl-qualitative}, note that the adapted signal is only shown for the fully online trained adapter, but it is very similar to that of the pretrained adapter.
 An improvement in rise time is clearly observable, and shows that the improved settling time directly results from this, rather than the baseline controller having an unstable signal.

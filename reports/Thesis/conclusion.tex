@@ -13,4 +13,9 @@ If the sampling frequency is too low \emph{and} the recorded data contains some 
 Updates on such meaningless features lead to a negative feedback loop for the adapter's performance, which it is unable to escape.
 
 Possible solutions to the problem are methods that allow the adapter to either recall previous settings or maintain a more stable performance.
-An implementation of some kind of memory, or more envolved updating techniques like \emph{learning without forgetting}~\parencite{Li2016}, could potentially allow the adapter to escape such vicious cycles.
+An implementation of some kind of memory or knowledge base, or more envolved updating techniques like \emph{learning without forgetting}~\parencite{Li2016}, could potentially allow the adapter to escape or avoid such vicious cycles.
+Additionally, since the adapter seems to produce unnecessary adaptations even when the intended target has been reached, a mechanism that forcefully removes or limits adaptations once that target is reached could help reduce the chances of becoming unstable.
+
+A sensitivity analysis on the effect of the various parameters involved in the method could potentially isolate the issue.
+Examples are the (combination of) prediction windows used, the sampling rate of the buffer, the frequency of training updates, and the contents of the states in training features.
+

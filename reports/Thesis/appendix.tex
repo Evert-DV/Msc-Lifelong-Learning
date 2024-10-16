@@ -1,31 +1,6 @@
-\section{KOS Design and Template}\label[appendix]{app:kos-design}
-The KOSs used during the experiments used the following design parameters, as related to the design map from~\Cref{subsec:kresling-origami}:
-
-\begin{center}
-    \begin{tabular}[!h]{rl}
-        $a_0$      & 25~\si{\mm} \\
-        $a_0/b_0$  & 1.5         \\
-        $\alpha_0$ & 28 degrees
-    \end{tabular}
-\end{center}
-
-The springs were constructed from 160\si{\gram\per\square\meter} paper.
-A template for constructing this KOS can be found at the end of the document.\\
-
-\emph{Instructions}:\\[-.5em]
-\begin{enumerate}
-    \item Tear out the template along its outer contours.
-    \item Fold the Kresling pattern: The parallelogram's diagonals are valley folds, the sides are mountain folds.
-    \item Form a cylinder and glue the flaps at the ends to the inside of the opposite ends of the template.
-    \item Insert the extensions at the top and bottom of the cylinder through the slits in the two base hexagons.
-    \item Fold the extensions outward and glue them to the bases.
-    \item For extra strength, an extra (cardboard) hexagonal base can be glued to the top and bottom of the KOS.
-\end{enumerate}
-
-
 \section{Software implementation}\label[appendix]{app:code-structure}
 The supervised learning implementation for target adaptations is divided into two key components: the nominal control of the robot, programmed in C++ and executed by the Arduino board, and the target adaptation, implemented in Python and managed by an external computer.
-The adapter is implemented and trained using Keras with the PyTorch backend. % TODO: cite python and packages?
+The adapter is implemented and trained using Keras with the PyTorch backend. % TODO: cite python packages?
 
 \subsection{Nominal Control on the Arduino}
 Upon startup, the Arduino initializes a connection with the external computer and directs the servo to move to its minimum position.
@@ -33,7 +8,7 @@ The Arduino allows some time for the servo to reach this home position and then 
 During the control loop, the servo reads $\theta$ (relative to the reference) and $\dot{\theta}$ received from the sensor, and reads the target $\theta_d$ received from the external computer.
 Based on these measurements, the PID controller computes the value to be written to the servo, but before writing it to the servo, a ceiling is imposed on it to protect the servo from exceeding its mechanical limit (\Cref{subsec:mechanical-details}).
 The Arduino allows some time for the servo to act and then reads the measurements from the angle sensor again.
-Finally, it sends the tuple containing the state, action, resulting state, and target to the external computer.
+Finally, it sends the tuple containing the resulting state and target to the external computer.
 
 \subsection{Target Adaptation on the External Computer}
 The target adaptation and supervised learning are implemented exclusively on the external computer through the established connection with the Arduino.
@@ -50,7 +25,7 @@ This way, values that need to be sent or read can be updated in the background u
 
 \Cref{fig:code-diagram} provides an overview of the communication between computer and Arduino, and their inner interactions between various modules.
 For example, the sole task of the \texttt{send} thread is to read the value of a global variable representing the target state and send this to the Arduino.
-The \texttt{listen} thread reads the tuple sent in return by the Arduino and assigns its contents to the respective shared variables for the state, control action, resulting state and target.
+The \texttt{listen} thread reads the tuple sent in return by the Arduino and assigns its contents to the respective shared variables for the resulting state and target.
 It then adds this tuple to the buffer used for updating the adapter model.
 The \texttt{update} thread is responsible for (re)training the adapter.
 It creates a copy of the adapter, which can then be trained in the background while the original adapter remains functional.
@@ -61,200 +36,43 @@ The resulting $\Delta$ is added to the target, which is read by the \texttt{send
 The buffer is maintained by storing the tuples received from the Arduino.
 All threads aim to operate at 50\si{\hertz}.
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \FloatBarrier
-\onecolumn
-\section{Extended Test Results}\label[appendix]{app:results-ext}
-Complete results for the experiments in~\Cref{sec:results} are presented here.
-The results are presented as the evolution of the metrics over the experiment duration.
-The evolution is presented visually in plots, accompanied by the respective numerical values in tables.
-
-\begin{figure}[htb]
-    \centering
-    \input{./Thesis/figures/appendix/slow-overshoot-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution for the \emph{slow-aggressive} controller.}
-    \label{fig:slow-overshoot-metrics-full}
-\end{figure}
-
-
-\begin{table*}[htb]
-    \caption{Numerical values of the metrics for the \emph{slow-aggressive} controller.}
-    \label{tab:slow-overshoot}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \caption{Baseline controller}
-        \label{tab:slow-overshoot-baseline}
-        \input{./Thesis/appendix tables/slow overshoot wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{Target adapter}
-        \label{tab:slow-overshoot-adapter}
-        \input{./Thesis/appendix tables/slow overshoot w adapter}
-    \end{subtable}
-\end{table*}
-
-
-\begin{figure*}[htb]
-    \centering
-    \input{./Thesis/figures/appendix/under-tuned-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution for the \emph{under-tuned} controller.}
-    \label{fig:under-tuned-metrics-full}
-\end{figure*}
-
-\begin{table*}[htb]
-    \caption{Numerical values of the metrics for the \emph{under-tuned} controller.}
-    \label{tab:under-tuned}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \caption{Baseline controller}
-        \label{tab:under-tuned-baseline}
-        \input{./Thesis/appendix tables/under-tuned wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{Target adapter}
-        \label{tab:under-tuned-adapter}
-        \input{./Thesis/appendix tables/under-tuned w adapter}
-    \end{subtable}
-\end{table*}
-
-
-\begin{figure*}
-    \centering
-    \input{./Thesis/figures/appendix/25--25-50--50-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution for the 25--25 and 50--50\si{\mm} perforations.}
-    \label{fig:25--25-50--50-metrics-full}
-\end{figure*}
-
-\begin{table*}
-    \caption{Numerical values of the metrics for the 25--25 and 50--50\si{\mm} perforations.}
-    \label{tab:25--25-50--50}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \caption{0.25--0.25\si{\mm} Baseline controller}
-        \label{tab:25--25-baseline}
-        \input{./Thesis/appendix tables/25--25 wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{0.25--0.25\si{\mm} Target adapter}
-        \label{tab:25--25-adapter}
-        \input{./Thesis/appendix tables/25--25 w adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{0.5--0.5\si{\mm} Baseline controller}
-        \label{tab:50--50-baseline}
-        \input{./Thesis/appendix tables/50--50 wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{0.5--0.5\si{\mm} Target adapter}
-        \label{tab:50--50-adapter}
-        \input{./Thesis/appendix tables/50--50 w adapter}
-    \end{subtable}
-\end{table*}
-
-\begin{figure*}
-    \centering
-    \input{./Thesis/figures/appendix/150--50-200--50-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution for the 150--50 and 200--50\si{\mm} perforations.}
-    \label{fig:150--50-200--50-metrics-full}
-\end{figure*}
-
-\begin{table*}
-    \caption{Numerical values of the metrics for the 150--50 and 200--50\si{\mm} perforations.}
-    \label{tab:150--50-200--50}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \caption{1.5--0.5\si{\mm} Baseline controller}
-        \label{tab:150--50-baseline}
-        \input{./Thesis/appendix tables/150--50 wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{1.5--0.5\si{\mm} Target adapter}
-        \label{tab:150--50-adapter}
-        \input{./Thesis/appendix tables/150--50 w adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{2--0.5\si{\mm} Baseline controller}
-        \label{tab:200--50-baseline}
-        \input{./Thesis/appendix tables/200--50 wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{2--0.5\si{\mm} Target adapter}
-        \label{tab:200--50-adapter}
-        \input{./Thesis/appendix tables/200--50 w adapter}
-    \end{subtable}
-\end{table*}
-
-\begin{figure*}
-    \centering
-    \input{./Thesis/figures/appendix/crawling-gait-metrics.pgf}
-    \vspace*{-2em}
-    \caption{Metrics evolution for the crawling gait experiment.}
-    \label{fig:crawling-gait-metrics-full}
-\end{figure*}
-
-\twocolumn
-
-\begin{table}
-    \centering
-    \caption{Numerical values of the metrics for the crawling gait experiment.}
-    \label{tab:crawling-gait}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{Baseline controller}
-        \label{tab:crawling-gait-baseline}
-        \input{./Thesis/appendix tables/crawling gait wo adapter}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{Pretrained target adapter}
-        \label{tab:crawling-gait-adapter}
-        \input{./Thesis/appendix tables/crawling gait w adapter pretrained}
-    \end{subtable}
-    \begin{subtable}[t]{\linewidth}
-        \centering
-        \vspace*{1em}
-        \caption{Online trained target adapter}
-        \label{tab:crawling-gait-online}
-        \input{./Thesis/appendix tables/crawling gait w adapter online}
-    \end{subtable}
-\end{table}
-
-\FloatBarrier
-
 \section{KOS Reference Recordings}\label[appendix]{app:KOS-refs}
 Before and during each experiment, with intervals of 30\si{\minute}, a minute of reference data was recorded.
-This meant pausing the experiment, disabling the adapter, and evaluating the performance metrics on a preset 1\si{\minute} sequence.
-These measurements serve as a basis for comparing the relevant KOSs involved in each experiment, since they are suposed to be reasonably similar to each other (\Cref{subsec:validity}).
-
+These measurements serve as a basis for comparing the relevant KOSs involved in each experiment, since they are supposed to be reasonably similar to each other (\Cref{subsec:validity}).
 The measurements presented are the numeric values of these evaluations, as well as visual representations of the distance in the normalized metric space between the vectors represented by the evaluation of the first reference minute, i.e.~\emph{before} the experiment has started.
+
 Values used for normalizing the components of the metric vector were: 5 (theoretical maximum rise time), 5 (theoretical maximum settling time), 25 (physical maximum overshoot for the actuation arm), 25 (physical maximum error for the actuation arm), 480 (maximum servo velocity), 1800 (maximum control output).
 
-\begin{table}
+
+\newpage
+\FloatBarrier
+\subsection{Reference Minutes Slow-Agressive PID Controller}
+\begin{figure}[!h]
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \input{Thesis/figures/appendix/ref_dist_slow-over.pgf}
+        \vspace*{-2em}
+        \caption{\emph{slow-aggressive} PID}
+        \label{fig:ref-slow-over}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \input{Thesis/figures/appendix/ref_dist_soft.pgf}
+        \vspace*{-2em}
+        \caption{\emph{under-tuned} PID}
+        \label{fig:ref-soft}
+    \end{subfigure}
+    \caption{Distance in the metric space between the KOSs at the start of the experiment.}
+\end{figure}
+
+\begin{table}[h]
     \centering
     \caption{Numerical values of the reference minute metrics for the \emph{slow-aggressive} PID experiment.}
     \label{tab:ref-slow-over}
+    \vspace*{-1em}
     \begin{subtable}{\linewidth}
         \centering\vspace*{1em}
         \caption{Baseline controller}
@@ -268,27 +86,12 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-\begin{figure}
-    \begin{subfigure}[t]{0.49\linewidth}
-        \centering
-        \input{Thesis/figures/appendix/ref_dist_slow-over.pgf}
-        \vspace*{-1em}
-        \caption{Distance in the metric space between the KOSs at the start of the \emph{slow-aggressive} PID experiment.}
-        \label{fig:ref-slow-over}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.49\linewidth}
-        \centering
-        \input{Thesis/figures/appendix/ref_dist_soft.pgf}
-        \vspace*{-1em}
-        \caption{Distance in the metric space between the KOSs at the start of the \emph{under-tuned} PID experiment.}
-        \label{fig:ref-soft}
-    \end{subfigure}
-\end{figure}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{table}
+\FloatBarrier
+\subsection{Reference Minutes Under-Tuned PID Controller}
+\begin{table}[bh]
     \centering
     \caption{Numerical values of the reference minute metrics for the \emph{under-tuned} PID experiment.}
+    \vspace*{-1em}
     \begin{subtable}{\linewidth}
         \centering\vspace*{1em}
         \caption{Baseline controller}
@@ -304,8 +107,19 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{table}
+\FloatBarrier
+\pagebreak
+
+\subsection{Reference Minutes 0.25--0.25 \& 0.5--0.5 Perforations}
+\begin{figure}[ht]
+    \centering
+    \input{Thesis/figures/appendix/ref_dist_25-50.pgf}
+    \vspace*{-1em}
+    \caption{Distance in the metric space between the KOSs at the start of the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
+    \label{fig:ref-25-50}
+\end{figure}
+
+\begin{table}[ht]
     \centering
     \caption{Numerical values of the reference minute metrics for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
     \label{tab:ref-25-50}
@@ -323,15 +137,9 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-\begin{figure}
-    \centering
-    \input{Thesis/figures/appendix/ref_dist_25-50.pgf}
-    \vspace*{-1em}
-    \caption{Distance in the metric space between the KOSs at the start of the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforation experiment.}
-    \label{fig:ref-25-50}
-\end{figure}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{table}
+\FloatBarrier
+\subsection{Reference Minutes 1.5--0.5 \& 2--0.5 Perforations}
+\begin{table}[ht]
     \centering
     \caption{Numerical values of the reference minute metrics for the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
     \label{tab:ref-150-200}
@@ -348,15 +156,17 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \input{Thesis/figures/appendix/ref_dist_150-200.pgf}
     \vspace*{-1em}
     \caption{Distance in the metric space between the KOSs at the start of the 1.5--0.5\si{\mm} and 2--0.5\si{\mm} perforation experiment.}
     \label{fig:ref-150-200}
 \end{figure}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{table}
+
+\FloatBarrier
+\subsection{Reference Minutes Crawling Gait}
+\begin{table}[ht]
     \centering
     \caption{Numerical values of the reference minute metrics for the crawling gait experiment.}
     \label{tab:ref-crawl}
@@ -382,7 +192,7 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
     \end{subtable}
 \end{table}
 
-\begin{figure}[!t]
+\begin{figure}[ht]
     \centering
     \input{Thesis/figures/appendix/ref_dist_crawl.pgf}
     \vspace*{-1em}
@@ -424,6 +234,232 @@ Values used for normalizing the components of the metric vector were: 5 (theoret
 %    \label{fig:ref-metrics-crawl}
 %\end{figure*}
 
+\FloatBarrier
+\onecolumn
+\section{Extended Test Results}\label[appendix]{app:results-ext}
+%Complete results for the experiments in~\Cref{sec:results} are presented here.
+%The results are presented as the evolution of the metrics over the experiment duration.
+%The evolution is presented visually in plots, accompanied by the respective numerical values in tables.
+
+\subsection{Slow-Aggressive PID Controller}
+\begin{figure}[htb]
+    \centering
+    \input{./Thesis/figures/appendix/slow-overshoot-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the \emph{slow-aggressive} controller.}
+    \label{fig:slow-overshoot-metrics-full}
+\end{figure}
 
 
+\begin{table}[htb]
+    \caption{Numerical values of the metrics for the \emph{slow-aggressive} controller.}
+    \label{tab:slow-overshoot}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:slow-overshoot-baseline}
+        \input{./Thesis/appendix tables/slow overshoot wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:slow-overshoot-adapter}
+        \input{./Thesis/appendix tables/slow overshoot w adapter}
+    \end{subtable}
+\end{table}
+
+
+\FloatBarrier
+\pagebreak
+\subsection{Under-Tuned PID Controller}
+\begin{figure}[!h]
+    \centering
+    \input{./Thesis/figures/appendix/under-tuned-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the \emph{under-tuned} controller.}
+    \label{fig:under-tuned-metrics-full}
+\end{figure}
+%\vfill
+\begin{table}[!h]
+    \caption{Numerical values of the metrics for the \emph{under-tuned} controller.}
+    \label{tab:under-tuned}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{Baseline controller}
+        \label{tab:under-tuned-baseline}
+        \input{./Thesis/appendix tables/under-tuned wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Target adapter}
+        \label{tab:under-tuned-adapter}
+        \input{./Thesis/appendix tables/under-tuned w adapter}
+    \end{subtable}
+\end{table}
+\vfill
+
+\FloatBarrier
+\pagebreak
+\subsection{0.25--0.25 \& 0.5--0.5 Perforations}
+\begin{figure}[!h]
+    \centering
+    \input{./Thesis/figures/appendix/25--25-50--50-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the 25--25 and 50--50\si{\mm} perforations.}
+    \label{fig:25--25-50--50-metrics-full}
+\end{figure}
+
+\begin{table}[!h]
+    \caption{Numerical values of the metrics for the 25--25 and 50--50\si{\mm} perforations.}
+    \label{tab:25--25-50--50}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{0.25--0.25\si{\mm} Baseline controller}
+        \label{tab:25--25-baseline}
+        \input{./Thesis/appendix tables/25--25 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{0.25--0.25\si{\mm} Target adapter}
+        \label{tab:25--25-adapter}
+        \input{./Thesis/appendix tables/25--25 w adapter}
+    \end{subtable}
+%\end{table}
+%\pagebreak
+%\begin{table}
+%    \ContinuedFloat
+%    \caption{Numerical values of the metrics for the 25--25 and 50--50\si{\mm} perforations, \emph{cnt'd}.}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{0.5--0.5\si{\mm} Baseline controller}
+        \label{tab:50--50-baseline}
+        \input{./Thesis/appendix tables/50--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{0.5--0.5\si{\mm} Target adapter}
+        \label{tab:50--50-adapter}
+        \input{./Thesis/appendix tables/50--50 w adapter}
+    \end{subtable}
+\end{table}
+
+
+\FloatBarrier
+\subsection{1.5--0.5 \& 2--0.5 Perforations}
+\begin{figure}[!h]
+    \centering
+    \input{./Thesis/figures/appendix/150--50-200--50-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the 150--50 and 200--50\si{\mm} perforations.}
+    \label{fig:150--50-200--50-metrics-full}
+\end{figure}
+
+\begin{table}[!h]
+    \caption{Numerical values of the metrics for the 150--50 and 200--50\si{\mm} perforations.}
+    \label{tab:150--50-200--50}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \caption{1.5--0.5\si{\mm} Baseline controller}
+        \label{tab:150--50-baseline}
+        \input{./Thesis/appendix tables/150--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{1.5--0.5\si{\mm} Target adapter}
+        \label{tab:150--50-adapter}
+        \input{./Thesis/appendix tables/150--50 w adapter}
+    \end{subtable}
+\end{table}
+\pagebreak
+\begin{table}[!t]
+    \ContinuedFloat
+    \caption{Numerical values of the metrics for the 150--50 and 200--50\si{\mm} perforations, \emph{continued}.}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{2--0.5\si{\mm} Baseline controller}
+        \label{tab:200--50-baseline}
+        \input{./Thesis/appendix tables/200--50 wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{2--0.5\si{\mm} Target adapter}
+        \label{tab:200--50-adapter}
+        \input{./Thesis/appendix tables/200--50 w adapter}
+    \end{subtable}
+\end{table}
+
+
+\FloatBarrier
+\subsection{Crawling Gait}
+\begin{figure}[!h]
+    \centering
+    \input{./Thesis/figures/appendix/crawling-gait-metrics.pgf}
+    \vspace*{-2em}
+    \caption{Metrics evolution for the crawling gait experiment.}
+    \label{fig:crawling-gait-metrics-full}
+\end{figure}
+
+\twocolumn
+
+\begin{table}
+    \centering
+    \caption{Numerical values of the metrics for the crawling gait experiment.}
+    \label{tab:crawling-gait}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Baseline controller}
+        \label{tab:crawling-gait-baseline}
+        \input{./Thesis/appendix tables/crawling gait wo adapter}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Pretrained target adapter}
+        \label{tab:crawling-gait-adapter}
+        \input{./Thesis/appendix tables/crawling gait w adapter pretrained}
+    \end{subtable}
+    \begin{subtable}[t]{\linewidth}
+        \centering
+        \vspace*{1em}
+        \caption{Online trained target adapter}
+        \label{tab:crawling-gait-online}
+        \input{./Thesis/appendix tables/crawling gait w adapter online}
+    \end{subtable}
+\end{table}
+
+\FloatBarrier
+
+\section{KOS Design and Template}\label[appendix]{app:kos-design}
+The KOSs used during the experiments are of type B1 and used the following design parameters, as related to the design map from~\Cref{subsec:kresling-origami}:
+
+\begin{center}
+    \begin{tabular}[!h]{rl}
+        $a_0$      & 25~\si{\mm} \\
+        $a_0/b_0$  & 1.5         \\
+        $\alpha_0$ & 28 degrees
+    \end{tabular}
+\end{center}
+
+The springs were constructed from 160\si{\gram\per\square\meter} paper.
+A template for constructing this KOS can be found at the end of the document.
+The template uses the 1.5--0.5\si{\mm} perforation.\\
+
+\emph{Instructions}:\\[-.5em]
+\begin{enumerate}
+    \item Tear out the template along its outer contours.
+    \item Fold the Kresling pattern: The parallelogram's diagonals are valley folds, the sides are mountain folds.
+    \item Form a cylinder and glue the flaps at the ends to the inside of the opposite ends of the template.
+    \item Insert the extensions at the top and bottom of the cylinder through the slits in the two base hexagons.
+    \item Fold the extensions outward and glue them to the bases.
+    \item For extra strength, an extra (cardboard) hexagonal base can be glued to the top and bottom of the KOS.
+\end{enumerate}
 

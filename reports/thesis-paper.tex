@@ -28,6 +28,7 @@
 \usepackage{textcomp}
 \usepackage{microtype}
 \usepackage{multicol}
+\usepackage{longtable}
 
 
 \setmainfont{TeX Gyre Termes}
@@ -115,15 +116,15 @@
     \section{Experiments and Results}\label{sec:results}
     \input{Thesis/results}
 %    \FloatBarrier
-%
-%
-%    \section{Discussion}\label{sec:discussion}
-%    \input{Thesis/discussion}
-%%    \FloatBarrier
-%
-%    \section{Conclusion}\label{sec:conclusion}
-%    \input{Thesis/conclusion}
-%%    \FloatBarrier
+
+
+    \section{Discussion}\label{sec:discussion}
+    \input{Thesis/discussion}
+%    \FloatBarrier
+
+    \section{Conclusion}\label{sec:conclusion}
+    \input{Thesis/conclusion}
+%    \FloatBarrier
 
     \printbibliography
     \FloatBarrier
@@ -135,10 +136,21 @@
         \setcounter{figure}{0}
         \setcounter{table}{0}
     }
-%    \input{Thesis/appendix}
+    \input{Thesis/appendix}
 
+    \onecolumn
+    \section*{Template}
+    \vspace*{2cm}
+    \input{./Thesis/figures/appendix/template.pdf_tex}
+%    \begin{minipage}[t]{0.07\textwidth}
+%    \end{minipage}
+%    \hfill
+%    \begin{minipage}[t]{0.92\textwidth}
+%        \centering
+%        \input{./Thesis/figures/appendix/template.pdf_tex}
+%    \end{minipage}
 
-%    \newpage
+%    \pagebreak
 %    \tableofcontents
 %    \listoffigures
 %    \listoftables
