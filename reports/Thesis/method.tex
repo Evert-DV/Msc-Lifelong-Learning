@@ -39,7 +39,7 @@ To train this model to learn suitable target adaptations, interactions of the co
 Specifically, a buffer stores the recorded system states with corresponding targets.
 The model is then provided with pairs of system states that are obtained from the buffer and are spaced by a certain time window $\mathbf{x}_t$ and $\mathbf{x}_{t+\text{window}}$.
 From these pairs, the model infers the target it ``believes'' the controller aims to reach.
-However, instead of learning to predict the target directly, the training labels represent the difference $\bm{\Delta}$ between the target $x_{d, \,t}$ and the latter state in the pair (\Cref{fig:target-adaptation-train,fig:feature-extraction}).
+However, instead of learning to predict the target directly, the training labels represent the difference $\bm{\Delta}$ between the target $\mathbf{x}_{d, \,t}$ and the latter state in the pair (\Cref{fig:target-adaptation-train,fig:feature-extraction}).
 
 \begin{figure}
     \centering

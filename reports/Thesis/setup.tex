@@ -2,6 +2,7 @@ For each experiment, a minimum of two sets of KOSs was required:
 One set serving as a baseline, with the Arduino receiving unadapted targets, and the second set used for testing target adaptation.
 All experiments used a 60\si{\second} buffer and 15\si{\second} intervals between adapter updates, with the first update at 60\si{\second}.
 The adapter trained on prediction windows of 3, 5, 10, and 15 steps.
+Both runs of each experiment use the same preset sequence of random targets.
 This sequence amounts to 5\si{\minute} of deployment time and is repeated according to the full experiment duration.
 The signals corresponding to each 5\si{\minute} sequence are recorded and saved for evaluation.
 This way, the evolution of the performance metrics can be studied, and a fair comparison between the baseline PID controller and adapted controller is ensured.

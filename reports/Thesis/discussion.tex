@@ -23,16 +23,6 @@ As can be observed in~\Cref{fig:under-tuned-closeup}, this behavior resembles th
     \label{fig:under-tuned-closeup}
 \end{figure}
 
-Similarly, systems with an over-aggressive controller, i.e.~the \emph{slow-aggressive} controller experiment and the 2--0.5\si{\mm} \& 1.5--0.5\si{\mm} perforations, exhibit low rise times, but high settling times: the high gains ``push'' the state toward the desired target quickly, and then overcompensate for the high overshoot, resulting in an unstable response near the target.
-This explains the high total variance.
-The adapter moves the target to less extreme positions, compensating for the overshoot in advance.
-This prevents the system from entering an unstable feedback loop by preventing the control inputs from getting overly aggressive in the first place.
-Thus, even though target adaptions are made, the overall controller effort is decreased.
-\Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
-Again, a resemblance to the equivalent scenario in~\Cref{subsec:toy-aggressive} can be observed.
-The contradicting results from the 2--0.5 \& 1.5--0.5\si{\mm} perforations, see~\Cref{fig:150--50-200--50-metrics}, will be addressed in~\Cref{subsec:limitations}.
-However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the baseline in the early stages, and it is during this phase that the same trends described earlier can be observed.
-
 \begin{figure}
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/discussion/"}}]{Thesis/figures/discussion/slow-overshoot-overlay}
@@ -42,6 +32,15 @@ However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph
     \label{fig:slow-overshoot-closeup}
 \end{figure}
 
+Similarly, systems with an over-aggressive controller, i.e.~the \emph{slow-aggressive} controller experiment and the 2--0.5\si{\mm} \& 1.5--0.5\si{\mm} perforations, exhibit low rise times, but high settling times: the high gains ``push'' the state toward the desired target quickly, and then overcompensate for the high overshoot, resulting in an unstable response near the target.
+This explains the high total variance.
+The adapter moves the target to less extreme positions, compensating for the overshoot in advance.
+This prevents the system from entering an unstable feedback loop by preventing the control inputs from getting overly aggressive in the first place.
+Thus, even though target adaptions are made, the overall controller effort is decreased.
+\Cref{fig:slow-overshoot-closeup} provides a clearer view of the process.
+Again, a resemblance to the equivalent scenario in~\Cref{subsec:toy-aggressive} can be observed.
+The contradicting results from the 2--0.5 \& 1.5--0.5\si{\mm} perforations, see~\Cref{fig:150--50-200--50-metrics}, will be addressed in~\Cref{subsec:limitations}.
+However, as mentioned in~\Cref{subsec:varying-kos}, the adapted controller \emph{does} outperform the baseline in the early stages, and it is during this phase that the same trends described earlier can be observed.
 
 These two observed trends in the target adapter's effect suggest that the method is inherently self-correcting.
 By constantly retraining the adapter on features derived from its own influence on the signal response, an under-responsive adapted controller will become more aggressive, up to the point that the adapter needs to moderate its behavior again.
@@ -102,7 +101,7 @@ The KOS templates were all designed with identical parameters, exempting the per
 They were, however, assembled by hand.
 Several steps were taken to mitigate or minimize variability introduced during the assembly.
 
-First, the required KOSs for a certain experiment setting--usually four, since two are required for the reference run, and 2 for the adapter test--were all made in a single batch, following a preset routine.
+First, the required KOSs for a certain experiment setting--usually four, since two are required for the reference run, and two for the adapter test--were all made in a single batch, following a preset routine.
 Additionally, all KOSs were then conditioned by exactly one cycle of contracting and expanding it.
 This procedure reduces potential differences in the cutting and assembly process.
 
@@ -115,7 +114,6 @@ During these reference minutes, and regardless of the specific experiment settin
 This meant pausing the experiment, disabling the adapter, and evaluating the performance metrics on a preset 1\si{\minute} sequence.
 These minutes were evaluated using the same metrics as the experiments to compare the similarity of the KOSs involved.
 Comparisons of these metrics are presented in~\Cref{app:KOS-refs}, but it is sufficient here to note that variations in metric values for reference minutes are insignificant compared to the difference introduced by the implementation of the target adapter.
-
 These measures allow for valid interpretation of the results.
 
 \subsubsection{Uninterpreted Results}

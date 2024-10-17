@@ -24,7 +24,7 @@ Finally, the use of mechanisms that invoke some kind of memory, either by modify
 
 The techniques most similar to the method discussed in this paper are parameter adaptation/estimation and iterative learning control (ILC).
 In parameter adaptation, ML-based methods are used to directly tune the internal parameters of a controller.
-The various techniques used to achieve this rely on observing the interactions of the controller with the system or having access to the feedback signal of the controller~\parencite{Annaswamy2021}.
+The various techniques used to achieve this rely on observing the interactions of the controller with the system or having access to the feedback signal of the controller~\parencite{Landau2011}.
 Furthermore, the estimation mechanism must be designed specifically for the parameters of the controller in question.
 Iterative learning control on the other hand only uses the error signal to improve a controller's performance.
 It achieves this by changing either the controller's reference signal (i.e., the target) or its control action, based on the observed error during a previous trial~\parencite{Li2005}.
@@ -51,7 +51,7 @@ However, ILC is limited to systems that are highly repetitive, i.e., the same ta
         \caption{Kresling origami pattern}
 \end{figure}
 
-The Kresling origami pattern is folding-pattern used to create deployable cylindrical structures (also known as bellows) such as the one in~\Cref{fig:kos}.
+The Kresling origami pattern is a folding-pattern used to create deployable cylindrical structures (also known as bellows) such as the one in~\Cref{fig:kos}.
 As shown in ~\Cref{fig:twis-buckle}, the pattern is based on the creases that naturally occur when twist-buckling a cylindrical structure~\parencite{Kresling2008}.
 
 Due to the strain induced on the folds when twisting or compressing the structure formed by the pattern, it forms a torsional and translational spring with nonlinear stiffness.

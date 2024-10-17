@@ -18,7 +18,7 @@ The system's response to this control input is simulated and the tuple $(\mathbf
 This buffer stores a limited number of tuples corresponding to a specified window of the most recent data:
 Once capacity is reached, the oldest element is removed at every timestep.
 At regular update intervals, the adapter is trained on the data in the buffer.
-To ensure meaningful training, it is important that the tuples in the training data always contain the \emph{true} target position $x_d$, and not the target that was actually provided to the controller, i.e.,~$x_d + \Delta$.
+To ensure meaningful training, it is important that the tuples in the training data always contain the \emph{intended} target position $x_d$, and not the target that was actually provided to the controller, i.e.,~$x_d + \Delta$.
 As the simulation progresses, the parameters of the dynamic system are gradually altered to simulate system degradation.
 The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-problem}.
 
@@ -45,7 +45,7 @@ The pseudo algorithm for the implementation can be found in~\Cref{alg:toy-proble
 
         $\Delta \gets adapter.predict([\mathbf{x}_0, \mathbf{x}_d])$\;
         $u \gets controller.compute\_control(\mathbf{x}_0, \mathbf{x}_d + [\Delta, 0])$\;
-        Simulate the system $\mathbf{x} \gets response(\mathbf{x}_0, u)$\;
+        Simulate the system: $\mathbf{x} \gets response(\mathbf{x}_0, u)$\;
         Update system parameters\;
         Append $(\mathbf{x}_0, \mathbf{x}_d)$ to \textit{buffer}\;
         $\mathbf{x}_0 \gets \mathbf{x}$\;
@@ -75,15 +75,7 @@ In~\Cref{fig:toy-plot}, the result of the simulation can be observed.
 At the start, due to the near-zero initialization of the adapter's parameters, the signal response of the system controlled by the adapted controller is indistinguishable from that of the baseline PID controller.
 However, as soon as the adapter has trained on the buffer, the changes to the target become visible.
 
-The effects of the adaptation can be more clearly observed in~\Cref{fig:toy-plot-closeup}.
-Since the baseline PID controller is too aggressive, the signal overshoots and oscillates significantly before settling.
-In contrast, the adapter counters this by bringing the target closer to the current state.
-This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target position\footnote{Rather, the labeled $\Delta = x_{d} - x_{t+\emph{window}}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+\emph{window}}$.
-Therefore, upon receiving the input feature $[\mathbf{x}_t, \mathbf{x}_d]$
-it produces and adapted target position in between $x_t$ and $x_d$.
-As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
-
-\begin{figure}[htb]
+\begin{figure}[!htb]
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot_closeup}
     \vspace*{-2em}
@@ -99,6 +91,15 @@ As the state approaches the adapted target, the adapter starts producing targets
     \emph{Bottom}: The resulting adapted control inputs from the controller receiving the altered target alongside the unaltered baseline PID control inputs.}
     \label{fig:toy-plot-damped}
 \end{figure*}
+
+The effects of the adaptation can be more clearly observed in~\Cref{fig:toy-plot-closeup}.
+Since the baseline PID controller is too aggressive, the signal overshoots and oscillates significantly before settling.
+In contrast, the adapter counters this by bringing the target closer to the current state.
+This is the logical result of the buffer containing data corresponding to the overshoots, where the adapter would often encounter training features for which the labeled target position\footnote{Rather, the labeled $\Delta = x_{d} - x_{t+\emph{window}}$, but the explanation provided is equivalent and somewhat clearer.} $x_d$ is somewhere in between $x_t$ and $x_{t+\emph{window}}$.
+Therefore, upon receiving the input feature $[\mathbf{x}_t, \mathbf{x}_d]$
+it produces and adapted target position in between $x_t$ and $x_d$.
+As the state approaches the adapted target, the adapter starts producing targets closer to the reference target, guiding the system towards this desired state.
+
 
 \subsection{An Under-Tuned Controller}\label{subsec:toy-damped}
 For a second simulation, the system and controller were designed such that the controller was more conservative or \emph{under-tuned}.
@@ -117,7 +118,7 @@ These features are the result of the steady-state error present in the signal, l
     \centering
     \includestandalone[build={latexoptions={"-output-directory=./Thesis/figures/toy-problem/"}}]{Thesis/figures/toy-problem/toy_plot_damped_closeup}
     \vspace*{-2em}
-    \caption{A close-up of the second to last target in the one-minute simulation. The target is initially moved further from the current state to `pull' it towards the desired state in a shorter period. In addition, the adapted target is offset from the desired state as to counter the steady-state error seen in the baseline PID signal.}
+    \caption{A close-up of the second to last target in the one-minute simulation. The target is initially moved further from the current state to ``pull'' it towards the desired state in a shorter period. In addition, the adapted target is offset from the desired state as to counter the steady-state error seen in the baseline PID signal.}
     \label{fig:toy-plot-damped-closeup}
 \end{figure}
 

@@ -25,10 +25,7 @@ Contrary to the baseline controller's state response, which oscillates wildly, t
     \label{fig:slow-overshoot-overlay}
 \end{figure}
 
-During the full 90\si{\minute} duration of the experiment, each 5\si{\minute} sequence was recorded and evaluated using the metrics discussed in~\Cref{subsec:metrics}.
-\Cref{tab:slow-overhoot-percent} shows the results of implementing the target adapter as the percentual change in the average values of the metrics compared to the baseline controller.
-
-\begin{table}
+\begin{table}[t]
     \centering
     \caption{Percentual change after applying the target adapter for the \emph{slow-aggressive} PID experiment.}
     \label{tab:slow-overhoot-percent}
@@ -41,11 +38,15 @@ During the full 90\si{\minute} duration of the experiment, each 5\si{\minute} se
     \end{tabular}
 \end{table}
 
+During the full 90\si{\minute} duration of the experiment, each 5\si{\minute} sequence was recorded and evaluated using the metrics discussed in~\Cref{subsec:metrics}.
+\Cref{tab:slow-overhoot-percent} shows the results of implementing the target adapter as the percentual change in the average values of the metrics compared to the baseline controller.
+
+
 The rise time is the only metric that increases after applying the adapter, all other metrics are consistently lower from the start.
 This is demonstrated in~\Cref{fig:slow-overshoot-metrics}, most notably for the mean absolute error and total variance.
 The settling time also improves immediately, but only decreases significantly after approximately half the duration of the experiment.
 
-\begin{figure}
+\begin{figure}[!t]
     \centering
     \input{Thesis/figures/results/slow-overshoot-metrics.pgf}
     \vspace*{-1em}
@@ -117,16 +118,7 @@ For the second type of experiment, the PID controller is tuned to a highly respo
 The KOS perforations used are 0.25–0.25~mm, 0.5–0.5~mm, 1.5–0.5~mm, and 2--0.5~mm, representing various stages of KOS degradation.
 Once again, the values of the targets in the random sequence are integer values ranging between -3 and -25~degrees, and the robot has 5\si{\second} to reach and settle around a target.
 
-\subsubsection{0.25--0.25 \& 0.5--0.5 Perforations}
-The 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations represent KOSs in a state of lower degradation than the standard 1.5-0.5\si{\mm} perforation.
-The results of applying the target adapter to these settings are averaged for both experiments and are presented in~\Cref{tab:25--25-50--50-percent}.
-The evolution of the mean rise time, overshoot, and total variance over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}, showing the average of the results from both experiments.
-The metrics display similar trends to those observed for the \emph{under-tuned} PID controller:
-On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
-Another observation is that the difference in the baseline controller's performance between the two experiments drifts further apart over the full duration.
-However, the adapted controller's performance over the two experiments appears less varied.
-
-\begin{table}
+\begin{table}[t]
     \centering
     \caption{Average percentual change after applying the target adapter for the 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} dynamics experiment.}
     \label{tab:25--25-50--50-percent}
@@ -139,13 +131,23 @@ However, the adapted controller's performance over the two experiments appears l
     \end{tabular}
 \end{table}
 
-\begin{figure}
+\begin{figure}[!t]
     \centering
     \input{Thesis/figures/results/25--25-50--50-metrics.pgf}
     \vspace*{-2em}
     \caption{Metrics evolution over the 1\si{\hour} duration of the experiment for KOSs in a lower state of degradation (0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations, see annotations), with their average overlayed. Each point represents the calculated value of the metric on identical 5\si{\minute} sequences of targets. Plots for all metrics and numerical values can be found in~\Cref{fig:25--25-50--50-metrics-full} and~\Cref{tab:25--25-50--50}, respectively.}
     \label{fig:25--25-50--50-metrics}
 \end{figure}
+
+\subsubsection{0.25--0.25 \& 0.5--0.5 Perforations}
+The 0.25--0.25\si{\mm} and 0.5--0.5\si{\mm} perforations represent KOSs in a state of lower degradation than the standard 1.5--0.5\si{\mm} perforation.
+The results of applying the target adapter to these settings are averaged for both experiments and are presented in~\Cref{tab:25--25-50--50-percent}.
+The evolution of the mean rise time, overshoot, and total variance over the course of the 1\si{\hour} experiment is shown in~\Cref{fig:25--25-50--50-metrics}, showing the average of the results from both experiments.
+The metrics display similar trends to those observed for the \emph{under-tuned} PID controller:
+On average, the adapted controller has lower rise times, settling times, and absolute errors, but higher overshoot, absolute velocity, and total variance.
+Another observation is that the difference in the baseline controller's performance between the two experiments drifts further apart over the full duration.
+However, the adapted controller's performance over the two experiments appears less varied.
+
 
 \paragraph*{Interpretation}
 Since the perforations aim to represent a less degraded KOS, i.e.~a stiffer KOS, the gains of the PID (tuned to a 1.5--0.5\si{\mm} perforated KOS) are likely set too low.

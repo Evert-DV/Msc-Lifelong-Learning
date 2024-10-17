@@ -31,7 +31,7 @@ The controller works in cooperation with the ML-module, separating the interpret
 
 Techniques like parameter adaptation work much in the same way.
 An adapting or tuning module, quite often ML-based, can be ``plugged'' into a base controller, tuning its parameters \emph{on the go} to achieve an optimal performance~\parencite{Annaswamy2021,Landau2011}.
-However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned), and such a module must thus be designed separately for each controller.
+However, parameter adaptation requires knowledge on the architecture of the controller (e.g., how many, and which parameters should be tuned) and such a module must thus be designed separately for each controller.
 
 The proposed method tries to mitigate this downside by offering a ``plug-and-play'' module that can improve a controller's performance by simply adapting the desired target it receives (\Cref{fig:cool-robot}, \emph{bottom}).
 In this way, no previous knowledge on the type or tuning of the controller is required.
